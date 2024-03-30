@@ -1,4 +1,4 @@
-(* Ocamllex scanner for NanoC *)
+(* Ocamllex scanner for LILY*)
 
 { open Parser }
 
@@ -13,6 +13,7 @@ rule token = parse
 | '{'      { LBRACE }
 | '}'      { RBRACE }
 | ';'      { SEMI }
+(* COMMA *)
 | ','      { COMMA }
 | '+'      { PLUS }
 | '-'      { MINUS }
@@ -25,6 +26,7 @@ rule token = parse
 | "if"     { IF }
 | "else"   { ELSE }
 | "while"  { WHILE }
+(* RETURN *)
 | "return" { RETURN }
 | "int"    { INT }
 | "bool"   { BOOL }

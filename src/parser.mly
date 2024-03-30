@@ -1,4 +1,4 @@
-/* Ocamlyacc parser for NanoC */
+/* Ocamlyacc parser for LILY */
 
 %{
 open Ast
@@ -7,14 +7,15 @@ open Ast
 %token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN
 %token EQ NEQ LT AND OR
 %token IF ELSE WHILE INT BOOL
+/* return, COMMA token */
 %token RETURN COMMA
 %token <int> LITERAL
 %token <bool> BLIT
 %token <string> ID
 %token EOF
 
-%start program_rule
-%type <Ast.program> program_rule
+%start program
+%type <Ast.program> program
 
 %right ASSIGN
 %left OR
@@ -25,41 +26,84 @@ open Ast
 
 %%
 
-program_rule:
-  vdecl_list_rule stmt_list_rule EOF { {locals=$1; body=$2} }
+/* add function declarations*/
+program:
+  decls EOF { $1}
 
-vdecl_list_rule:
-  /*nothing*/                   { []       }
-  | vdecl_rule vdecl_list_rule  { $1 :: $2 }
+decls:
+   /* nothing */ { ([], [])               }
+ | vdecl SEMI decls { (($1 :: fst $3), snd $3) }
+ | fdecl decls { (fst $2, ($1 :: snd $2)) }
 
-vdecl_rule:
-  typ_rule ID SEMI { ($1, $2) }
+vdecl_list:
+  /*nothing*/ { [] }
+  | vdecl SEMI vdecl_list  {  $1 :: $3 }
 
+/* int x */
+vdecl:
+  typ ID { ($1, $2) }
 
-typ_rule:
-  INT       { Int  }
-  | BOOL    { Bool }
+typ:
+    INT   { Int   }
+  | BOOL  { Bool  }
 
-stmt_list_rule:
-    /* nothing */               { []     }
-    | stmt_rule stmt_list_rule  { $1::$2 }
+/* fdecl */
+fdecl:
+  vdecl LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+  {
+    {
+      rtyp=fst $1;
+      fname=snd $1;
+      formals=$3;
+      locals=$6;
+      body=$7
+    }
+  }
 
-stmt_rule:
-  expr_rule SEMI                                          { Expr $1         }
-  | LBRACE stmt_list_rule RBRACE                          { Block $2        }
-  | IF LPAREN expr_rule RPAREN stmt_rule ELSE stmt_rule   { If ($3, $5, $7) }
-  | WHILE LPAREN expr_rule RPAREN stmt_rule               { While ($3,$5)   }
+/* formals_opt */
+formals_opt:
+  /*nothing*/ { [] }
+  | formals_list { $1 }
 
-expr_rule:
-  | BLIT                          { BoolLit $1            }
-  | LITERAL                       { Literal $1            }
-  | ID                            { Id $1                 }
-  | expr_rule PLUS expr_rule      { Binop ($1, Add, $3)   }
-  | expr_rule MINUS expr_rule     { Binop ($1, Sub, $3)   }
-  | expr_rule EQ expr_rule        { Binop ($1, Equal, $3) }
-  | expr_rule NEQ expr_rule       { Binop ($1, Neq, $3)   }
-  | expr_rule LT expr_rule        { Binop ($1, Less, $3)  }
-  | expr_rule AND expr_rule       { Binop ($1, And, $3)   }
-  | expr_rule OR expr_rule        { Binop ($1, Or, $3)    }
-  | ID ASSIGN expr_rule           { Assign ($1, $3)       }
-  | LPAREN expr_rule RPAREN       { $2                    }
+formals_list:
+  vdecl { [$1] }
+  | vdecl COMMA formals_list { $1::$3 }
+
+stmt_list:
+  /* nothing */ { [] }
+  | stmt stmt_list  { $1::$2 }
+
+stmt:
+    expr SEMI                               { Expr $1      }
+  | LBRACE stmt_list RBRACE                 { Block $2 }
+  /* if (condition) { block1} else {block2} */
+  /* if (condition) stmt else stmt */
+  | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
+  | WHILE LPAREN expr RPAREN stmt           { While ($3, $5)  }
+  /* return */
+  | RETURN expr SEMI                        { Return $2      }
+
+expr:
+    LITERAL          { Literal($1)            }
+  | BLIT             { BoolLit($1)            }
+  | ID               { Id($1)                 }
+  | expr PLUS   expr { Binop($1, Add,   $3)   }
+  | expr MINUS  expr { Binop($1, Sub,   $3)   }
+  | expr EQ     expr { Binop($1, Equal, $3)   }
+  | expr NEQ    expr { Binop($1, Neq, $3)     }
+  | expr LT     expr { Binop($1, Less,  $3)   }
+  | expr AND    expr { Binop($1, And,   $3)   }
+  | expr OR     expr { Binop($1, Or,    $3)   }
+  | ID ASSIGN expr   { Assign($1, $3)         }
+  | LPAREN expr RPAREN { $2                   }
+  /* call */
+  | ID LPAREN args_opt RPAREN { Call ($1, $3)  }
+
+/* args_opt*/
+args_opt:
+  /*nothing*/ { [] }
+  | args { $1 }
+
+args:
+  expr  { [$1] }
+  | expr COMMA args { $1::$3 }

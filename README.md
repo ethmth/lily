@@ -2,44 +2,73 @@
 
 LILY (Lightweight Integrated List Syntax), is a Programming Language implemented using OCaml.
 
-> :warning: **Repo not fully ready**: The files are not yet ready to be worked on. I (Ethan) will update them soon by copying the NanoC/MicroC examples from class.
+Currently, the programming language implementation can be found in the `src/` directory, and examples can be found in the `test/` directory.
 
-Currently, the programming language implementation can be found in the `src/` directory, and examples can be found in the `examples/` directory.
+## Parser Instructions
 
-PLEASE DO NOT COMMIT BINARY FILES OR COMMIT DIRECTLY TO THE `main` BRANCH.
-
-## Parser Instructions (from NanoC)
-
-```
+```sh
 cd src/
 ```
 
-### Build the NanoC parser
+### Build the LILY parser
 
-```
-ocamlbuild test.native
+```sh
+ocamlbuild test1.native
+# OR
+make test1
 ```
 
-### Run the NanoC parser
+### Run the LILY parser
 
-```
-./test.native
+```sh
+./test1.native
 ```
 
 #### Test on specific file
 
-```
-cat ../test/example.mc | ./test.native
+```sh
+cat ../test/example.mc | ./test1.native
 ```
 
-### Compiler files
+## Compiler Instructions (NOT TESTED YET)
 
-- `ast.ml`: abstract syntax tree (AST)
+You must have the llvm ocaml package installed (`opam install llvm` should work)
+
+### Build the LILY compiler
+
+```sh
+ocamlbuild -pkgs llvm lily.native
+# OR
+make lily
+```
+
+### Run the LILY compiler and generate llvm code
+
+```
+./lily.native -l ../test/example.mc > example.out
+```
+
+### Run the llvm code
+
+```
+lli example.out
+```
+
+## File Overview
+
+### Compiler files (`src/`)
+
+- `ast.ml`: abstract syntax tree (AST) definition
 - `scanner.mll`: scanner
-- ~~`nanocparse.mly`~~ `parser.mly`: parser
+- `parser.mly`: parser
+- `sast.ml`: definition of the semantically-checked AST
+- `semant.ml`: semantic checking
+- `irgen.ml`: LLVM IR code generator
 
 ### Other files
 
-- `test.ml`: top-level file to test and run the scanner
-- ~~`example.mc`: a sample NanoC source code~~
-- ~~`example.out`: a sample parsed code of example.mc~~
+- `src/test1.ml`: the file to test the scanner and parser
+- `src/test2.ml`: the file to test the semantic checker
+- `src/lily.ml`: top-level file to test and run the LILY compiler
+- `test/example.mc`: a sample microc source code
+- `test/example.out`: a sample compiled code of example.mc
