@@ -1,0 +1,35 @@
+# The GCD algorithm in LILY
+a : int = 0
+b : int = 0
+
+# GCD Function
+def gcd(a:int, b:int) -> int:
+	while (a != b):
+		if (b < a):
+			a = a - b
+		else:
+			b = b - a
+	return a
+
+# Main Function (entrypoint)
+def main():
+	x : int = 0
+	y : int = 0
+	a = 18
+	b = 9
+	x = 2
+	y = 14
+
+	# Python style
+	# print(gcd(x,y))
+	# print(gcd(3,15))
+	# print(gcd(99,121))
+	# print(gcd(a,b))
+
+	# LILY style?
+	gcd(x,y).print()
+	gcd(3,15).print()
+	gcd(99,121).print()
+	gcd(a,b).print()
+
+	return 0
