@@ -76,7 +76,7 @@ statements:
 
 // TODO Implement adv functionality: Allow for multiple ways of declaration
 declaration: 
-  LET ID COLON type ASSIGN expression { $4, $2 }
+  LET ID COLON typ ASSIGN expression { $4, $2 }
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
@@ -91,7 +91,7 @@ while_loop:
 
 // TODO might need to fix this function definition, may have ambiguity with no ending
 function_def:
-  DEF ID LPAREN parameters_opt RPAREN ARROW type COLON statements
+  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON statements
   {
     {
       rtyp=$7;
@@ -123,7 +123,7 @@ parameters:
 // finally_clause:
 //   FINALLY COLON statements
 
-type:
+typ:
     INT   { Int   }
   | BOOL  { Bool  }
   | FLOAT { Float }

@@ -2,3 +2,5 @@ _build
 test1.native
 test2.native
 scanner.ml
+parser.ml
+parser.mli

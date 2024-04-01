@@ -41,7 +41,8 @@ type fdecl = {
 }
 
 (* Program type, consisting of variable declarations and functions *)
-type program = (typ * string) list * fdecl list
+(* type program = (typ * string) list * fdecl list *)
+type program = stmt list
 
 (* Pretty-printing functions *)
 let string_of_op = function
@@ -94,7 +95,11 @@ let string_of_fdecl fdecl =
   (* String.concat "" (List.map string_of_vdecl fdecl.locals) ^ *) (*TODO Not sure if we're using locals?*)
   String.concat "" (List.map string_of_stmt fdecl.body) ^ "}\n"
 
-let string_of_program (vars, funcs) =
+(* let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^
-  String.concat "\n" (List.map string_of_fdecl funcs)
+  String.concat "\n" (List.map string_of_fdecl funcs) *)
+
+  let string_of_program (stmts : stmt list) =
+    "\n\nParsed program: \n\n" ^
+    String.concat "" (List.map string_of_stmt stmts)
