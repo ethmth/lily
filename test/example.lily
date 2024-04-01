@@ -1,6 +1,6 @@
 # The GCD algorithm in LILY
-a : int = 0
-b : int = 0
+let a : int = 0
+let b : int = 0
 
 # GCD Function
 def gcd(a:int, b:int) -> int:
@@ -13,8 +13,8 @@ def gcd(a:int, b:int) -> int:
 
 # Main Function (entrypoint)
 def main():
-	x : int = 0
-	y : int = 0
+	let x : int = 0
+	let y : int = 0
 	a = 18
 	b = 9
 	x = 2

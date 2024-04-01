@@ -35,8 +35,9 @@ type func_def = {
 
 type program = bind list * func_def list
 
+(* TODO: Fix Pretty-printing functions for LILY *)
 (* Pretty-printing functions *)
-let string_of_op = function
+(* let string_of_op = function
     Add -> "+"
   | Sub -> "-"
   | Equal -> "=="
@@ -82,4 +83,4 @@ let string_of_fdecl fdecl =
 let string_of_program (vars, funcs) =
   "\n\nParsed program: \n\n" ^
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-  String.concat "\n" (List.map string_of_fdecl funcs)
+  String.concat "\n" (List.map string_of_fdecl funcs) *)
