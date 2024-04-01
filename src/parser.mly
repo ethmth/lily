@@ -1,30 +1,67 @@
-/* Ocamlyacc parser for LILY */
+/* Author(s): Michaela Gary */
+/* Last Edited: April 1, 2024 */
+/* Ocamllex parser for LILY */
 
 %{
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE PLUS MINUS ASSIGN
-%token EQ NEQ LT AND OR
-%token IF ELSE WHILE INT BOOL
-/* return, COMMA token */
-%token RETURN COMMA
-%token <int> LITERAL
-%token <bool> BLIT
-%token <string> ID
+/* Seperators */
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
+
+/* Punctuation */
+%token COLON COMMA DECIMAL ARROW
+
+/* Binary Operators */
+%token PLUS MINUS TIMES DIVIDE
+
+/* Assignment Operators */
+%token ASSIGN
+
+/* Relational Operators */
+%token EQ NEQ GT LT GEQ LEQ 
+
+/* Functional Operators */
+%token MAP FILTER REDUCE 
+
+/* Logical Operators */
+%token AND OR NOT
+
+/* Control Flow */
+%token IF IS IN NONE ELSE ELIF FOR TRY CATCH WHILE FINALLY BREAK RETURN CONTINUE
+
+/* Declaration */
+%token CONST DEF LET
+
+/* Types */
+%token BOOL INT FLOAT CHAR STRING
+
+/* Literals */
+%token <int> INT_LIT FLOAT_LIT
+%token <bool> BOOL_LIT
+%token <string> ID CHAR_LIT STRING_LIT
+
+/* Miscellaneous */
 %token EOF
 
 %start program
 %type <Ast.program> program
 
-%right ASSIGN
-%left OR
-%left AND
-%left EQ NEQ
-%left LT
+/* Operator Associativity */
 %left PLUS MINUS
+%left TIMES DIVIDE
+%right ASSIGN
+%left EQ NEQ
+%left GT LT
+%nonassoc GEQ LEQ
+%nonassoc MAP FILTER
+%left REDUCE
+%left AND OR 
+%right NOT
 
 %%
+
+/* The grammar rules below were not modified. They are from Micro C. */
 
 /* add function declarations*/
 program:

@@ -64,7 +64,7 @@ rule token = parse
 | "try"      { TRY }
 | "catch"    { CATCH }
 | "while"    { WHILE }
-| "finally"    { FINALLY }
+| "finally"  { FINALLY }
 | "break"    { BREAK }
 | "return"   { RETURN }
 | "continue" { CONTINUE }
@@ -82,12 +82,12 @@ rule token = parse
 | "string" { STRING }
 
 (* Literals *)
-| "True"   { BLIT(true)  }
-| "False"  { BLIT(false) }
-| digit+ as lem  { INT(lem) }
-| digit+ '.' digit+ as lem { FLOAT(lem) }
-| '\\'' (alpha | digit) '\\'' as lem { CHAR(lem) }
-| '\\"' ((alpha | digit)* as lem) '\\"' { STRING(lem) }
+| "True"   { BOOL_LIT(true)  }
+| "False"  { BOOL_LIT(false) }
+| digit+ as lem  { INT_LIT(lem) }
+| digit+ '.' digit+ as lem { FLOAT_LIT(lem) }
+| '\\'' (alpha | digit) '\\'' as lem { CHAR_LIT(lem) }
+| '\\"' ((alpha | digit)* as lem) '\\"' { STRING_LIT(lem) }
 | alpha (alpha | digit | '_')* as lem { ID(lem) }
 
 (* Miscellaneous *)
