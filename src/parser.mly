@@ -61,6 +61,125 @@ open Ast
 
 %%
 
+/* The grammar rules below here are for LILY from the LRM Parser section. */
+
+/* add function declarations*/
+program:
+  statements EOF { $1 }
+
+statements:
+  /* nothing */ { [] }
+  | statement statements  { $1::$2 }
+
+// TODO Allow for multiple ways of declaration
+declaration: 
+  // LET vdeclaration { $2 }
+  // | vdeclaration { $1 }
+  LET ID COLON type ASSIGN expression { $4, $2 }
+
+// vdeclaration:
+//   ID ASSIGN expression
+//   | ID COLON type ASSIGN expression
+//   | ID COLON COLON type ASSIGN expression
+
+// TODO May need to change this to avoid ambiguity, allow for ELIFs
+if_statement:
+  IF LPAREN expression RPAREN statement
+  | IF LPAREN expression RPAREN statement ELSE statement
+
+while_loop:
+  WHILE LPAREN expression RPAREN statement
+
+for_loop:
+  FOR ID IN expression statement
+
+// TODO need to fix this function definition, may have ambiguity with no ending
+function_def:
+  DEF ID LPAREN parameters_opt RPAREN ARROW type COLON statements
+
+parameters_opt:
+    /*nothing*/ { [] }
+  | parameters { $1 }
+
+parameters:
+  expression  { [$1] }
+  | expression COMMA parameters { $1::$3 }
+
+
+// TODO NEED TO FIX ALL THESE TRY STATEMENT THINGS, MAYBE LAST PRIORITY
+try_statement:
+  TRY COLON statements catch_clauses
+
+catch_clauses:
+  catch_clause
+
+catch_clause:
+  CATCH LPAREN ID type RPAREN COLON statements
+
+finally_clause:
+  FINALLY COLON statements
+
+type:
+    INT   { Int   }
+  | BOOL  { Bool  }
+  | FLOAT { Float }
+  | CHAR  { Char }
+  | STRING { String }
+
+statement:
+    declaration { $1 }
+  | if_statement { $1 }
+  | while_loop  { $1 }
+  | for_loop  { $1 }
+  | function_def { $1 }
+  | try_statement { $1 }
+  | expression_statement { $1 }
+
+expression_statement:
+  expression { $1 }
+
+expression:
+  /* From LRM: expression ('+' | '-' | '*' | '/') expression */ 
+    expression PLUS expression { Binop($1, Add,   $3) }
+  | expression MINUS expression { Binop($1, Sub,   $3) }
+  | expression TIMES expression { Binop($1, Mult,   $3) }
+  | expression DIVIDE expression { Binop($1, Div,   $3) }
+    /* From LRM: expression ('==' | '!=' | '<' | '<=' | '>' | '>=') expression */ 
+  | expression EQ expression { Binop($1, Eq,   $3) }
+  | expression NEQ expression { Binop($1, Neq,   $3) }
+  | expression LT expression { Binop($1, Lt,   $3) }
+  | expression LEQ expression { Binop($1, Leq,   $3) }
+  | expression GT expression { Binop($1, Gt,   $3) }
+  | expression GEQ expression { Binop($1, Geq,   $3) }
+    /* From LRM: the rest */ 
+  | function_call { $1 }
+  | list_declaration { $1 }
+  | LPAREN expression RPAREN { $1 } // For grouping and precedence
+
+function_call:
+  ID LPAREN arguments_opt RPAREN {$1, $3}
+
+arguments_opt:
+  /*nothing*/ { [] }
+  | arguments { $1 }
+
+arguments:
+  expression  { [$1] }
+  | expression COMMA arguments { $1::$3 }
+
+// TODO: Fix List declaration to adjust for multiple forms.
+list_declaration:
+  LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE
+
+elements_opt:
+  /*nothing*/ { [] }
+  | elements { $1 }
+
+elements:
+  expression  { [$1] }
+  | expression COMMA elements { $1::$3 }
+
+
 /* The grammar rules below were not modified. They are from Micro C. */
 
 /* add function declarations*/

@@ -1,8 +1,8 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | Sub | Equal | Neq | Less | And | Or
+type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq
 
-type typ = Int | Bool
+type typ = Int | Bool | Char | Float | String
 
 type expr =
     Literal of int
