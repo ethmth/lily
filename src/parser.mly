@@ -37,9 +37,12 @@ open Ast
 %token BOOL INT FLOAT CHAR STRING
 
 /* Literals */
-%token <int> INT_LIT FLOAT_LIT
+%token <int> INT_LIT 
+%token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
-%token <string> ID CHAR_LIT STRING_LIT
+%token <char> CHAR_LIT
+%token <string> STRING_LIT
+%token <string> ID
 
 /* Miscellaneous */
 %token EOF
@@ -71,22 +74,22 @@ statements:
   /* nothing */ { [] }
   | statement statements  { $1::$2 }
 
-// TODO Allow for multiple ways of declaration
+// TODO Implement adv functionality: Allow for multiple ways of declaration
 declaration: 
   LET ID COLON type ASSIGN expression { $4, $2 }
 
-// TODO Make this work for ifs without elses, and ifs with elifs
+// TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
-  IF LPAREN expression RPAREN COLON statement ELSE COLON statement {If($3, $6, $9)}
+  IF LPAREN expression RPAREN COLON statement ELSE COLON statement { If($3, $6, $9) }
 
 while_loop:
-  WHILE LPAREN expression RPAREN COLON statement { While ($3, $6)  }
+  WHILE LPAREN expression RPAREN COLON statement { While($3, $6) }
 
-// TODO Add for loops
+// TODO Implement for loops
 // for_loop:
 //   FOR ID IN expression statement
 
-// TODO need to fix this function definition, may have ambiguity with no ending
+// TODO might need to fix this function definition, may have ambiguity with no ending
 function_def:
   DEF ID LPAREN parameters_opt RPAREN ARROW type COLON statements
   {
@@ -107,7 +110,7 @@ parameters:
   | expression COMMA parameters { $1::$3 }
 
 
-// TODO Add try statements
+// TODO Implement try statements
 // try_statement:
 //   TRY COLON statements catch_clauses
 
@@ -131,9 +134,9 @@ statement:
     declaration { $1 }
   | if_statement { $1 }
   | while_loop  { $1 }
-  | for_loop  { $1 }
+  // | for_loop  { $1 }
   | function_def { $1 }
-  | try_statement { $1 }
+  // | try_statement { $1 }
   | expression_statement { $1 }
 
 expression_statement:
@@ -141,7 +144,12 @@ expression_statement:
 
 expression:
   /* From LRM: expression ('+' | '-' | '*' | '/') expression */ 
-    expression PLUS expression { Binop($1, Add,   $3) }
+  INT_LIT { LitInt($1) }
+  | BOOL_LIT { LitInt($1) }
+  | CHAR_LIT { LitChar($1) }
+  | FLOAT_LIT { LitFloat($1) }
+  | STRING_LIT { LitString($1) }
+  | expression PLUS expression { Binop($1, Add,   $3) }
   | expression MINUS expression { Binop($1, Sub,   $3) }
   | expression TIMES expression { Binop($1, Mult,   $3) }
   | expression DIVIDE expression { Binop($1, Div,   $3) }
@@ -154,11 +162,11 @@ expression:
   | expression GEQ expression { Binop($1, Geq,   $3) }
     /* From LRM: the rest */ 
   | function_call { $1 }
-  | list_declaration { $1 }
+  // | list_declaration { $1 }
   | LPAREN expression RPAREN { $2 } // For grouping and precedence
 
 function_call:
-  ID LPAREN arguments_opt RPAREN {$1, $3}
+  ID LPAREN arguments_opt RPAREN { Call($1, $3)}
 
 arguments_opt:
   /*nothing*/ { [] }
@@ -168,20 +176,20 @@ arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
 
-// TODO: Fix List declaration to adjust for multiple forms.
-list_declaration:
-  LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE
+// TODO: Implement List Declaration
+// list_declaration:
+//   LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE {}
 
-elements_opt:
-  /*nothing*/ { [] }
-  | elements { $1 }
+// elements_opt:
+//   /*nothing*/ { [] }
+//   | elements { $1 }
 
-elements:
-  expression  { [$1] }
-  | expression COMMA elements { $1::$3 }
+// elements:
+//   expression  { [$1] }
+//   | expression COMMA elements { $1::$3 }
 
 
-/* The grammar rules below were not modified. They are from Micro C. */
+/* The grammar rules below were not modified. They are from Micro C. For refernce only */
 
 // /* add function declarations*/
 // program:

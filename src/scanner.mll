@@ -84,10 +84,10 @@ rule token = parse
 (* Literals *)
 | "True"   { BOOL_LIT(true)  }
 | "False"  { BOOL_LIT(false) }
-| digit+ as lem  { INT_LIT(lem) }
-| digit+ '.' digit+ as lem { FLOAT_LIT(lem) }
-| '\\'' (alpha | digit) '\\'' as lem { CHAR_LIT(lem) }
-| '\\"' ((alpha | digit)* as lem) '\\"' { STRING_LIT(lem) }
+| digit+ as lem  { INT_LIT(int_of_string lem) }
+| digit+ '.' digit+ as lem { FLOAT_LIT(float_of_string lem) }
+| '\'' (alpha | digit) '\'' as lem { CHAR_LIT(lem.[0]) }
+| '\"' ((alpha | digit)* as lem) '\"' { STRING_LIT(lem) }
 | alpha (alpha | digit | '_')* as lem { ID(lem) }
 
 (* Miscellaneous *)
