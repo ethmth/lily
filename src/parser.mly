@@ -74,9 +74,18 @@ statements:
   /* nothing */ { [] }
   | statement statements  { $1::$2 }
 
+statement:
+    declaration { $1 }
+  | if_statement { $1 }
+  | while_loop  { $1 }
+  // | for_loop  { $1 }
+  | function_def { $1 }
+  // | try_statement { $1 }
+  | expression_statement { $1 }
+
 // TODO Implement adv functionality: Allow for multiple ways of declaration
 declaration: 
-  LET ID COLON typ ASSIGN expression { $4, $2 }
+  LET ID COLON typ ASSIGN expression { Decl($4, $2) }
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
@@ -93,12 +102,12 @@ while_loop:
 function_def:
   DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON statements
   {
-    {
+    Fdecl({
       rtyp=$7;
       fname=$2;
       formals=$4;
       body=$9
-    }
+    })
   }
 
 parameters_opt:
@@ -106,8 +115,8 @@ parameters_opt:
   | parameters { $1 }
 
 parameters:
-  expression  { [$1] }
-  | expression COMMA parameters { $1::$3 }
+  vdecl  { [$1] }
+  | vdecl COMMA parameters { $1::$3 }
 
 
 // TODO Implement try statements
@@ -130,29 +139,20 @@ typ:
   | CHAR  { Char }
   | STRING { String }
 
-statement:
-    declaration { $1 }
-  | if_statement { $1 }
-  | while_loop  { $1 }
-  // | for_loop  { $1 }
-  | function_def { $1 }
-  // | try_statement { $1 }
-  | expression_statement { $1 }
-
 expression_statement:
-  expression { $1 }
+  expression { Expr($1) }
 
 expression:
   /* From LRM: expression ('+' | '-' | '*' | '/') expression */ 
   INT_LIT { LitInt($1) }
-  | BOOL_LIT { LitInt($1) }
+  | BOOL_LIT { LitBool($1) }
   | CHAR_LIT { LitChar($1) }
   | FLOAT_LIT { LitFloat($1) }
   | STRING_LIT { LitString($1) }
-  | expression PLUS expression { Binop($1, Add,   $3) }
-  | expression MINUS expression { Binop($1, Sub,   $3) }
-  | expression TIMES expression { Binop($1, Mult,   $3) }
-  | expression DIVIDE expression { Binop($1, Div,   $3) }
+  | expression PLUS expression { Binop($1, Plus,   $3) }
+  | expression MINUS expression { Binop($1, Minus,   $3) }
+  | expression TIMES expression { Binop($1, Times,   $3) }
+  | expression DIVIDE expression { Binop($1, Divide,   $3) }
     /* From LRM: expression ('==' | '!=' | '<' | '<=' | '>' | '>=') expression */ 
   | expression EQ expression { Binop($1, Eq,   $3) }
   | expression NEQ expression { Binop($1, Neq,   $3) }
@@ -175,6 +175,9 @@ arguments_opt:
 arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
+
+vdecl:
+  ID COLON typ { ($3, $1) }
 
 // TODO: Implement List Declaration
 // list_declaration:

@@ -9,6 +9,8 @@ type unary_op = Negate
 (* Types definition *)
 type typ = Int | Bool | Char | Float | String
 
+type bind = typ * string
+
 (* Expressions definition *)
 type expr =
     LitInt of int
@@ -23,6 +25,7 @@ type expr =
   | ListExpr of expr list
   | UnaryOp of unary_op * expr
 
+
 (* Statements definition *)
 type stmt =
     Block of stmt list
@@ -30,12 +33,14 @@ type stmt =
   | While of expr * stmt
   | Expr of expr
   | Return of expr
+  | Decl of typ * string
+  | Fdecl of fdecl
 
 (* Function declaration type *)
-type fdecl = {
+and fdecl = {
   rtyp: typ;
   fname: string;
-  formals: (typ * string) list;
+  formals: bind list;
   (* locals: (typ * string) list; *) (* TODO Not sure if we're using locals?*)
   body: stmt list;
 }
@@ -73,13 +78,6 @@ let rec string_of_expr = function
   | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
 
-let rec string_of_stmt = function
-    Block(stmts) -> "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
-  | Expr(expr) -> string_of_expr expr ^ ";\n"
-  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
-  | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
-  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-
 let string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
@@ -87,9 +85,18 @@ let string_of_typ = function
   | Float -> "float"
   | String -> "string"
 
-let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
+let rec string_of_stmt = function
+    Block(stmts) -> "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+  | Expr(expr) -> string_of_expr expr ^ ";\n"
+  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+  | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+  | Decl(t, s) -> s ^ " : " ^ string_of_typ t
+  | Fdecl(f) -> string_of_fdecl f
 
-let string_of_fdecl fdecl =
+(* let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n" *)
+
+and string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ 
   String.concat ", " (List.map (fun (t, id) -> string_of_typ t ^ " " ^ id) fdecl.formals) ^ ")\n{\n" ^
   (* String.concat "" (List.map string_of_vdecl fdecl.locals) ^ *) (*TODO Not sure if we're using locals?*)
