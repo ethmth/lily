@@ -11,6 +11,7 @@ open Ast
 
 /* Punctuation */
 %token COLON COMMA DECIMAL ARROW
+%token DOT
 
 /* Binary Operators */
 %token PLUS MINUS TIMES DIVIDE
@@ -139,6 +140,18 @@ typ:
   | CHAR  { Char }
   | STRING { String }
 
+
+  list_literal:
+  LBRACKET list_elements_opt RBRACKET { ListLit($2) }
+
+list_elements_opt:
+  /* nothing */ { [] }
+  | list_elements { $1 }
+
+list_elements:
+  expression { [$1] }
+  | expression COMMA list_elements { $1 :: $3 }
+
 expression_statement:
   expression { Expr($1) }
 
@@ -150,6 +163,9 @@ expression:
   | FLOAT_LIT { LitFloat($1) }
   | STRING_LIT { LitString($1) }
   | expression PLUS expression { Binop($1, Plus,   $3) }
+
+  | expression DOT ID LPAREN arguments_opt RPAREN { MethodCall($1, $3, $5) }
+
   | expression MINUS expression { Binop($1, Minus,   $3) }
   | expression TIMES expression { Binop($1, Times,   $3) }
   | expression DIVIDE expression { Binop($1, Divide,   $3) }

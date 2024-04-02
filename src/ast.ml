@@ -24,12 +24,14 @@ type expr =
   | Call of string * expr list
   | ListExpr of expr list
   | UnaryOp of unary_op * expr
+  | ListLit of expr list  (* Chima New: Represents list literals *)
+  | MethodCall of expr * string * expr list  (* Chima New: Represents method calls on expressions *)
 
 
 (* Statements definition *)
 type stmt =
-    Block of stmt list
-  | If of expr * stmt * stmt
+  Block of stmt list
+  | If of expr * stmt * stmt option  (* Modified: Allow for optional else branch *)
   | While of expr * stmt
   | Expr of expr
   | Return of expr
