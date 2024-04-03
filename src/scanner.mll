@@ -8,9 +8,11 @@ let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 
 rule token = parse
-  [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
-| '\n' { token lexbuf }
+  [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
+
+(* New Line *)
+| '\n' { NEWLINE }
 
 (* Seperators *)
 | '('      { LPAREN }

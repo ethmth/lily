@@ -94,7 +94,7 @@ let rec string_of_stmt = function
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
   | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
-  | Decl(t, s) -> s ^ " : " ^ string_of_typ t
+  | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
   | Fdecl(f) -> string_of_fdecl f
 
 (* let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n" *)

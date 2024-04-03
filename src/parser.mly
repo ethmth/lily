@@ -6,8 +6,11 @@
 open Ast
 %}
 
+/* New Line */
+%token NEWLINE
+
 /* Seperators */
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
+%token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 
 /* Punctuation */
 %token COLON COMMA ARROW
@@ -86,7 +89,7 @@ statement:
 
 // TODO Implement adv functionality: Allow for multiple ways of declaration
 declaration: 
-  LET ID COLON typ ASSIGN expression { Decl($4, $2) }
+  LET ID COLON typ ASSIGN expression NEWLINE { Decl($4, $2) }
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
