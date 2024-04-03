@@ -25,7 +25,7 @@ let string_of_value = function
 let rec string_of_token(t: toke): string = 
   match t with
   | StringToken(s) -> s ^ "\n"
-  | StringAndValueToken(s, v) -> s ^ string_of_value v ^ "\n"
+  | StringAndValueToken(s, v) -> s ^ " " ^ string_of_value v ^ "\n"
 
 let string_of_program (tokens : program) =
     "\n\nLexxed program: \n\n" ^

@@ -54,18 +54,6 @@ open Astscanner
 %start program
 %type <Astscanner.program> program
 
-// /* Operator Associativity */
-// %left PLUS MINUS
-// %left TIMES DIVIDE
-// %right ASSIGN
-// %left EQ NEQ
-// %left GT LT
-// %nonassoc GEQ LEQ
-// %nonassoc MAP FILTER
-// %left REDUCE
-// %left AND OR 
-// %right NOT
-
 %%
 
 /* The grammar rules below here are for LILY from the LRM Parser section. */
@@ -141,15 +129,9 @@ token:
   | CHAR      { StringToken("CHAR")}
   | STRING    { StringToken("STRING")}
   /* Literals */
-  // | INT_LIT       { StringAndValueToken("INT_LIT", ValInt($1))}
-  // | FLOAT_LIT     { StringAndValueToken("FLOAT_LIT", ValFloat($1))}
-  // | BOOL_LIT      { StringAndValueToken("BOOL_LIT", ValBool($1))}
-  // | CHAR_LIT      { StringAndValueToken("CHAR_LIT", ValChar($1))}
-  // | STRING_LIT    { StringAndValueToken("STRING_LIT", ValString($1))}
-  // | ID            { StringAndValueToken("ID", ValString($1))}
-  | INT_LIT       { StringToken("INT_LIT")}
-  | FLOAT_LIT     { StringToken("FLOAT_LIT")}
-  | BOOL_LIT      { StringToken("BOOL_LIT")}
-  | CHAR_LIT      { StringToken("CHAR_LIT")}
-  | STRING_LIT    { StringToken("STRING_LIT")}
-  | ID            { StringToken("ID")}
+  | INT_LIT       { StringAndValueToken("INT_LIT", ValInt($1))}
+  | FLOAT_LIT     { StringAndValueToken("FLOAT_LIT", ValFloat($1))}
+  | BOOL_LIT      { StringAndValueToken("BOOL_LIT", ValBool($1))}
+  | CHAR_LIT      { StringAndValueToken("CHAR_LIT", ValChar($1))}
+  | STRING_LIT    { StringAndValueToken("STRING_LIT", ValString($1))}
+  | ID            { StringAndValueToken("ID", ValString($1))}
