@@ -24,14 +24,14 @@ type expr =
   | Call of string * expr list
   | ListExpr of expr list
   | UnaryOp of unary_op * expr
-  | ListLit of expr list  (* Chima New: Represents list literals *)
+  (* | ListLit of expr list  Chima New: Represents list literals *)
   | MethodCall of expr * string * expr list  (* Chima New: Represents method calls on expressions *)
 
 
 (* Statements definition *)
 type stmt =
   Block of stmt list
-  | If of expr * stmt * stmt option  (* Modified: Allow for optional else branch *)
+  | If of expr * stmt * stmt (*option  Modified: Allow for optional else branch *)
   | While of expr * stmt
   | Expr of expr
   | Return of expr
@@ -79,6 +79,7 @@ let rec string_of_expr = function
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
+  | MethodCall(e,s,el) -> string_of_expr e ^ "." ^ s ^ string_of_expr (ListExpr(el))
 
 let string_of_typ = function
     Int -> "int"

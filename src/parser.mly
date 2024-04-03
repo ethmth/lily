@@ -141,16 +141,16 @@ typ:
   | STRING { String }
 
 
-  list_literal:
-  LBRACKET list_elements_opt RBRACKET { ListLit($2) }
+//   list_literal:
+//   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-list_elements_opt:
-  /* nothing */ { [] }
-  | list_elements { $1 }
+// list_elements_opt:
+//   /* nothing */ { [] }
+//   | list_elements { $1 }
 
-list_elements:
-  expression { [$1] }
-  | expression COMMA list_elements { $1 :: $3 }
+// list_elements:
+//   expression { [$1] }
+//   | expression COMMA list_elements { $1 :: $3 }
 
 expression_statement:
   expression { Expr($1) }
