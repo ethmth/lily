@@ -10,7 +10,7 @@ open Ast
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 
 /* Punctuation */
-%token COLON COMMA DECIMAL ARROW
+%token COLON COMMA ARROW
 %token DOT
 
 /* Binary Operators */

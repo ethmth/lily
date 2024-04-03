@@ -23,7 +23,7 @@ rule token = parse
 (* Punctuation *)
 | ':'      { COLON }
 | ','      { COMMA }
-| '.'      { DECIMAL }
+| '.'      { DOT }
 | "->"     { ARROW }
 
 (* Binary Operators *)

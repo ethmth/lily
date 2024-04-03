@@ -1,4 +1,4 @@
-all : lily
+all : test1
 
 lily : ast.ml irgen.ml lily.ml parser.mly sast.ml scanner.mll semant.ml
 	ocamlbuild -pkgs llvm lily.native
