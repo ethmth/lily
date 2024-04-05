@@ -51,6 +51,9 @@ open Ast
 /* Miscellaneous */
 %token EOF
 
+/* New tokens for indentation detection */
+%token NO_TOKEN INDENT DEDENT
+
 %start program
 %type <Ast.program> program
 

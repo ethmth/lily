@@ -2,19 +2,34 @@
 (* Last Edited: April 1, 2024 *)
 (* Ocamllex scanner for LILY *)
 
-{ open Parser }
+{ open Parser
 (* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner } *)
+(* { open Parserscanner *)
+
+let curr_indent = ref 0
+
+let count_indentation ident_str =
+  let curr_indent_old = !curr_indent in
+  let this_indent = (String.length ident_str) in
+  curr_indent := this_indent;
+  if this_indent = curr_indent_old then
+    NO_TOKEN
+  else if this_indent < curr_indent_old then
+    DEDENT
+  else
+    INDENT
+}
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
+let ident = '\t'
 
 rule token = parse
   [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
 
 (* New Line *)
-| '\n' { NEWLINE }
+| '\n' (ident* as ident_str) { count_indentation ident_str }
 
 (* Seperators *)
 | '('      { LPAREN }

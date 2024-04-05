@@ -51,6 +51,9 @@ open Astscanner
 /* Miscellaneous */
 %token EOF
 
+/* New tokens for indentation detection */
+%token NO_TOKEN INDENT DEDENT
+
 %start program
 %type <Astscanner.program> program
 
@@ -135,3 +138,7 @@ token:
   | CHAR_LIT      { StringAndValueToken("CHAR_LIT", ValChar($1))}
   | STRING_LIT    { StringAndValueToken("STRING_LIT", ValString($1))}
   | ID            { StringAndValueToken("ID", ValString($1))}
+  /* NEW TOKENS */
+  | NO_TOKEN      { StringToken("NO_TOKEN")}
+  | DEDENT      { StringToken("DEDENT")}
+  | INDENT    { StringToken("INDENT")}
