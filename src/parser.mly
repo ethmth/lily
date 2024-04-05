@@ -96,10 +96,10 @@ declaration:
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
-  IF LPAREN expression RPAREN COLON statement ELSE COLON statement { If($3, $6, $9) }
+  IF LPAREN expression RPAREN COLON statement ELSE COLON INDENT statement DEDENT { If($3, $6, $10) }
 
 while_loop:
-  WHILE LPAREN expression RPAREN COLON statement { While($3, $6) }
+  WHILE LPAREN expression RPAREN COLON INDENT statement DEDENT { While($3, $7) }
 
 // TODO Implement for loops
 // for_loop:
@@ -107,13 +107,13 @@ while_loop:
 
 // TODO might need to fix this function definition, may have ambiguity with no ending
 function_def:
-  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON statements
+  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON INDENT statements DEDENT
   {
     Fdecl({
       rtyp=$7;
       fname=$2;
       formals=$4;
-      body=$9
+      body=$10
     })
   }
 
