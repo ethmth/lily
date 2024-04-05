@@ -13,7 +13,7 @@ let count_indentation ident_str =
   let this_indent = (String.length ident_str) in
   curr_indent := this_indent;
   if this_indent = curr_indent_old then
-    NO_TOKEN
+    raise (Failure("programmer: check your implementation of count_indentation"))
   else if this_indent < curr_indent_old then
     DEDENT
   else
@@ -29,7 +29,7 @@ rule token = parse
 | "#"     { comment lexbuf }           (* Comments *)
 
 (* New Line *)
-| '\n' (ident* as ident_str) { count_indentation ident_str }
+| '\n' (ident* as ident_str) { if (String.length ident_str = !curr_indent) then token lexbuf else count_indentation ident_str }
 
 (* Seperators *)
 | '('      { LPAREN }
