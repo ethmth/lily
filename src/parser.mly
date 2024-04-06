@@ -82,17 +82,18 @@ statements:
   | statement statements  { $1::$2 }
 
 statement:
-    declaration { $1 }
+    // declaration { $1 }
   | if_statement { $1 }
   | while_loop  { $1 }
   // | for_loop  { $1 }
   | function_def { $1 }
   // | try_statement { $1 }
   | expression_statement { $1 }
+  | RETURN expression { Return($2) }
 
-// TODO Implement adv functionality: Allow for multiple ways of declaration
-declaration: 
-  LET ID COLON typ ASSIGN expression NEWLINE { Decl($4, $2) }
+// TODO Implement declaration: Allow for multiple ways of declaration
+// declaration: 
+//   LET ID COLON typ ASSIGN expression NEWLINE { Decl($4, $2) }
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
@@ -186,6 +187,7 @@ expression:
   | function_call { $1 }
   // | list_declaration { $1 }
   | LPAREN expression RPAREN { $2 } // For grouping and precedence
+  | ID ASSIGN expression {Assign($1, $3)}
 
 function_call:
   ID LPAREN arguments_opt RPAREN { Call($1, $3)}

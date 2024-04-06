@@ -2,4 +2,4 @@
 
 # Printing "Hello, World!" to the console
 
-["Hello","World!"].print(",")
+print("Hello, World!")
