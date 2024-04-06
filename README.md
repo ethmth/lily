@@ -72,13 +72,13 @@ So far, we have begun implementation on the scanner, parser, and AST.
 
 Since our language is indentation-based like python, we've added
 special tokens INDENT and DEDENT that detect increases and decreases in
-tab indentation. The implementation of this scanning is crude and does not
+tab indentation. ~~The implementation of this scanning is crude and does not
 yet allow for multiple DEDENTs at once (for example, ending a function and 
 its nested if statement at once), but works for the limited subset of programs
-we have so far.
+we have so far.~~
 
-More work needs to done on the scanner (see `TODO`s in `scanner.mll`) to parse 
-for multiple DEDENTs, as well as to determine whether NEWLINE tokens are needed.
+~~More work needs to done on the scanner (see `TODO`s in `scanner.mll`) to parse 
+for multiple DEDENTs, as well as to determine whether NEWLINE tokens are needed.~~
 
 We have also implemented a dummy parser `parserscanner.mly` and `astscanner.ml`
 that simply prints out the lexxed tokens for testing and debug purposes.
@@ -86,8 +86,8 @@ that simply prints out the lexxed tokens for testing and debug purposes.
 ### `parser.mly`
 
 Currently, our parser works for a very limited set of sample LILY programs,
-specifically `example.lily` and `hello_world.lily`. Our parser still has 10+
-shift/reduce conflicts that need to be sorted out. The parser also still needs
+specifically `example.lily`, `gcd.lily`, and `hello_world.lily`. ~~Our parser still has 10+
+shift/reduce conflicts that need to be sorted out.~~ The parser still needs
 to implement a lot of LILY functionality that it is currently missing, specifically 
 lists, elifs, for loops, and try statements.
 
@@ -96,9 +96,9 @@ lists, elifs, for loops, and try statements.
 Our AST currently works hand-in-hand with our parser, containing the different 
 expression and statement types as well as useful functions. The same improvements
 that need to be made to our parser need to be made in the corresponding location in
-`ast.ml`
+`ast.ml`. The pretty-printing functions in `ast.ml` must also be updated to use LILY syntax instead of MicroC syntax.
 
 ### Other Files
 
-Currently, all of the other files are taken directly from the MicroC example
+Currently, ~~all~~ most of the other files are taken directly from the MicroC example
 and we do not claim ownership of the code.
