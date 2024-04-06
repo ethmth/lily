@@ -194,6 +194,7 @@ expression:
   | CHAR_LIT { LitChar($1) }
   | FLOAT_LIT { LitFloat($1) }
   | STRING_LIT { LitString($1) }
+  | ID          { Id($1) }
   | expression PLUS expression { Binop($1, Plus,   $3) }
   | expression MINUS expression { Binop($1, Minus,   $3) }
   | expression TIMES expression { Binop($1, Times,   $3) }
