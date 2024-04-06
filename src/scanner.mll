@@ -4,36 +4,32 @@
 
 { open Parser
 (* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner *)
+(* { open Parserscanner  *)
 
-let curr_indent = ref 0
-
-(* TODO: Need to be able to detect MULTIPLE DEDENTATIONs at once (when exiting multiple scopes)*)
-(* TODO: Need to be able to return NEWLINE tokens with INDENT/DEDENT to ensure that simple statements don't have S/R conflicts *)
-(* TODO: Add support for indentation with chars other than tabs? Allow for first line? *)
-let count_indentation ident_str =
-  let curr_indent_old = !curr_indent in
-  let this_indent = (String.length ident_str) in
-  curr_indent := this_indent;
-  if this_indent = curr_indent_old then
-    raise (Failure("programmer: check your implementation of count_indentation"))
-  else if this_indent < curr_indent_old then
-    DEDENT
-  else
-    INDENT
+  let calc_ind_size (ident_str: string) =
+    let cur_size = ref 0 in
+    String.iter (fun c ->
+    if c = '\t' then
+      cur_size := !cur_size + 4
+    else
+      cur_size := !cur_size + 1
+    ) ident_str;
+    (!cur_size / 4)
 }
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let schar = [' ' '!' '#' '$' '%' '&' '(' ')' '*' '+' ',' '-' '.' '/']
-let ident = '\t'
+let ident = "\t" | "    "
 
 rule token = parse
-  [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
+(* New Line (with indentation afterwards) *)
+| ['\n' '\t' ' ' '\r']* '\n' ['\n' '\t' ' ' '\r']* '#' { comment lexbuf }
+| ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(calc_ind_size ident_str) }
+
+| [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
 
-(* New Line *)
-| '\n' (ident* as ident_str) { if (String.length ident_str = !curr_indent) then token lexbuf else count_indentation ident_str }
 
 (* Seperators *)
 | '('      { LPAREN }
@@ -54,6 +50,7 @@ rule token = parse
 | '-'      { MINUS }
 | '*'      { TIMES }
 | '/'      { DIVIDE }
+(* TODO: Add exponent? (**) *)
 
 (* Assignment Operators *)
 | '='      { ASSIGN }
@@ -118,5 +115,7 @@ rule token = parse
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
-  "\n" { token lexbuf }
+  ['\n' '\t' ' ' '\r']* '#' { comment lexbuf }
+| ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(calc_ind_size ident_str) }
+| eof { EOF }
 | _    { comment lexbuf }

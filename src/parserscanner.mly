@@ -52,6 +52,7 @@ open Astscanner
 %token EOF
 
 /* Indentation Tokens */
+%token <int> NEWLINEI
 %token INDENT DEDENT
 
 %start program
@@ -141,3 +142,4 @@ token:
   /* Indentation Tokens */
   | DEDENT      { StringToken("DEDENT")}
   | INDENT    { StringToken("INDENT")}
+  | NEWLINEI     { StringAndValueToken("NEWLINEI", ValInt($1)) }

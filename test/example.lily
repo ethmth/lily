@@ -3,7 +3,10 @@ b = 0
 
 # GCD Function (not really)
 def gcd(a:int, b:int) -> int:
-	return 2
+	if (a == b):
+		return 3
+	else:
+		return 4
 
 def main() -> int:
 	print(gcd(4,5))
