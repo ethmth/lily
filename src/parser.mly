@@ -59,16 +59,16 @@ open Ast
 %type <Ast.program> program
 
 /* Operator Associativity */
+%right ASSIGN
+%left OR
+%left AND
+%left EQ NEQ
+%left GT LT GEQ LEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
-%right ASSIGN
-%left EQ NEQ
-%left GT LT
-%nonassoc GEQ LEQ
+%right NOT
 %nonassoc MAP FILTER
 %left REDUCE
-%left AND OR 
-%right NOT
 
 %%
 
@@ -83,14 +83,20 @@ statements:
   | statement statements  { $1::$2 }
 
 statement:
+    stmt_oneline NEWLINE { $1 }
+  | stmt_multiline { $1 }
+
+stmt_oneline:
     declaration { $1 }
-  | if_statement { $1 }
+  | expression_statement { $1 }
+  | RETURN expression { Return($2) }
+
+stmt_multiline:
+  if_statement { $1 }
   | while_loop  { $1 }
   // | for_loop  { $1 }
   | function_def { $1 }
   // | try_statement { $1 }
-  | expression_statement { $1 }
-  | RETURN expression { Return($2) }
 
 // TODO Implement declaration: Allow for multiple ways of declaration
 declaration: 
@@ -98,24 +104,23 @@ declaration:
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
-  IF LPAREN expression RPAREN COLON statement ELSE COLON INDENT statement DEDENT { If($3, $6, $10) }
+  IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
 
 while_loop:
-  WHILE LPAREN expression RPAREN COLON INDENT statement DEDENT { While($3, $7) }
+  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
 
 // TODO Implement for loops
 // for_loop:
 //   FOR ID IN expression statement
 
-// TODO might need to fix this function definition, may have ambiguity with no ending
 function_def:
-  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON INDENT statements DEDENT
+  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON NEWLINE INDENT statements DEDENT
   {
     Fdecl({
       rtyp=$7;
       fname=$2;
       formals=$4;
-      body=$10
+      body=$11
     })
   }
 
@@ -148,7 +153,7 @@ typ:
   | CHAR  { Char }
   | STRING { String }
 
-
+// TODO: Implement Lists
 //   list_literal:
 //   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 

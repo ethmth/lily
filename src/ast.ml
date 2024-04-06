@@ -31,8 +31,8 @@ type expr =
 (* Statements definition *)
 type stmt =
   Block of stmt list
-  | If of expr * stmt * stmt (*option  Modified: Allow for optional else branch *)
-  | While of expr * stmt
+  | If of expr * stmt list * stmt list (*option  Modified: Allow for optional else branch *)
+  | While of expr * stmt list
   | Expr of expr
   | Return of expr
   | Decl of typ * string
@@ -88,12 +88,15 @@ let string_of_typ = function
   | Float -> "float"
   | String -> "string"
 
-let rec string_of_stmt = function
+let rec string_of_stmt_list (stmts: stmt list) = 
+  String.concat "" (List.map string_of_stmt stmts)
+
+and string_of_stmt = function
     Block(stmts) -> "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
-  | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
-  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+  | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s1 ^ "else\n" ^ string_of_stmt_list s2
+  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s
   | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
   | Fdecl(f) -> string_of_fdecl f
 
@@ -112,4 +115,4 @@ and string_of_fdecl fdecl =
 
   let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
-    String.concat "" (List.map string_of_stmt stmts)
+    string_of_stmt_list stmts

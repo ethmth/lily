@@ -5,6 +5,8 @@ b = 0
 def gcd(a:int, b:int) -> int:
 	if a == b:
 		return 3
+	else:
+		return 4
 
 def main() -> int:
 	print(gcd(4,5))
