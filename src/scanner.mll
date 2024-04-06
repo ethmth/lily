@@ -13,6 +13,7 @@ let ident = '\t'
 
 rule token = parse
 (* New Line (with indentation afterwards) *)
+| ['\n' '\t' ' ' '\r']* '\n' ['\n' '\t' ' ' '\r']* '#' { comment lexbuf }
 | ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(String.length ident_str) }
 
 | [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
@@ -102,5 +103,6 @@ rule token = parse
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
-  "\n" { token lexbuf }
+  ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(String.length ident_str) }
+| eof { EOF }
 | _    { comment lexbuf }

@@ -31,25 +31,39 @@ let process_newline (this_indent: int) (queue) (curr_indent)=
   else
     queue_add_indent (this_indent - curr_indent_old) queue
 
+let process_eof (queue) (curr_indent) (last_token) =
+  if ((queue_add_dedent (!curr_indent) queue) = NEWLINE) then
+    queue := !queue @ [EOF];
+    if (!last_token = NEWLINE) then
+      match !queue with
+      | h::t -> queue := t; h
+      | [] -> EOF
+    else
+      NEWLINE
+
 let tokenize =
   let queue = ref [] in
   let curr_indent = ref 0 in
   let first_line = ref true in
+  let last_token = ref NEWLINE in
   fun (lexbuf: Lexing.lexbuf) ->
     match !queue with
     | h::t -> queue := t; h
     | [] ->
       let stokens = Scanner.token lexbuf in 
       match stokens with
-      | NEWLINEI(x) -> if !first_line then 
+      | NEWLINEI(x) -> last_token := 
+            (if !first_line then 
               (first_line := false; NEWLINE) else
               (* if (x > 0) then raise(Failure("Tokenize Failure: First line cannot be indented."))); *)
-            process_newline x queue curr_indent
-      | _ -> if !first_line then 
+            process_newline x queue curr_indent); !last_token
+      | EOF -> process_eof queue curr_indent last_token
+      | _ -> last_token := 
+            (if !first_line then 
               (first_line := false;
                queue := !queue @ [stokens]; 
                NEWLINE) 
-            else stokens
+            else stokens); !last_token
 
 (* let lexbuf_insert_newline =
   let first_line_read = ref true in

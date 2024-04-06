@@ -76,7 +76,7 @@ open Ast
 
 /* add function declarations*/
 program:
-  statements EOF { $1 }
+  NEWLINE statements EOF { $1 }
 
 statements:
   /* nothing */ { [] }

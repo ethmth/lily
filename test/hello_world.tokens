@@ -1,0 +1,11 @@
+
+
+Lexxed program: 
+
+NEWLINE
+NEWLINE
+ID print
+LPAREN
+STRING_LIT Hello, World!
+RPAREN
+
