@@ -1,6 +1,6 @@
-(* open Parser *)
+open Parser
 (* UNCOMMENT THIS FOR test0: *)
-open Parserscanner
+(* open Parserscanner *)
 
 let print_queue (queue) =
   let rec print_queue_helper (q) =

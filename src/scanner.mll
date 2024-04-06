@@ -2,9 +2,9 @@
 (* Last Edited: April 1, 2024 *)
 (* Ocamllex scanner for LILY *)
 
-(* { open Parser } *)
+{ open Parser }
 (* UNCOMMENT THIS FOR test0: *)
-{ open Parserscanner }
+(* { open Parserscanner } *)
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
