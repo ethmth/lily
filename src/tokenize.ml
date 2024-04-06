@@ -1,6 +1,6 @@
-open Parser
+(* open Parser *)
 (* UNCOMMENT THIS FOR test0: *)
-(* open Parserscanner *)
+open Parserscanner
 
 let print_queue (queue) =
   let rec print_queue_helper (q) =
@@ -34,11 +34,26 @@ let process_newline (this_indent: int) (queue) (curr_indent)=
 let tokenize =
   let queue = ref [] in
   let curr_indent = ref 0 in
+  let first_line = ref true in
   fun (lexbuf: Lexing.lexbuf) ->
     match !queue with
     | h::t -> queue := t; h
     | [] ->
-      let stokens = Scanner.token lexbuf
-      in match stokens with
-      | NEWLINEI(x) -> process_newline x queue curr_indent
-      | _ -> stokens
+      let stokens = Scanner.token lexbuf in 
+      match stokens with
+      | NEWLINEI(x) -> if !first_line then 
+              (first_line := false; NEWLINE) else
+              (* if (x > 0) then raise(Failure("Tokenize Failure: First line cannot be indented."))); *)
+            process_newline x queue curr_indent
+      | _ -> if !first_line then 
+              (first_line := false;
+               queue := !queue @ [stokens]; 
+               NEWLINE) 
+            else stokens
+
+(* let lexbuf_insert_newline =
+  let first_line_read = ref true in
+  if !first_line_read then 
+    (first_line_read := false; Lexing.from_string "\n") 
+  else
+    (Lexing.from_channel stdin) *)

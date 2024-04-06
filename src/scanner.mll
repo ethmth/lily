@@ -2,9 +2,9 @@
 (* Last Edited: April 1, 2024 *)
 (* Ocamllex scanner for LILY *)
 
-{ open Parser }
+(* { open Parser } *)
 (* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner } *)
+{ open Parserscanner }
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
@@ -12,11 +12,12 @@ let schar = [' ' '!' '#' '$' '%' '&' '(' ')' '*' '+' ',' '-' '.' '/']
 let ident = '\t'
 
 rule token = parse
-  [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
+(* New Line (with indentation afterwards) *)
+| ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(String.length ident_str) }
+
+| [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
 
-(* New Line (with indentation afterwards) *)
-| '\n' (ident* as ident_str) { NEWLINEI(String.length ident_str) }
 
 (* Seperators *)
 | '('      { LPAREN }
