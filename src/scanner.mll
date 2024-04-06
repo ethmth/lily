@@ -115,6 +115,7 @@ rule token = parse
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
-  ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(calc_ind_size ident_str) }
+  ['\n' '\t' ' ' '\r']* '#' { comment lexbuf }
+| ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(calc_ind_size ident_str) }
 | eof { EOF }
 | _    { comment lexbuf }
