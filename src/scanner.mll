@@ -2,19 +2,30 @@
 (* Last Edited: April 1, 2024 *)
 (* Ocamllex scanner for LILY *)
 
-{ open Parser }
+{ open Parser
 (* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner } *)
+(* { open Parserscanner  *)
+
+  let calc_ind_size (ident_str: string) =
+    let cur_size = ref 0 in
+    String.iter (fun c ->
+    if c = '\t' then
+      cur_size := !cur_size + 4
+    else
+      cur_size := !cur_size + 1
+    ) ident_str;
+    (!cur_size / 4)
+}
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let schar = [' ' '!' '#' '$' '%' '&' '(' ')' '*' '+' ',' '-' '.' '/']
-let ident = '\t'
+let ident = "\t" | "    "
 
 rule token = parse
 (* New Line (with indentation afterwards) *)
 | ['\n' '\t' ' ' '\r']* '\n' ['\n' '\t' ' ' '\r']* '#' { comment lexbuf }
-| ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(String.length ident_str) }
+| ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(calc_ind_size ident_str) }
 
 | [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
@@ -103,6 +114,6 @@ rule token = parse
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment = parse
-  ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(String.length ident_str) }
+  ['\n' '\t' ' ' '\r']* '\n' (ident* as ident_str) { NEWLINEI(calc_ind_size ident_str) }
 | eof { EOF }
 | _    { comment lexbuf }
