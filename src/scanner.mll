@@ -2,16 +2,16 @@
 (* Last Edited: April 1, 2024 *)
 (* Ocamllex scanner for LILY *)
 
-{ open Parser
+(* { open Parser *)
 (* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner *)
+{ open Parserscanner
 
-let curr_indent = ref 0
+(* let curr_indent = ref 0 *)
 
 (* TODO: Need to be able to detect MULTIPLE DEDENTATIONs at once (when exiting multiple scopes)*)
 (* TODO: Need to be able to return NEWLINE tokens with INDENT/DEDENT to ensure that simple statements don't have S/R conflicts *)
 (* TODO: Add support for indentation with chars other than tabs? Allow for first line? *)
-let count_indentation ident_str =
+(* let count_indentation ident_str =
   let curr_indent_old = !curr_indent in
   let this_indent = (String.length ident_str) in
   curr_indent := this_indent;
@@ -20,7 +20,7 @@ let count_indentation ident_str =
   else if this_indent < curr_indent_old then
     DEDENT
   else
-    INDENT
+    INDENT *)
 }
 
 let digit = ['0'-'9']
@@ -33,7 +33,8 @@ rule token = parse
 | "#"     { comment lexbuf }           (* Comments *)
 
 (* New Line *)
-| '\n' (ident* as ident_str) { if (String.length ident_str = !curr_indent) then token lexbuf else count_indentation ident_str }
+(* | '\n' (ident* as ident_str) { if (String.length ident_str = !curr_indent) then token lexbuf else count_indentation ident_str } *)
+| '\n' { NEWLINE }
 
 (* Seperators *)
 | '('      { LPAREN }

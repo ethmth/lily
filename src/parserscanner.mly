@@ -8,6 +8,7 @@ open Astscanner
 
 /* New Line */
 %token NEWLINE
+%token <int> NEWLINEI
 
 /* Seperators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
