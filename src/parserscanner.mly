@@ -8,7 +8,6 @@ open Astscanner
 
 /* New Line */
 %token NEWLINE
-%token <int> NEWLINEI
 
 /* Seperators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
@@ -53,6 +52,7 @@ open Astscanner
 %token EOF
 
 /* Indentation Tokens */
+%token <int> NEWLINEI
 %token INDENT DEDENT
 
 %start program
@@ -142,3 +142,4 @@ token:
   /* Indentation Tokens */
   | DEDENT      { StringToken("DEDENT")}
   | INDENT    { StringToken("INDENT")}
+  | NEWLINE     { StringAndValueToken("NEWLINEI", ValInt($1)) }

@@ -52,6 +52,7 @@ open Ast
 %token EOF
 
 /* Indentation Tokens */
+%token <int> NEWLINEI
 %token INDENT DEDENT
 
 %start program
