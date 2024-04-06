@@ -142,4 +142,4 @@ token:
   /* Indentation Tokens */
   | DEDENT      { StringToken("DEDENT")}
   | INDENT    { StringToken("INDENT")}
-  | NEWLINE     { StringAndValueToken("NEWLINEI", ValInt($1)) }
+  | NEWLINEI     { StringAndValueToken("NEWLINEI", ValInt($1)) }
