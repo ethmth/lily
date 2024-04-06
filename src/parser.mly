@@ -74,7 +74,6 @@ open Ast
 
 /* The grammar rules below here are for LILY from the LRM Parser section. */
 
-/* add function declarations*/
 program:
   NEWLINE statements EOF { $2 }
 
@@ -83,35 +82,40 @@ statements:
   | statement statements  { $1::$2 }
 
 statement:
-    stmt_oneline NEWLINE { $1 }
-  | stmt_multiline { $1 }
+    stmt_simple NEWLINE { $1 }  // one-line statements
+  | stmt_compound { $1 }        // multi-line "block" statements
 
-stmt_oneline:
+stmt_simple:
     declaration { $1 }
+  | assignment { $1 }
   | expression_statement { $1 }
-  | RETURN expression { Return($2) }
+  | return_statement { $1 }
+  // | BREAK
+  // | CONTINUE
 
-stmt_multiline:
-  if_statement { $1 }
-  | while_loop  { $1 }
-  // | for_loop  { $1 }
+stmt_compound:
   | function_def { $1 }
+  | if_statement { $1 }
+  // | for_loop  { $1 }
   // | try_statement { $1 }
+  | while_loop  { $1 }
+
+/* stmt_simple */
 
 // TODO Implement declaration: Allow for multiple ways of declaration
 declaration: 
-  LET ID COLON typ ASSIGN expression { Decl($4, $2) }
+  LET ID COLON typ ASSIGN expression_statement { Decl($4, $2) }
 
-// TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
-if_statement:
-  IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
+assignment:
+  | ID ASSIGN expression_statement {Assign($1, $3)}
 
-while_loop:
-  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
+return_statement:
+  | RETURN expression_statement { Return($2) }
 
-// TODO Implement for loops
-// for_loop:
-//   FOR ID IN expression statement
+expression_statement:
+  expression { Expr($1) }
+
+/* stmt_compound */
 
 function_def:
   DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON NEWLINE INDENT statements DEDENT
@@ -129,9 +133,19 @@ parameters_opt:
   | parameters { $1 }
 
 parameters:
-  vdecl  { [$1] }
-  | vdecl COMMA parameters { $1::$3 }
+  id_with_type  { [$1] }
+  | id_with_type COMMA parameters { $1::$3 }
 
+id_with_type:
+  ID COLON typ { ($3, $1) }
+
+// TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
+if_statement:
+  IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
+
+// TODO Implement for loops
+// for_loop:
+//   FOR ID IN expression statement
 
 // TODO Implement try statements
 // try_statement:
@@ -145,6 +159,12 @@ parameters:
 
 // finally_clause:
 //   FINALLY COLON statements
+
+while_loop:
+  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
+
+
+/* Types */
 
 typ:
     INT   { Int   }
@@ -165,11 +185,10 @@ typ:
 //   expression { [$1] }
 //   | expression COMMA list_elements { $1 :: $3 }
 
-expression_statement:
-  expression { Expr($1) }
+
+/* Expressions */
 
 expression:
-  /* From LRM: expression ('+' | '-' | '*' | '/') expression */ 
   INT_LIT { LitInt($1) }
   | BOOL_LIT { LitBool($1) }
   | CHAR_LIT { LitChar($1) }
@@ -177,7 +196,7 @@ expression:
   | STRING_LIT { LitString($1) }
   | expression PLUS expression { Binop($1, Plus,   $3) }
 
-  | expression DOT ID LPAREN arguments_opt RPAREN { MethodCall($1, $3, $5) }
+  // | expression DOT ID LPAREN arguments_opt RPAREN { MethodCall($1, $3, $5) }
 
   | expression MINUS expression { Binop($1, Minus,   $3) }
   | expression TIMES expression { Binop($1, Times,   $3) }
@@ -193,7 +212,6 @@ expression:
   | function_call { $1 }
   // | list_declaration { $1 }
   | LPAREN expression RPAREN { $2 } // For grouping and precedence
-  | ID ASSIGN expression {Assign($1, $3)}
 
 function_call:
   ID LPAREN arguments_opt RPAREN { Call($1, $3)}
@@ -206,8 +224,6 @@ arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
 
-vdecl:
-  ID COLON typ { ($3, $1) }
 
 // TODO: Implement List Declaration
 // list_declaration:

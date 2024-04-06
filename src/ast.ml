@@ -20,7 +20,6 @@ type expr =
   | LitString of string
   | Id of string
   | Binop of expr * op * expr
-  | Assign of string * expr
   | Call of string * expr list
   | ListExpr of expr list
   | UnaryOp of unary_op * expr
@@ -30,13 +29,14 @@ type expr =
 
 (* Statements definition *)
 type stmt =
-  Block of stmt list
+  (* Block of stmt list *)
   | If of expr * stmt list * stmt list (*option  Modified: Allow for optional else branch *)
   | While of expr * stmt list
   | Expr of expr
-  | Return of expr
+  | Return of stmt
   | Decl of typ * string
   | Fdecl of fdecl
+  | Assign of string * stmt
 
 (* Function declaration type *)
 and fdecl = {
@@ -75,7 +75,6 @@ let rec string_of_expr = function
   | LitString(s) -> s
   | Id(s) -> s
   | Binop(e1, o, e2) -> string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
@@ -92,13 +91,14 @@ let rec string_of_stmt_list (stmts: stmt list) =
   String.concat "" (List.map string_of_stmt stmts)
 
 and string_of_stmt = function
-    Block(stmts) -> "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n"
-  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+  | Return(expr) -> "return " ^ string_of_stmt expr ^ ";\n"
   | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s1 ^ "else\n" ^ string_of_stmt_list s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s
   | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
   | Fdecl(f) -> string_of_fdecl f
+  | Assign(v, e) -> v ^ " = " ^ string_of_stmt e
+
 
 (* let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n" *)
 

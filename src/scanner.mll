@@ -50,6 +50,7 @@ rule token = parse
 | '-'      { MINUS }
 | '*'      { TIMES }
 | '/'      { DIVIDE }
+(* TODO: Add exponent? (**) *)
 
 (* Assignment Operators *)
 | '='      { ASSIGN }
