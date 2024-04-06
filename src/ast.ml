@@ -29,7 +29,6 @@ type expr =
 
 (* Statements definition *)
 type stmt =
-  (* Block of stmt list *)
   | If of expr * stmt list * stmt list (*option  Modified: Allow for optional else branch *)
   | While of expr * stmt list
   | Expr of expr
@@ -42,13 +41,11 @@ type stmt =
 and fdecl = {
   rtyp: typ;
   fname: string;
-  formals: bind list;
-  (* locals: (typ * string) list; *) (* TODO Not sure if we're using locals?*)
-  body: stmt list;
+  parameters: bind list;
+  stmts: stmt list;
 }
 
 (* Program type, consisting of variable declarations and functions *)
-(* type program = (typ * string) list * fdecl list *)
 type program = stmt list
 
 (* Pretty-printing functions *)
@@ -99,20 +96,10 @@ and string_of_stmt = function
   | Fdecl(f) -> string_of_fdecl f
   | Assign(v, e) -> v ^ " = " ^ string_of_stmt e
 
-
-(* let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n" *)
-
 and string_of_fdecl fdecl =
   string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ 
-  String.concat ", " (List.map (fun (t, id) -> string_of_typ t ^ " " ^ id) fdecl.formals) ^ ")\n{\n" ^
-  (* String.concat "" (List.map string_of_vdecl fdecl.locals) ^ *) (*TODO Not sure if we're using locals?*)
-  String.concat "" (List.map string_of_stmt fdecl.body) ^ "}\n"
-
-(* let string_of_program (vars, funcs) =
-  "\n\nParsed program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^
-  String.concat "\n" (List.map string_of_fdecl funcs) *)
-
-  let string_of_program (stmts : stmt list) =
+  String.concat ", " (List.map (fun (t, id) -> string_of_typ t ^ " " ^ id) fdecl.parameters) ^ ")\n{\n" ^
+  String.concat "" (List.map string_of_stmt fdecl.stmts) ^ "}\n"
+let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
     string_of_stmt_list stmts
