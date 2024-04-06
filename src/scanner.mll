@@ -8,6 +8,9 @@
 
 let curr_indent = ref 0
 
+(* TODO: Need to be able to detect MULTIPLE DEDENTATIONs at once (when exiting multiple scopes)*)
+(* TODO: Need to be able to return NEWLINE tokens with INDENT/DEDENT to ensure that simple statements don't have S/R conflicts *)
+(* TODO: Add support for indentation with chars other than tabs? Allow for first line? *)
 let count_indentation ident_str =
   let curr_indent_old = !curr_indent in
   let this_indent = (String.length ident_str) in
@@ -22,6 +25,7 @@ let count_indentation ident_str =
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
+let schar = [' ' '!' '#' '$' '%' '&' '(' ')' '*' '+' ',' '-' '.' '/']
 let ident = '\t'
 
 rule token = parse
@@ -105,8 +109,8 @@ rule token = parse
 | "False"  { BOOL_LIT(false) }
 | digit+ as lem  { INT_LIT(int_of_string lem) }
 | digit+ '.' digit+ as lem { FLOAT_LIT(float_of_string lem) }
-| '\'' (alpha | digit) '\'' as lem { CHAR_LIT(lem.[0]) }
-| '\"' ((alpha | digit)* as lem) '\"' { STRING_LIT(lem) }
+| '\'' (alpha | digit | schar) '\'' as lem { CHAR_LIT(lem.[0]) }
+| '\"' ((alpha | digit | schar)* as lem) '\"' { STRING_LIT(lem) }
 | alpha (alpha | digit | '_')* as lem { ID(lem) }
 
 (* Miscellaneous *)
