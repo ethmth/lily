@@ -1,4 +1,4 @@
-a = 0
+let a:int = 0
 b = 0
 
 # GCD Function (not really)

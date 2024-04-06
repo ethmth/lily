@@ -82,7 +82,7 @@ statements:
   | statement statements  { $1::$2 }
 
 statement:
-    // declaration { $1 }
+    declaration { $1 }
   | if_statement { $1 }
   | while_loop  { $1 }
   // | for_loop  { $1 }
@@ -92,8 +92,8 @@ statement:
   | RETURN expression { Return($2) }
 
 // TODO Implement declaration: Allow for multiple ways of declaration
-// declaration: 
-//   LET ID COLON typ ASSIGN expression NEWLINE { Decl($4, $2) }
+declaration: 
+  LET ID COLON typ ASSIGN expression { Decl($4, $2) }
 
 // TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
