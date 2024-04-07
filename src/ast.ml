@@ -48,6 +48,8 @@ and fdecl = {
 (* Program type, consisting of variable declarations and functions *)
 type program = stmt list
 
+(* TODO (Ethan) Fix pretty printing questions *)
+
 (* Pretty-printing functions *)
 let string_of_op = function
   Plus -> "+" 

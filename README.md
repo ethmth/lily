@@ -4,6 +4,18 @@ LILY (Lightweight Integrated List Syntax), is a Programming Language implemented
 
 Currently, the programming language implementation can be found in the `src/` directory, and examples can be found in the `test/` directory.
 
+## Todo by 04/14
+
+Things that need done for the parser:
+
+- For Loops - Michaela
+- Try statements - Tani
+- Lists/List declarations - Chima
+- Elifs and Ifs without Else statements - Michaela
+- Fix declarations to be possible without assignment? Include assignment in declaration - Ethan
+- Update pretty print functions in ast.ml to use LILY syntax - Ethan
+- Parse functional operators - Jay
+
 
 ## Team Members
 

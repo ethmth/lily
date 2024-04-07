@@ -102,7 +102,7 @@ stmt_compound:
 
 /* stmt_simple */
 
-// TODO Implement declaration: Allow for multiple ways of declaration
+// TODO (Ethan) Implement declaration: Allow for multiple ways of declaration
 declaration: 
   LET ID COLON typ ASSIGN expression_statement { Decl($4, $2) }
 
@@ -139,15 +139,15 @@ parameters:
 binding:
   ID COLON typ { ($3, $1) }
 
-// TODO Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
+// TODO (Michaela) Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
 if_statement:
   IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
 
-// TODO Implement for loops
+// TODO (Michaela) Implement for loops
 // for_loop:
 //   FOR ID IN expression statement
 
-// TODO Implement try statements
+// TODO (Tani) Implement try statements
 // try_statement:
 //   TRY COLON statements catch_clauses
 
@@ -173,7 +173,7 @@ typ:
   | CHAR  { Char }
   | STRING { String }
 
-// TODO: Implement Lists
+// TODO: (Chima) Implement Lists
 //   list_literal:
 //   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
@@ -223,7 +223,7 @@ arguments:
   | expression COMMA arguments { $1::$3 }
 
 
-// TODO: Implement List Declaration
+// TODO: (Chima) Implement List Declaration
 // list_declaration:
 //   LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE {}
 
@@ -234,3 +234,6 @@ arguments:
 // elements:
 //   expression  { [$1] }
 //   | expression COMMA elements { $1::$3 }
+
+
+// TODO (Jay): Parse functional/list operators
