@@ -82,7 +82,7 @@ rule token = parse
 | "elif"     { ELIF }
 | "for"      { FOR }
 | "try"      { TRY }
-| "catch"    { CATCH }
+| "except"    { EXCEPT }
 | "while"    { WHILE }
 | "finally"  { FINALLY }
 | "break"    { BREAK }

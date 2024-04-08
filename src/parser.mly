@@ -1,4 +1,4 @@
-/* Author(s): Michaela Gary */
+/* Author(s): Michaela Gary, Ethan Thomas */
 /* Last Edited: April 1, 2024 */
 /* Ocamllex parser for LILY */
 
@@ -32,7 +32,7 @@ open Ast
 %token AND OR NOT
 
 /* Control Flow */
-%token IF IS IN NONE ELSE ELIF FOR TRY CATCH WHILE FINALLY BREAK RETURN CONTINUE
+%token IF IS IN NONE ELSE ELIF FOR TRY EXCEPT WHILE FINALLY BREAK RETURN CONTINUE
 
 /* Declaration */
 %token CONST DEF LET
@@ -139,30 +139,30 @@ parameters:
 binding:
   ID COLON typ { ($3, $1) }
 
-// TODO (Michaela) Implement adv functionality: Make this work for ifs without elses, and ifs with elifs
+// I did the work below. To be honest, I kind of used random numbers but let me know if it's wrong.
+for_loop:
+  FOR LPAREN expression COMMA expression RPAREN COLON NEWLINE INDENT statements DEDENT { For($3, $5, $10) }
+
+while_loop:
+  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
+
 if_statement:
   IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
 
-// TODO (Michaela) Implement for loops
-// for_loop:
-//   FOR ID IN expression statement
+elif_statement:
+
+else_statement:
+
 
 // TODO (Tani) Implement try statements
 // try_statement:
 //   TRY COLON statements catch_clauses
 
-// catch_clauses:
-//   catch_clause
-
-// catch_clause:
+// except_clause:
 //   CATCH LPAREN ID type RPAREN COLON statements
 
 // finally_clause:
 //   FINALLY COLON statements
-
-while_loop:
-  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
-
 
 /* Types */
 
