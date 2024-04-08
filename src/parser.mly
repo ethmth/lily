@@ -95,10 +95,12 @@ stmt_simple:
 
 stmt_compound:
   | function_def { $1 }
-  | if_statement { $1 }
   | for_loop  { $1 }
-  // | try_statement { $1 }
   | while_loop  { $1 }
+  | if_statement { $1 }
+  | elif_statement { $1 }
+  | else_statement { $1 }
+  // | try_statement { $1 }
 
 /* stmt_simple */
 
@@ -139,7 +141,7 @@ parameters:
 binding:
   ID COLON typ { ($3, $1) }
 
-// I did the work below. To be honest, I kind of used random numbers but let me know if it's wrong.
+// I did the work below. Let me know if the numbers I used are wrong. -- Michaela
 for_loop:
   FOR LPAREN expression COMMA expression RPAREN COLON NEWLINE INDENT statements DEDENT { For($3, $5, $10) }
 
@@ -147,13 +149,13 @@ while_loop:
   WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
 
 if_statement:
-  IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
+  IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { If($3, $8) }
 
 elif_statement:
-   /*TODO*/ { [] }
+  ELIF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { Elif($3, $8) }
 
 else_statement:
-   /*TODO*/ { [] }
+  ELSE COLON NEWLINE INDENT statements DEDENT { Else($4) }
 
 // TODO (Tani) Implement try statements
 // try_statement:
