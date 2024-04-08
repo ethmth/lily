@@ -141,7 +141,6 @@ parameters:
 binding:
   ID COLON typ { ($3, $1) }
 
-// I did the work below. Let me know if the numbers I used are wrong. -- Michaela
 for_loop:
   FOR LPAREN expression COMMA expression RPAREN COLON NEWLINE INDENT statements DEDENT { For($3, $5, $10) }
 
@@ -155,7 +154,7 @@ elif_statement:
   ELIF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { Elif($3, $8) }
 
 else_statement:
-  ELSE COLON NEWLINE INDENT statements DEDENT { Else($4) }
+  ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
 // try_statement:

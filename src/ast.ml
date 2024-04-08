@@ -29,7 +29,9 @@ type expr =
 
 (* Statements definition *)
 type stmt =
-  | If of expr * stmt list * stmt list (*option  Modified: Allow for optional else branch *)
+  | If of expr * stmt list
+  | Elif of expr * stmt list
+  | Else  of stmt list
   | While of expr * stmt list
   | For of expr * expr * stmt list
   | Expr of expr
@@ -93,7 +95,9 @@ let rec string_of_stmt_list (stmts: stmt list) =
 and string_of_stmt = function
   | Expr(expr) -> string_of_expr expr ^ ";\n"
   | Return(expr) -> "return " ^ string_of_stmt expr ^ ";\n"
-  | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s1 ^ "else\n" ^ string_of_stmt_list s2
+  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s
+  | Elif(e, s) -> "elif (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s
+  | Else(s) -> "else\n" ^ string_of_stmt_list s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s
   | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^string_of_stmt_list s
   | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
