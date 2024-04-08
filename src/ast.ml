@@ -31,6 +31,7 @@ type expr =
 type stmt =
   | If of expr * stmt list * stmt list (*option  Modified: Allow for optional else branch *)
   | While of expr * stmt list
+  | For of expr * expr * stmt list
   | Expr of expr
   | Return of stmt
   | Decl of typ * string
@@ -94,6 +95,7 @@ and string_of_stmt = function
   | Return(expr) -> "return " ^ string_of_stmt expr ^ ";\n"
   | If(e, s1, s2) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s1 ^ "else\n" ^ string_of_stmt_list s2
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s
+  | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^string_of_stmt_list s
   | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
   | Fdecl(f) -> string_of_fdecl f
   | Assign(v, e) -> v ^ " = " ^ string_of_stmt e

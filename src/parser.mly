@@ -96,7 +96,7 @@ stmt_simple:
 stmt_compound:
   | function_def { $1 }
   | if_statement { $1 }
-  // | for_loop  { $1 }
+  | for_loop  { $1 }
   // | try_statement { $1 }
   | while_loop  { $1 }
 
@@ -150,9 +150,10 @@ if_statement:
   IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT { If($3, $8, $14) }
 
 elif_statement:
+   /*TODO*/ { [] }
 
 else_statement:
-
+   /*TODO*/ { [] }
 
 // TODO (Tani) Implement try statements
 // try_statement:
