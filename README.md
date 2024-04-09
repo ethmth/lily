@@ -8,10 +8,8 @@ Currently, the programming language implementation can be found in the `src/` di
 
 Things that need done for the parser:
 
-- For Loops - Michaela
 - Try statements - Tani
 - Lists/List declarations - Chima
-- Elifs and Ifs without Else statements - Michaela
 - Fix declarations to be possible without assignment? Include assignment in declaration - Ethan
 - Update pretty print functions in ast.ml to use LILY syntax - Ethan
 - Parse functional operators - Jay
