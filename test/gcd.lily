@@ -1,6 +1,6 @@
 # The GCD algorithm in LILY
-let a : int = 0
-let b : int = 0
+let a : int
+let b : int
 
 # GCD Function
 def gcd(a:int, b:int) -> int:

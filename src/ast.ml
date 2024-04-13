@@ -82,8 +82,8 @@ let rec string_of_expr = function
     LitInt(l) -> string_of_int l
   | LitBool(b) -> string_of_bool b
   | LitFloat(f) -> string_of_float(f)
-  | LitChar(c) -> String.make 1 c
-  | LitString(s) -> s
+  | LitChar(c) -> "\'" ^ String.make 1 c ^ "\'"
+  | LitString(s) -> "\"" ^ s ^ "\""
   | Id(s) -> s
   | Binop(e1, o, e2) -> string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
@@ -104,21 +104,23 @@ let rec string_of_stmt_list (stmts: stmt list) (curr_indent) =
 and string_of_stmt (stmt) (curr_indent) = 
   string_of_indent curr_indent ^
   match stmt with
-  | ExprStmt(expr) -> string_of_expr expr ^ ";\n"
-  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
-  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s (curr_indent + 1)
-  | Elif(e, s) -> "elif (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s (curr_indent + 1)
-  | Else(s) -> "else\n" ^ string_of_stmt_list s (curr_indent + 1)
-  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s (curr_indent + 1)
-  | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^string_of_stmt_list s (curr_indent + 1)
-  | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
-  | Fdecl(f) -> string_of_fdecl f (curr_indent + 1)
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | ExprStmt(expr) -> string_of_expr expr ^ "\n"
+  | Return(expr) -> "return " ^ string_of_expr expr ^ "\n"
+  | If(e, s) -> "if (" ^ string_of_expr e ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | Elif(e, s) -> "elif (" ^ string_of_expr e ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | Else(s) -> "else:\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | While(e, s) -> "while (" ^ string_of_expr e ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
+  | Fdecl(f) -> string_of_fdecl f (curr_indent)
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
 
 and string_of_fdecl fdecl curr_indent =
-  string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ 
-  String.concat ", " (List.map (fun (t, id) -> string_of_typ t ^ " " ^ id) fdecl.parameters) ^ ")\n{\n" ^
-  String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) fdecl.stmts) ^ "}\n"
+  "def " ^ fdecl.fname ^ "(" ^ 
+  String.concat ", " (List.map (fun (t, id) ->  id ^ " : " ^ string_of_typ t) fdecl.parameters) ^ 
+  ")" ^ " -> " ^ string_of_typ fdecl.rtyp ^ ":" ^ "\n" ^
+  String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt (curr_indent + 1)) fdecl.stmts)
+  ^ "\n"
 
 let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
