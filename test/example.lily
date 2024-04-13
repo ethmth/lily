@@ -1,5 +1,7 @@
 let a:int
-b = 0
+let b:int = 0
+let c
+let d = 5
 
 # GCD Function (not really)
 def gcd(a:int, b:int) -> int:
