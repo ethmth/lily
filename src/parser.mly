@@ -108,6 +108,8 @@ stmt_compound:
 declaration: 
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
+  | LET ID ASSIGN expression { IDeclAssign($2, $4) }
+  | LET ID { IDecl($2) }
 
 assignment:
   | ID ASSIGN expression {Assign($1, $3)}

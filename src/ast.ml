@@ -38,6 +38,8 @@ type stmt =
   | Return of expr
   | Decl of typ * string
   | DeclAssign of typ * string * expr
+  | IDecl of string
+  | IDeclAssign of string * expr
   | Fdecl of fdecl
   | Assign of string * expr
 
@@ -114,6 +116,8 @@ and string_of_stmt (stmt) (curr_indent) =
   | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1)
   | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | DeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e ^ "\n"
+  | IDecl(s) -> "let " ^ s ^ "\n"
+  | IDeclAssign(s, e) -> "let " ^ s ^ " = " ^ string_of_expr e ^ "\n"
   | Fdecl(f) -> string_of_fdecl f (curr_indent)
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
 
