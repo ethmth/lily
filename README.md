@@ -11,7 +11,7 @@ Things that need done for the parser:
 - Try statements - Tani
 - Lists/List declarations - Chima
 - Fix declarations to be possible without assignment? Include assignment in declaration - Ethan
-- Update pretty print functions in ast.ml to use LILY syntax - Ethan
+~~- Update pretty print functions in ast.ml to use LILY syntax - Ethan~~
 - Parse functional operators - Jay
 
 
