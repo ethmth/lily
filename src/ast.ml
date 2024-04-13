@@ -34,11 +34,11 @@ type stmt =
   | Else  of stmt list
   | While of expr * stmt list
   | For of expr * expr * stmt list
-  | Expr of expr
-  | Return of stmt
+  | ExprStmt of expr
+  | Return of expr
   | Decl of typ * string
   | Fdecl of fdecl
-  | Assign of string * stmt
+  | Assign of string * expr
 
 (* Function declaration type *)
 and fdecl = {
@@ -54,6 +54,15 @@ type program = stmt list
 (* TODO (Ethan) Fix pretty printing questions *)
 
 (* Pretty-printing functions *)
+let string_of_indent (curr_indent) =
+  let rec append_tab indent_left =
+    if indent_left <= 0 then 
+      ""
+    else
+      "    " ^ append_tab (indent_left - 1)
+  in
+  append_tab curr_indent
+
 let string_of_op = function
   Plus -> "+" 
   | Minus -> "-"
@@ -89,25 +98,28 @@ let string_of_typ = function
   | Float -> "float"
   | String -> "string"
 
-let rec string_of_stmt_list (stmts: stmt list) = 
-  String.concat "" (List.map string_of_stmt stmts)
+let rec string_of_stmt_list (stmts: stmt list) (curr_indent) = 
+  String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) stmts)
 
-and string_of_stmt = function
-  | Expr(expr) -> string_of_expr expr ^ ";\n"
-  | Return(expr) -> "return " ^ string_of_stmt expr ^ ";\n"
-  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s
-  | Elif(e, s) -> "elif (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s
-  | Else(s) -> "else\n" ^ string_of_stmt_list s
-  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s
-  | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^string_of_stmt_list s
+and string_of_stmt (stmt) (curr_indent) = 
+  string_of_indent curr_indent ^
+  match stmt with
+  | ExprStmt(expr) -> string_of_expr expr ^ ";\n"
+  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n"
+  | If(e, s) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | Elif(e, s) -> "elif (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | Else(s) -> "else\n" ^ string_of_stmt_list s (curr_indent + 1)
+  | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt_list s (curr_indent + 1)
+  | For(e1,e2,s) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^string_of_stmt_list s (curr_indent + 1)
   | Decl(t, s) -> s ^ " : " ^ string_of_typ t ^ "\n"
-  | Fdecl(f) -> string_of_fdecl f
-  | Assign(v, e) -> v ^ " = " ^ string_of_stmt e
+  | Fdecl(f) -> string_of_fdecl f (curr_indent + 1)
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
 
-and string_of_fdecl fdecl =
+and string_of_fdecl fdecl curr_indent =
   string_of_typ fdecl.rtyp ^ " " ^ fdecl.fname ^ "(" ^ 
   String.concat ", " (List.map (fun (t, id) -> string_of_typ t ^ " " ^ id) fdecl.parameters) ^ ")\n{\n" ^
-  String.concat "" (List.map string_of_stmt fdecl.stmts) ^ "}\n"
+  String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) fdecl.stmts) ^ "}\n"
+
 let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
-    string_of_stmt_list stmts
+    string_of_stmt_list stmts 0

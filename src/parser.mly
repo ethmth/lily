@@ -106,16 +106,16 @@ stmt_compound:
 
 // TODO (Ethan) Implement declaration: Allow for multiple ways of declaration
 declaration: 
-  LET ID COLON typ ASSIGN expression_statement { Decl($4, $2) }
+  LET ID COLON typ ASSIGN expression { Decl($4, $2) }
 
 assignment:
-  | ID ASSIGN expression_statement {Assign($1, $3)}
+  | ID ASSIGN expression {Assign($1, $3)}
 
 return_statement:
-  | RETURN expression_statement { Return($2) }
+  | RETURN expression { Return($2) }
 
 expression_statement:
-  expression { Expr($1) }
+  expression { ExprStmt($1) }
 
 /* stmt_compound */
 
