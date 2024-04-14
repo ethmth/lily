@@ -1,7 +1,7 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 (* Operators definition *)
-type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq
+type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map | Filter | Reduce
 
 (* Unary operator definition *)
 type unary_op = Negate
@@ -90,6 +90,9 @@ let string_of_op = function
   | Leq -> "<="
   | Gt -> ">" 
   | Geq -> ">="
+  | Map -> "=>"
+  | Filter -> "=>?"
+  | Reduce -> "=>/"
 
 let string_of_unary_op = function
     Negate -> "!"
