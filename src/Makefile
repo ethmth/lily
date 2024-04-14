@@ -12,6 +12,13 @@ test1 : ast.ml irgen.ml lily.ml parser.mly sast.ml scanner.mll semant.ml  tokeni
 test2 : ast.ml irgen.ml lily.ml parser.mly sast.ml scanner.mll semant.ml tokenize.ml test2.ml clean
 	ocamlbuild test2.native
 
+test3:
+    cd src
+    rm -rf *.cmi *.cmo *.mli *.ml
+    ocamlbuild -use-ocamlfind -r test1.native
+
+true: traverse
+
 
 .PHONY : clean
 clean :
