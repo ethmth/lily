@@ -42,6 +42,7 @@ type stmt =
   | IDeclAssign of string * expr
   | Fdecl of fdecl
   | Assign of string * expr
+  | Try of try_stmt 
 
 (* Function declaration type *)
 and fdecl = {
@@ -120,6 +121,7 @@ and string_of_stmt (stmt) (curr_indent) =
   | IDeclAssign(s, e) -> "let " ^ s ^ " = " ^ string_of_expr e ^ "\n"
   | Fdecl(f) -> string_of_fdecl f (curr_indent)
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
+  | Try(try_stmt) -> string_of_try_stmt try_stmt curr_indent
 
 and string_of_fdecl fdecl curr_indent =
   "def " ^ fdecl.fname ^ "(" ^ 
@@ -131,3 +133,27 @@ and string_of_fdecl fdecl curr_indent =
 let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
     string_of_stmt_list stmts 0
+    
+and string_of_try_stmt try_stmt curr_indent =
+  "try:\n" ^ 
+  string_of_stmt_list try_stmt.try_block (curr_indent + 1) ^
+  String.concat "" (List.map (fun e -> string_of_except_clause e curr_indent) try_stmt.except_blocks) ^
+  (match try_stmt.finally_block with
+   | Some(f) -> "finally:\n" ^ string_of_stmt_list f (curr_indent + 1)
+   | None -> "")
+
+and string_of_except_clause ex curr_indent =
+  "except (" ^ ex.ex_id ^ "):\n" ^ string_of_stmt_list ex.ex_body (curr_indent + 1)
+
+(* Exception clause definition *)
+type except_clause = {
+  ex_id: string;   (* Exception identifier, if you plan to use specific exception types or names *)
+  ex_body: stmt list;   (* Statements to execute when the exception is caught *)
+}
+
+(* Try statement definition *)
+type try_stmt = {
+  try_block: stmt list;            (* Statements inside the try block *)
+  except_blocks: except_clause list;  (* List of except clauses *)
+  finally_block: stmt list option;   (* Optional finally block *)
+}
