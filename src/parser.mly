@@ -99,8 +99,8 @@ stmt_compound:
   | while_loop  { $1 }
   | if_statement { $1 }
   | elif_statement { $1 }
-  | else_statement { $1 }
-  // | try_statement { $1 }
+  | else_statement { $1 
+  | try_statement { $1 }
 
 /* stmt_simple */
 
@@ -160,14 +160,6 @@ else_statement:
   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
-stmt_compound:
-  | function_def { $1 }
-  | for_loop { $1 }
-  | while_loop { $1 }
-  | if_statement { $1 }
-  | elif_statement { $1 }
-  | else_statement { $1 }
-  | try_statement { $1 }
 try_statement:
   TRY COLON NEWLINE INDENT statements maybe_catch_clauses maybe_finally_clause DEDENT
   {
