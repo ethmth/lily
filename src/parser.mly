@@ -1,4 +1,4 @@
-/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni */
+/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni, Chimaobi Onwuka*/
 /* Last Edited: April 1, 2024 */
 /* Ocamllex parser for LILY */
 
@@ -99,8 +99,8 @@ stmt_compound:
   | while_loop  { $1 }
   | if_statement { $1 }
   | elif_statement { $1 }
-  | else_statement { $1 }
-  // | try_statement { $1 }
+  | else_statement { $1 
+  | try_statement { $1 }
 
 /* stmt_simple */
 
@@ -108,7 +108,7 @@ stmt_compound:
 declaration: 
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
-  | LET ID ASSIGN expression { IDeclAssign($2, $4) }
+  | LET ID ASSIGN expression { IDeclAssign($2, $3) }
   | LET ID { IDecl($2) }
 
 assignment:
@@ -160,14 +160,6 @@ else_statement:
   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
-stmt_compound:
-  | function_def { $1 }
-  | for_loop { $1 }
-  | while_loop { $1 }
-  | if_statement { $1 }
-  | elif_statement { $1 }
-  | else_statement { $1 }
-  | try_statement { $1 }
 try_statement:
   TRY COLON NEWLINE INDENT statements maybe_catch_clauses maybe_finally_clause DEDENT
   {
@@ -211,18 +203,19 @@ typ:
   | FLOAT { Float }
   | CHAR  { Char }
   | STRING { String }
+  | LBRACKET typ RBRACKET { List($2) }  // Add this line for list types
 
-// TODO: (Chima) Implement Lists
-//   list_literal:
-//   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
+// (Chima) Implement Lists (COMPLETED)
+   list_literal:
+      LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-// list_elements_opt:
-//   /* nothing */ { [] }
-//   | list_elements { $1 }
+ list_elements_opt:
+   /* nothing */ { [] }
+   | list_elements { $1 }
 
-// list_elements:
-//   expression { [$1] }
-//   | expression COMMA list_elements { $1 :: $3 }
+ list_elements:
+     expression { [$1] }
+   | expression COMMA list_elements { $1 :: $3 }
 
 
 /* Expressions */
@@ -245,7 +238,8 @@ expression:
   | expression GT expression { Binop($1, Gt,   $3) }
   | expression GEQ expression { Binop($1, Geq,   $3) }
   | function_call { $1 }
-  // | list_declaration { $1 }
+  | list_literal { $1 }                   // Added this line to handle list literals as expressions (CHIMA)
+  | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  // New element-wise addition (CHIMA)
   | LPAREN expression RPAREN { $2 } // For grouping and precedence
   | LPAREN expression RPAREN DOT ID LPAREN arguments_opt RPAREN { MethodCall($2, $5, $7) }
 
@@ -262,9 +256,10 @@ arguments:
   | expression COMMA arguments { $1::$3 }
 
 
-// TODO: (Chima) Implement List Declaration
-// list_declaration:
-//   LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE {}
+// (Chima) Implement List Declaration (COMPLETED)
+list_declaration:
+   LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE {}
+|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
 // elements_opt:
 //   /*nothing*/ { [] }
