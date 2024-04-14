@@ -13,9 +13,6 @@ test2 : ast.ml irgen.ml lily.ml parser.mly sast.ml scanner.mll semant.ml tokeniz
 	ocamlbuild test2.native
 
 
-true: traverse
-
-
 .PHONY : clean
 clean :
 	rm -rf *.cmi *.cmo parser.ml parser.mli parserscanner.ml parserscanner.mli scanner.ml test0.native test1.native test2.native _build
