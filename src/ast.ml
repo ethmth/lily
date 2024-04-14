@@ -44,6 +44,18 @@ type stmt =
   | Assign of string * expr
   | Try of try_stmt 
 
+(* Try statement definition *)
+type try_stmt = {
+  try_block: stmt list;           
+  except_blocks: except_clause list;  
+  finally_block: stmt list option;  
+}
+(* Exception clause definition *)
+type except_clause = {
+  ex_id: string;  
+  ex_body: stmt list;   
+}
+
 (* Function declaration type *)
 and fdecl = {
   rtyp: typ;
@@ -145,15 +157,4 @@ and string_of_try_stmt try_stmt curr_indent =
 and string_of_except_clause ex curr_indent =
   "except (" ^ ex.ex_id ^ "):\n" ^ string_of_stmt_list ex.ex_body (curr_indent + 1)
 
-(* Exception clause definition *)
-type except_clause = {
-  ex_id: string;   (* Exception identifier, if you plan to use specific exception types or names *)
-  ex_body: stmt list;   (* Statements to execute when the exception is caught *)
-}
 
-(* Try statement definition *)
-type try_stmt = {
-  try_block: stmt list;            (* Statements inside the try block *)
-  except_blocks: except_clause list;  (* List of except clauses *)
-  finally_block: stmt list option;   (* Optional finally block *)
-}
