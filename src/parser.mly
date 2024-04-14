@@ -1,5 +1,5 @@
-/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni, Chimaobi Onwuka*/
-/* Last Edited: April 1, 2024 */
+/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni, Chimaobi Onwuka, Jay Sun*/
+/* Last Edited: April 14, 2024 */
 /* Ocamllex parser for LILY */
 
 %{
@@ -67,6 +67,7 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %right NOT
+%right MAP FILTER REDUCE
 %nonassoc MAP FILTER
 %left REDUCE
 
@@ -237,6 +238,9 @@ expression:
   | expression LEQ expression { Binop($1, Leq,   $3) }
   | expression GT expression { Binop($1, Gt,   $3) }
   | expression GEQ expression { Binop($1, Geq,   $3) }
+  | expression MAP expression     { Binop($1, Map, $3) }       
+  | expression FILTER expression  { Binop($1, Filter, $3) }    
+  | expression REDUCE expression  { Binop($1, Reduce, $3) }    
   | function_call { $1 }
   | list_literal { $1 }                   // Added this line to handle list literals as expressions (CHIMA)
   | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  // New element-wise addition (CHIMA)
