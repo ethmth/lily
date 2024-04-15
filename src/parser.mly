@@ -67,7 +67,6 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %right NOT
-%right MAP FILTER REDUCE
 %nonassoc MAP FILTER
 %left REDUCE
 
