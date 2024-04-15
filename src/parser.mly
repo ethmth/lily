@@ -40,6 +40,9 @@ open Ast
 /* Types */
 %token BOOL INT FLOAT CHAR STRING
 
+/* List Operators */
+%token ELWISE_ADD
+
 /* Literals */
 %token <int> INT_LIT 
 %token <float> FLOAT_LIT
@@ -99,7 +102,7 @@ stmt_compound:
   | while_loop  { $1 }
   | if_statement { $1 }
   | elif_statement { $1 }
-  | else_statement { $1 
+  | else_statement { $1 }
   | try_statement { $1 }
 
 /* stmt_simple */
@@ -108,7 +111,7 @@ stmt_compound:
 declaration: 
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
-  | LET ID ASSIGN expression { IDeclAssign($2, $3) }
+  | LET ID ASSIGN expression { IDeclAssign($2, $4) }
   | LET ID { IDecl($2) }
 
 assignment:
@@ -261,16 +264,16 @@ arguments:
 
 // (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
-   LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE {}
+   LET ID COLON COLON typ ASSIGN LBRACE elements_opt RBRACE {}
 |  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
-// elements_opt:
-//   /*nothing*/ { [] }
-//   | elements { $1 }
+elements_opt:
+  /*nothing*/ { [] }
+  | elements { $1 }
 
-// elements:
-//   expression  { [$1] }
-//   | expression COMMA elements { $1::$3 }
+elements:
+  expression  { [$1] }
+  | expression COMMA elements { $1::$3 }
 
 
 // TODO (Jay): Parse functional/list operators

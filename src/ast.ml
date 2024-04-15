@@ -42,19 +42,7 @@ type stmt =
   | IDeclAssign of string * expr
   | Fdecl of fdecl
   | Assign of string * expr
-  | Try of try_stmt 
-
-(* Try statement definition *)
-type try_stmt = {
-  try_block: stmt list;           
-  except_blocks: except_clause list;  
-  finally_block: stmt list option;  
-}
-(* Exception clause definition *)
-type except_clause = {
-  ex_id: string;  
-  ex_body: stmt list;   
-}
+  | Try of try_stmt
 
 (* Function declaration type *)
 and fdecl = {
@@ -62,6 +50,18 @@ and fdecl = {
   fname: string;
   parameters: bind list;
   stmts: stmt list;
+}
+
+(* Try statement definition *)
+and try_stmt = {
+  try_block: stmt list;           
+  except_blocks: except_clause list;  
+  finally_block: stmt list option;  
+}
+(* Exception clause definition *)
+and except_clause = {
+  ex_id: string;  
+  ex_body: stmt list;   
 }
 
 (* Program type, consisting of variable declarations and functions *)
