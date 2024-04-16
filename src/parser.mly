@@ -210,6 +210,10 @@ expression:
   | expression LEQ expression { Binop($1, Leq,   $3) }
   | expression GT expression { Binop($1, Gt,   $3) }
   | expression GEQ expression { Binop($1, Geq,   $3) }
+  | expression MAP expression { Map($1, $3) }      
+  | expression FILTER expression { Filter($1, $3) }   
+  | expression REDUCE expression expression { Reduce($1, $3, $4) } 
+
   | function_call { $1 }
   // | list_declaration { $1 }
   | LPAREN expression RPAREN { $2 } // For grouping and precedence

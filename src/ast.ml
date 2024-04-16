@@ -1,7 +1,7 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 (* Operators definition *)
-type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq
+type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map | Filter | Reduce
 
 (* Unary operator definition *)
 type unary_op = Negate
@@ -25,6 +25,9 @@ type expr =
   | UnaryOp of unary_op * expr
   (* | ListLit of expr list  Chima New: Represents list literals *)
   | MethodCall of expr * string * expr list  (* Chima New: Represents method calls on expressions *)
+  | Map of expr * expr       
+  | Filter of expr * expr    
+  | Reduce of expr * expr * expr  
 
 
 (* Statements definition *)
@@ -77,6 +80,9 @@ let string_of_op = function
   | Leq -> "<="
   | Gt -> ">" 
   | Geq -> ">="
+  | Map -> "=>"       
+  | Filter -> "=>?"   
+  | Reduce -> "=>/"  
 
 let string_of_unary_op = function
     Negate -> "!"
@@ -93,6 +99,10 @@ let rec string_of_expr = function
   | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
   | MethodCall(e,s,el) -> string_of_expr e ^ "." ^ s ^ string_of_expr (ListExpr(el))
+  | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func
+  | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate
+  | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init
+    
 
 let string_of_typ = function
     Int -> "int"
