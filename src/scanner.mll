@@ -73,6 +73,9 @@ rule token = parse
 | "||"     { OR }
 | '!'      { NOT }
 
+(* Additional functional operator for REDUCE *)
+| "with"   { WITH }
+
 (* Control Flow *)
 | "if"       { IF }
 | "is"       { IS }
