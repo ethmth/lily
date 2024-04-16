@@ -48,6 +48,10 @@ open Ast
 %token <string> STRING_LIT
 %token <string> ID
 
+/* Additional functional operator for REDUCE */
+%token WITH
+
+
 /* Miscellaneous */
 %token EOF
 
