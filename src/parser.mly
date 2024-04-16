@@ -48,6 +48,10 @@ open Ast
 %token <string> STRING_LIT
 %token <string> ID
 
+/* Additional functional operator for REDUCE */
+%token WITH
+
+
 /* Miscellaneous */
 %token EOF
 
@@ -67,8 +71,10 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %right NOT
-%nonassoc MAP FILTER
-%left REDUCE
+%nonassoc MAP FILTER 
+%nonassoc WITH
+%nonassoc REDUCE
+
 
 %%
 
@@ -210,6 +216,9 @@ expression:
   | expression LEQ expression { Binop($1, Leq,   $3) }
   | expression GT expression { Binop($1, Gt,   $3) }
   | expression GEQ expression { Binop($1, Geq,   $3) }
+  | expression MAP expression { Map($1, $3) }      
+  | expression FILTER expression { Filter($1, $3) }   
+  | expression REDUCE expression WITH expression { Reduce($1, $3, $5) }
   | function_call { $1 }
   // | list_declaration { $1 }
   | LPAREN expression RPAREN { $2 } // For grouping and precedence
