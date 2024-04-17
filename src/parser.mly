@@ -249,9 +249,8 @@ arguments:
 
 // (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
-   LET ID COLON COLON typ ASSIGN LBRACE elements_opt RBRACE {}
+   LET ID COLON COLON typ ASSIGN LBRACE elements_opt RBRACE { DeclAssign($2, $5, ListLit($8)) }
 |  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
-
 
  elements_opt:
    /*nothing*/ { [] }
