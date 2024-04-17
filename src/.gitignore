@@ -7,3 +7,5 @@ parser.ml
 parser.mli
 parserscanner.ml
 parserscanner.mli
+*.cmi
+*.cmo

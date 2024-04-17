@@ -7,9 +7,13 @@ type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map |
 type unary_op = Negate
 
 (* Types definition *)
-type typ = Int | Bool | Char | Float | String
+type typ = Int | Bool | Char | Float | String | List of typ
 
 type bind = typ * string
+
+(* Definition of list operations *)
+type list_op = 
+    | ElwiseAdd
 
 (* Expressions definition *)
 type expr =
@@ -23,8 +27,14 @@ type expr =
   | Call of string * expr list
   | ListExpr of expr list
   | UnaryOp of unary_op * expr
-  (* | ListLit of expr list  Chima New: Represents list literals *)
+  | ListLit of expr list  (*Chima New: Represents list literals*)
+  | ListInit of string * typ * expr list  (*Chima New: Represents list initialization*)
+  (* | DeclExpr of typ * string * expr  (* New type to treat declarations as expressions CHIMA *)*)
+  | ListBinop of expr * list_op * expr   (* Adding this line *)
   | MethodCall of expr * string * expr list  (* Chima New: Represents method calls on expressions *)
+  | Map of expr * expr       
+  | Filter of expr * expr    
+  | Reduce of expr * expr * expr  
 
 
 (* Statements definition *)
@@ -42,7 +52,6 @@ type stmt =
   | IDeclAssign of string * expr
   | Fdecl of fdecl
   | Assign of string * expr
-  | Try of try_stmt
 
 (* Function declaration type *)
 and fdecl = {
@@ -50,18 +59,6 @@ and fdecl = {
   fname: string;
   parameters: bind list;
   stmts: stmt list;
-}
-
-(* Try statement definition *)
-and try_stmt = {
-  try_block: stmt list;           
-  except_blocks: except_clause list;  
-  finally_block: stmt list option;  
-}
-(* Exception clause definition *)
-and except_clause = {
-  ex_id: string;  
-  ex_body: stmt list;   
 }
 
 (* Program type, consisting of variable declarations and functions *)
@@ -90,12 +87,23 @@ let string_of_op = function
   | Leq -> "<="
   | Gt -> ">" 
   | Geq -> ">="
-  | Map -> "=>"
-  | Filter -> "=>?"
-  | Reduce -> "=>/"
+  | Map -> "=>"       
+  | Filter -> "=>?"   
+  | Reduce -> "=>/"  
 
 let string_of_unary_op = function
     Negate -> "!"
+
+let string_of_list_op = function
+  | ElwiseAdd -> ".+" (*CHIMA NEW: Added this line*)
+
+  let string_of_typ = function
+      Int -> "int"
+    | Bool -> "bool"
+    | Char -> "char"
+    | Float -> "float"
+    | String -> "string" (*CHIMA NEW: Added this line*)
+    | List _ -> "list" (*CHIMA NEW: Added this line*)
 
 let rec string_of_expr = function
     LitInt(l) -> string_of_int l
@@ -109,13 +117,15 @@ let rec string_of_expr = function
   | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
   | MethodCall(e,s,el) -> string_of_expr e ^ "." ^ s ^ string_of_expr (ListExpr(el))
+  | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func
+  | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate
+  | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init
+  | ListLit(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
+  | ListBinop(e1, op, e2) -> string_of_expr e1 ^ " " ^ string_of_list_op op ^ " " ^ string_of_expr e2
+  | ListInit(_, _, _) -> "ListInit" (* Added this line to handle the ListInit case *)
+  (*| DeclExpr(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e*)
+  
 
-let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Char -> "char"
-  | Float -> "float"
-  | String -> "string"
 
 let rec string_of_stmt_list (stmts: stmt list) (curr_indent) = 
   String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) stmts)
@@ -136,7 +146,6 @@ and string_of_stmt (stmt) (curr_indent) =
   | IDeclAssign(s, e) -> "let " ^ s ^ " = " ^ string_of_expr e ^ "\n"
   | Fdecl(f) -> string_of_fdecl f (curr_indent)
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
-  | Try(try_stmt) -> string_of_try_stmt try_stmt curr_indent
 
 and string_of_fdecl fdecl curr_indent =
   "def " ^ fdecl.fname ^ "(" ^ 
@@ -148,16 +157,3 @@ and string_of_fdecl fdecl curr_indent =
 let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
     string_of_stmt_list stmts 0
-    
-and string_of_try_stmt try_stmt curr_indent =
-  "try:\n" ^ 
-  string_of_stmt_list try_stmt.try_block (curr_indent + 1) ^
-  String.concat "" (List.map (fun e -> string_of_except_clause e curr_indent) try_stmt.except_blocks) ^
-  (match try_stmt.finally_block with
-   | Some(f) -> "finally:\n" ^ string_of_stmt_list f (curr_indent + 1)
-   | None -> "")
-
-and string_of_except_clause ex curr_indent =
-  "except (" ^ ex.ex_id ^ "):\n" ^ string_of_stmt_list ex.ex_body (curr_indent + 1)
-
-

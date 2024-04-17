@@ -1,5 +1,5 @@
-/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni, Chimaobi Onwuka, Jay Sun*/
-/* Last Edited: April 14, 2024 */
+/* Author(s): Michaela Gary, Ethan Thomas */
+/* Last Edited: April 1, 2024 */
 /* Ocamllex parser for LILY */
 
 %{
@@ -12,12 +12,14 @@ open Ast
 /* Seperators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 
+
 /* Punctuation */
 %token COLON COMMA ARROW
 %token DOT
 
 /* Binary Operators */
 %token PLUS MINUS TIMES DIVIDE
+%token ELWISE_ADD  // Adding the new operator as a token (CHIMA)
 
 /* Assignment Operators */
 %token ASSIGN
@@ -40,8 +42,10 @@ open Ast
 /* Types */
 %token BOOL INT FLOAT CHAR STRING
 
-/* List Operators */
-%token ELWISE_ADD
+/* List */
+%token LIST
+%token EMPTY_LIST
+%token COLON_COLON
 
 /* Literals */
 %token <int> INT_LIT 
@@ -50,6 +54,11 @@ open Ast
 %token <char> CHAR_LIT
 %token <string> STRING_LIT
 %token <string> ID
+
+
+/* Additional functional operator for REDUCE */
+%token WITH
+
 
 /* Miscellaneous */
 %token EOF
@@ -70,8 +79,11 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE
 %right NOT
-%nonassoc MAP FILTER
-%left REDUCE
+%nonassoc MAP FILTER 
+%nonassoc WITH
+%nonassoc REDUCE
+%nonassoc ELWISE_ADD
+
 
 %%
 
@@ -87,7 +99,6 @@ statements:
 statement:
     stmt_simple NEWLINE { $1 }  // one-line statements
   | stmt_compound { $1 }        // multi-line "block" statements
-
 stmt_simple:
     declaration { $1 }
   | assignment { $1 }
@@ -97,13 +108,13 @@ stmt_simple:
   // | CONTINUE
 
 stmt_compound:
-  | function_def { $1 }
+  function_def { $1 }
   | for_loop  { $1 }
   | while_loop  { $1 }
   | if_statement { $1 }
   | elif_statement { $1 }
   | else_statement { $1 }
-  | try_statement { $1 }
+  // | try_statement { $1 }
 
 /* stmt_simple */
 
@@ -163,41 +174,15 @@ else_statement:
   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
-try_statement:
-  TRY COLON NEWLINE INDENT statements maybe_catch_clauses maybe_finally_clause DEDENT
-  {
-    Try($5, $6, $7)
-  }
+// try_statement:
 //   TRY COLON statements catch_clauses
-maybe_catch_clauses:
-  | catch_clauses { $1 }
-  | { [] }  // No catch clauses
-
-catch_clauses:
-  | except_clause catch_clauses { $1 :: $2 }
-  | except_clause { [$1] }
 
 // except_clause:
 //   CATCH LPAREN ID type RPAREN COLON statements
-except_clause:
-  EXCEPT LPAREN ID RPAREN COLON NEWLINE INDENT statements DEDENT
-  {
-    Except($3, $8)
-  }
-
 
 // finally_clause:
 //   FINALLY COLON statements
 
-maybe_finally_clause:
-  | finally_clause { Some($1) }
-  | { None }  // No finally clause
-finally_clause:
-  FINALLY COLON NEWLINE INDENT statements DEDENT
-  {
-    $5
-  }
-  
 /* Types */
 
 typ:
@@ -206,19 +191,22 @@ typ:
   | FLOAT { Float }
   | CHAR  { Char }
   | STRING { String }
-  | LBRACKET typ RBRACKET { List($2) }  // Add this line for list types
+  | LIST typ { List($2) }
 
-// (Chima) Implement Lists (COMPLETED)
-   list_literal:
-      LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
- list_elements_opt:
+/* Lists */
+
+list_elements_opt:
    /* nothing */ { [] }
    | list_elements { $1 }
 
  list_elements:
-     expression { [$1] }
+   expression { [$1] }
    | expression COMMA list_elements { $1 :: $3 }
+
+// TODO: (Chima) Implement Lists
+// list_literal:
+//    LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
 
 /* Expressions */
@@ -240,13 +228,15 @@ expression:
   | expression LEQ expression { Binop($1, Leq,   $3) }
   | expression GT expression { Binop($1, Gt,   $3) }
   | expression GEQ expression { Binop($1, Geq,   $3) }
-  | expression MAP expression     { Binop($1, Map, $3) }       
-  | expression FILTER expression  { Binop($1, Filter, $3) }    
-  | expression REDUCE expression  { Binop($1, Reduce, $3) }    
+  | expression MAP expression { Map($1, $3) }      
+  | expression FILTER expression { Filter($1, $3) }   
+  | expression REDUCE expression WITH expression { Reduce($1, $3, $5) }
+  | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  (*// New element-wise addition (CHIMA)*)
   | function_call { $1 }
-  | list_literal { $1 }                   // Added this line to handle list literals as expressions (CHIMA)
-  | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  // New element-wise addition (CHIMA)
-  | LPAREN expression RPAREN { $2 } // For grouping and precedence
+  | list_declaration { $1 }
+  | list_literal { $1 }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
+  // | LET ID COLON typ ASSIGN expression { DeclExpr($4, $2, $6) }  (*// Adding new expression type for inline declarations*)
+  | LPAREN expression RPAREN { $2 } (*// For grouping and precedence*)
   | LPAREN expression RPAREN DOT ID LPAREN arguments_opt RPAREN { MethodCall($2, $5, $7) }
 
 
@@ -262,18 +252,22 @@ arguments:
   | expression COMMA arguments { $1::$3 }
 
 
+// (Chima) Implement Lists (COMPLETED)
+   list_literal:
+      LBRACKET list_elements_opt RBRACKET { ListLit($2) }
+
 // (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
-   LET ID COLON COLON typ ASSIGN LBRACE elements_opt RBRACE {}
-|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
+  | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
+  //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
+  // | LET ID COLON_COLON typ '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
+  //|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
-elements_opt:
-  /*nothing*/ { [] }
-  | elements { $1 }
+ elements_opt:
+   /*nothing*/ { [] }
+   | elements { $1 }
 
-elements:
-  expression  { [$1] }
-  | expression COMMA elements { $1::$3 }
+ elements:
+   expression  { [$1] }
+   | expression COMMA elements { $1::$3 }
 
-
-// TODO (Jay): Parse functional/list operators
