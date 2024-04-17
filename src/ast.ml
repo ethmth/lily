@@ -31,11 +31,10 @@ type expr =
   | Reduce of expr * expr * expr  
 
 
-(* Statements definition *)
-type stmt =
+and stmt =
   | If of expr * stmt list
   | Elif of expr * stmt list
-  | Else  of stmt list
+  | Else of stmt list
   | While of expr * stmt list
   | For of expr * expr * stmt list
   | ExprStmt of expr
@@ -46,23 +45,20 @@ type stmt =
   | IDeclAssign of string * expr
   | Fdecl of fdecl
   | Assign of string * expr
-  | Try of stmt list * exn_clause list * stmt list option  (* try, except, and optionally finally *)
+  | Try of stmt list * exn_clause list * stmt list option
 
-(* Exception clause definition *)
-type exn_clause = {
-  exn_type: typ option;  (* Optional type for typed exception handling *)
-  exn_var: string option; (* Optional variable name to bind the exception *)
-  handler: stmt list;    (* Statements to handle the exception *)
+and exn_clause = {
+  exn_type: typ option;
+  exn_var: string option;
+  handler: stmt list;
 }
 
-(* Function declaration type *)
 and fdecl = {
   rtyp: typ;
   fname: string;
   parameters: bind list;
   stmts: stmt list;
 }
-
 (* Program type, consisting of variable declarations and functions *)
 type program = stmt list
 
