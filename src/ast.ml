@@ -11,12 +11,6 @@ type typ = Int | Bool | Char | Float | String
 
 type bind = typ * string
 
-(* Exception clause definition *)
-type exn_clause = {
-  exn_type: typ option;  (* Optional type for typed exception handling *)
-  exn_var: string option; (* Optional variable name to bind the exception *)
-  handler: stmt list;    (* Statements to handle the exception *)
-}
 
 (* Expressions definition *)
 type expr =
@@ -53,6 +47,13 @@ type stmt =
   | Fdecl of fdecl
   | Assign of string * expr
   | Try of stmt list * exn_clause list * stmt list option  (* try, except, and optionally finally *)
+
+(* Exception clause definition *)
+type exn_clause = {
+  exn_type: typ option;  (* Optional type for typed exception handling *)
+  exn_var: string option; (* Optional variable name to bind the exception *)
+  handler: stmt list;    (* Statements to handle the exception *)
+}
 
 (* Function declaration type *)
 and fdecl = {
