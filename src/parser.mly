@@ -259,9 +259,6 @@ arguments:
 // (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
   | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
-  //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
-  // | LET ID COLON_COLON typ '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
-  //|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
  elements_opt:
    /*nothing*/ { [] }
