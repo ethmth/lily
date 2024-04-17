@@ -28,6 +28,7 @@ type expr =
   | ListExpr of expr list
   | UnaryOp of unary_op * expr
   | ListLit of expr list  (*Chima New: Represents list literals*)
+  (* | DeclExpr of typ * string * expr  (* New type to treat declarations as expressions CHIMA *)*)
   | ListBinop of expr * list_op * expr   (* Adding this line *)
   | MethodCall of expr * string * expr list  (* Chima New: Represents method calls on expressions *)
   | Map of expr * expr       
@@ -95,6 +96,13 @@ let string_of_unary_op = function
 let string_of_list_op = function
   | ElwiseAdd -> ".+" (*CHIMA NEW: Added this line*)
 
+  let string_of_typ = function
+      Int -> "int"
+    | Bool -> "bool"
+    | Char -> "char"
+    | Float -> "float"
+    | String -> "string" (*CHIMA NEW: Added this line*)
+
 let rec string_of_expr = function
     LitInt(l) -> string_of_int l
   | LitBool(b) -> string_of_bool b
@@ -112,9 +120,10 @@ let rec string_of_expr = function
   | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init
   | ListLit(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
   | ListBinop(e1, op, e2) -> string_of_expr e1 ^ " " ^ string_of_list_op op ^ " " ^ string_of_expr e2 (*CHIMA NEW: Added this line*)
+  (*| DeclExpr(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e*)
+  
+  
 
-
-    
 
 let string_of_typ = function
     Int -> "int"
