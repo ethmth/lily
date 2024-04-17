@@ -12,12 +12,14 @@ open Ast
 /* Seperators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 
+
 /* Punctuation */
 %token COLON COMMA ARROW
 %token DOT
 
 /* Binary Operators */
 %token PLUS MINUS TIMES DIVIDE
+%token ELWISE_ADD  // Adding the new operator as a token (CHIMA)
 
 /* Assignment Operators */
 %token ASSIGN
@@ -40,6 +42,11 @@ open Ast
 /* Types */
 %token BOOL INT FLOAT CHAR STRING
 
+/* List */
+%token LIST
+%token EMPTY_LIST
+%token COLON_COLON
+
 /* Literals */
 %token <int> INT_LIT 
 %token <float> FLOAT_LIT
@@ -47,6 +54,7 @@ open Ast
 %token <char> CHAR_LIT
 %token <string> STRING_LIT
 %token <string> ID
+
 
 /* Additional functional operator for REDUCE */
 %token WITH
@@ -74,6 +82,7 @@ open Ast
 %nonassoc MAP FILTER 
 %nonassoc WITH
 %nonassoc REDUCE
+%nonassoc ELWISE_ADD
 
 
 %%
@@ -90,7 +99,6 @@ statements:
 statement:
     stmt_simple NEWLINE { $1 }  // one-line statements
   | stmt_compound { $1 }        // multi-line "block" statements
-
 stmt_simple:
     declaration { $1 }
   | assignment { $1 }
@@ -100,7 +108,7 @@ stmt_simple:
   // | CONTINUE
 
 stmt_compound:
-  | function_def { $1 }
+  function_def { $1 }
   | for_loop  { $1 }
   | while_loop  { $1 }
   | if_statement { $1 }
@@ -183,18 +191,22 @@ typ:
   | FLOAT { Float }
   | CHAR  { Char }
   | STRING { String }
+  | LIST typ { List($2) }
+
+
+/* Lists */
+
+list_elements_opt:
+   /* nothing */ { [] }
+   | list_elements { $1 }
+
+ list_elements:
+   expression { [$1] }
+   | expression COMMA list_elements { $1 :: $3 }
 
 // TODO: (Chima) Implement Lists
-//   list_literal:
-//   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
-
-// list_elements_opt:
-//   /* nothing */ { [] }
-//   | list_elements { $1 }
-
-// list_elements:
-//   expression { [$1] }
-//   | expression COMMA list_elements { $1 :: $3 }
+// list_literal:
+//    LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
 
 /* Expressions */
@@ -219,9 +231,12 @@ expression:
   | expression MAP expression { Map($1, $3) }      
   | expression FILTER expression { Filter($1, $3) }   
   | expression REDUCE expression WITH expression { Reduce($1, $3, $5) }
+  | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  (*// New element-wise addition (CHIMA)*)
   | function_call { $1 }
-  // | list_declaration { $1 }
-  | LPAREN expression RPAREN { $2 } // For grouping and precedence
+  | list_declaration { $1 }
+  | list_literal { $1 }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
+  // | LET ID COLON typ ASSIGN expression { DeclExpr($4, $2, $6) }  (*// Adding new expression type for inline declarations*)
+  | LPAREN expression RPAREN { $2 } (*// For grouping and precedence*)
   | LPAREN expression RPAREN DOT ID LPAREN arguments_opt RPAREN { MethodCall($2, $5, $7) }
 
 
@@ -237,17 +252,22 @@ arguments:
   | expression COMMA arguments { $1::$3 }
 
 
-// TODO: (Chima) Implement List Declaration
-// list_declaration:
-//   LET ID COLON COLON type ASSIGN LBRACE elements_opt RBRACE {}
+// (Chima) Implement Lists (COMPLETED)
+   list_literal:
+      LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-// elements_opt:
-//   /*nothing*/ { [] }
-//   | elements { $1 }
+// (Chima) Implement List Declaration (COMPLETED)
+list_declaration:
+  | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
+  //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
+  // | LET ID COLON_COLON typ '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
+  //|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
-// elements:
-//   expression  { [$1] }
-//   | expression COMMA elements { $1::$3 }
+ elements_opt:
+   /*nothing*/ { [] }
+   | elements { $1 }
 
+ elements:
+   expression  { [$1] }
+   | expression COMMA elements { $1::$3 }
 
-// TODO (Jay): Parse functional/list operators
