@@ -43,6 +43,7 @@ open Ast
 %token BOOL INT FLOAT CHAR STRING
 
 /* List */
+%token LIST
 %token EMPTY_LIST
 %token COLON_COLON
 
@@ -81,6 +82,7 @@ open Ast
 %nonassoc MAP FILTER 
 %nonassoc WITH
 %nonassoc REDUCE
+%nonassoc ELWISE_ADD
 
 
 %%
@@ -93,9 +95,6 @@ program:
 statements:
   /* nothing */ { [] }
   | statement statements  { $1::$2 }
-
-  empty_list:
-  | LBRACKET RBRACKET { Ast.ListLit [] }
 
 statement:
     stmt_simple NEWLINE { $1 }  // one-line statements
@@ -192,6 +191,7 @@ typ:
   | FLOAT { Float }
   | CHAR  { Char }
   | STRING { String }
+  | LIST typ { List($2) }
 
 
 /* Lists */
@@ -258,8 +258,8 @@ arguments:
 
 // (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
-  | LET ID COLON_COLON typ EMPTY_LIST '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }
-  | LET ID COLON_COLON typ EMPTY_LIST '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, []) }
+  | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
+  //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
   // | LET ID COLON_COLON typ '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
   //|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
@@ -271,5 +271,3 @@ list_declaration:
    expression  { [$1] }
    | expression COMMA elements { $1::$3 }
 
-
-// TODO (Jay): Parse functional/list operators
