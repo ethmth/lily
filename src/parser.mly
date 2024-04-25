@@ -167,15 +167,10 @@ else_statement:
 
 // TODO (Tani) Implement try statements
 try_statement:
-  TRY COLON NEWLINE INDENT statements catch_clauses finally_clause DEDENT
+  TRY COLON NEWLINE INDENT statements catch_clauses (finally_clause?) DEDENT
   {
-    Try({
-      try_block=$5;          
-      catch_blocks=$6;      
-      finally_block=$7       
-    })
+    Try($5, $6, $7)
   }
-
 catch_clauses:
   | catch_clause catch_clauses { $1 :: $2 }
   | /* nothing */ { [] }
@@ -183,19 +178,12 @@ catch_clauses:
 catch_clause:
   EXCEPT LPAREN typ ID RPAREN COLON NEWLINE INDENT statements DEDENT
   {
-    Catch({
-      exn_type=$3;           
-      exn_var=$4;           
-      handler=$9;            
-    })
+    { exn_type=Some $3; exn_var=Some $4; handler=$9 }
   }
   | EXCEPT COLON NEWLINE INDENT statements DEDENT
   {
-    CatchAll({
-      handler=$5;            
-    })
+    { exn_type=None; exn_var=None; handler=$5 }
   }
-
 finally_clause:
   | FINALLY COLON NEWLINE INDENT statements DEDENT { Some($5) }
   | /* nothing */ { None }
