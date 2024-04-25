@@ -106,7 +106,7 @@ stmt_compound:
   | if_statement { $1 }
   | elif_statement { $1 }
   | else_statement { $1 }
-  // | try_statement { $1 }
+  | try_statement { $1 }
 
 /* stmt_simple */
 
