@@ -1,4 +1,4 @@
-/* Author(s): Michaela Gary, Ethan Thomas */
+/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni */
 /* Last Edited: April 1, 2024 */
 /* Ocamllex parser for LILY */
 
