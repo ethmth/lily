@@ -167,10 +167,14 @@ else_statement:
 
 // TODO (Tani) Implement try statements
 try_statement:
-  TRY COLON NEWLINE INDENT statements catch_clauses (finally_clause?) DEDENT
-  {
-    Try($5, $6, $7)
-  }
+  | TRY COLON NEWLINE INDENT statements catch_clauses finally_clause DEDENT
+    {
+      Try($5, $6, Some($7))
+    }
+  | TRY COLON NEWLINE INDENT statements catch_clauses DEDENT
+    {
+      Try($5, $6, None)
+    }
 catch_clauses:
   | catch_clause catch_clauses { $1 :: $2 }
   | /* nothing */ { [] }
@@ -185,9 +189,7 @@ catch_clause:
     { exn_type=None; exn_var=None; handler=$5 }
   }
 finally_clause:
-  | FINALLY COLON NEWLINE INDENT statements DEDENT { Some($5) }
-  | /* nothing */ { None }
-
+  FINALLY COLON NEWLINE INDENT statements DEDENT { $5 }
 
 /* Types */
 
