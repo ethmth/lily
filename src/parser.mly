@@ -1,4 +1,4 @@
-/* Author(s): Michaela Gary, Ethan Thomas */
+/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni */
 /* Last Edited: April 1, 2024 */
 /* Ocamllex parser for LILY */
 
@@ -114,7 +114,7 @@ stmt_compound:
   | if_statement { $1 }
   | elif_statement { $1 }
   | else_statement { $1 }
-  // | try_statement { $1 }
+  | try_statement { $1 }
 
 /* stmt_simple */
 
@@ -174,14 +174,30 @@ else_statement:
   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
-// try_statement:
-//   TRY COLON statements catch_clauses
+try_statement:
+  | TRY COLON NEWLINE INDENT statements catch_clauses finally_clause DEDENT
+    {
+      Try($5, $6, Some($7))
+    }
+  | TRY COLON NEWLINE INDENT statements catch_clauses DEDENT
+    {
+      Try($5, $6, None)
+    }
+catch_clauses:
+  | catch_clause catch_clauses { $1 :: $2 }
+  | /* nothing */ { [] }
 
-// except_clause:
-//   CATCH LPAREN ID type RPAREN COLON statements
-
-// finally_clause:
-//   FINALLY COLON statements
+catch_clause:
+  EXCEPT LPAREN typ ID RPAREN COLON NEWLINE INDENT statements DEDENT
+  {
+    { exn_type=Some $3; exn_var=Some $4; handler=$9 }
+  }
+  | EXCEPT COLON NEWLINE INDENT statements DEDENT
+  {
+    { exn_type=None; exn_var=None; handler=$5 }
+  }
+finally_clause:
+  FINALLY COLON NEWLINE INDENT statements DEDENT { $5 }
 
 /* Types */
 

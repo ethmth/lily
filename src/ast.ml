@@ -37,11 +37,10 @@ type expr =
   | Reduce of expr * expr * expr  
 
 
-(* Statements definition *)
-type stmt =
+and stmt =
   | If of expr * stmt list
   | Elif of expr * stmt list
-  | Else  of stmt list
+  | Else of stmt list
   | While of expr * stmt list
   | For of expr * expr * stmt list
   | ExprStmt of expr
@@ -52,15 +51,20 @@ type stmt =
   | IDeclAssign of string * expr
   | Fdecl of fdecl
   | Assign of string * expr
+  | Try of stmt list * exn_clause list * stmt list option
 
-(* Function declaration type *)
+and exn_clause = {
+  exn_type: typ option;
+  exn_var: string option;
+  handler: stmt list;
+}
+
 and fdecl = {
   rtyp: typ;
   fname: string;
   parameters: bind list;
   stmts: stmt list;
 }
-
 (* Program type, consisting of variable declarations and functions *)
 type program = stmt list
 
@@ -75,6 +79,7 @@ let string_of_indent (curr_indent) =
       "    " ^ append_tab (indent_left - 1)
   in
   append_tab curr_indent
+  
 
 let string_of_op = function
   Plus -> "+" 
@@ -146,6 +151,13 @@ and string_of_stmt (stmt) (curr_indent) =
   | IDeclAssign(s, e) -> "let " ^ s ^ " = " ^ string_of_expr e ^ "\n"
   | Fdecl(f) -> string_of_fdecl f (curr_indent)
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
+  |Try(try_block, exn_clauses, finally_block) ->
+    "try:\n" ^
+    string_of_stmt_list try_block (curr_indent + 1) ^
+    String.concat "" (List.map (string_of_exn_clause (curr_indent + 1)) exn_clauses) ^
+    (match finally_block with
+     | Some(fb) -> "finally:\n" ^ string_of_stmt_list fb (curr_indent + 1)
+     | None -> "")
 
 and string_of_fdecl fdecl curr_indent =
   "def " ^ fdecl.fname ^ "(" ^ 
@@ -153,6 +165,13 @@ and string_of_fdecl fdecl curr_indent =
   ")" ^ " -> " ^ string_of_typ fdecl.rtyp ^ ":" ^ "\n" ^
   String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt (curr_indent + 1)) fdecl.stmts)
   ^ "\n"
+and string_of_exn_clause indent exn_clause =
+  string_of_indent indent ^
+  "except " ^
+  (match exn_clause.exn_type with
+   | Some(t) -> "(" ^ string_of_typ t ^ " " ^ (match exn_clause.exn_var with Some(v) -> v | None -> "") ^ ") "
+   | None -> "") ^
+  ":\n" ^ string_of_stmt_list exn_clause.handler (indent + 1)
 
 let string_of_program (stmts : stmt list) =
     "\n\nParsed program: \n\n" ^
