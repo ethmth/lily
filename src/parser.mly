@@ -9,7 +9,7 @@ open Ast
 /* New Line */
 %token NEWLINE
 
-/* Seperators */
+/* Separators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 
 
