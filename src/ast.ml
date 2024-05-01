@@ -1,3 +1,5 @@
+(* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni, Chimaobi Onwuka, Jianje Sun *)
+(* Last Edited: April 25, 2024 *)
 (* Abstract Syntax Tree and functions for printing it *)
 
 (* Operators definition *)
@@ -13,7 +15,7 @@ type bind = typ * string
 
 (* Definition of list operations *)
 type list_op = 
-    | ElwiseAdd
+  | ElwiseAdd
 
 (* Expressions definition *)
 type expr =
@@ -66,20 +68,7 @@ and fdecl = {
   stmts: stmt list;
 }
 (* Program type, consisting of variable declarations and functions *)
-type program = stmt list
-
-(* TODO (Ethan) Fix pretty printing questions *)
-
-(* Pretty-printing functions *)
-let string_of_indent (curr_indent) =
-  let rec append_tab indent_left =
-    if indent_left <= 0 then 
-      ""
-    else
-      "    " ^ append_tab (indent_left - 1)
-  in
-  append_tab curr_indent
-  
+type program = stmt list  
 
 let string_of_op = function
   Plus -> "+" 
@@ -102,13 +91,23 @@ let string_of_unary_op = function
 let string_of_list_op = function
   | ElwiseAdd -> ".+" (*CHIMA NEW: Added this line*)
 
-  let string_of_typ = function
-      Int -> "int"
-    | Bool -> "bool"
-    | Char -> "char"
-    | Float -> "float"
-    | String -> "string" (*CHIMA NEW: Added this line*)
-    | List _ -> "list" (*CHIMA NEW: Added this line*)
+let string_of_typ = function
+    Int -> "int"
+  | Bool -> "bool"
+  | Char -> "char"
+  | Float -> "float"
+  | String -> "string" (*CHIMA NEW: Added this line*)
+  | List _ -> "list" (*CHIMA NEW: Added this line*)
+
+(* Pretty-printing functions *)
+let string_of_indent (curr_indent) =
+  let rec append_tab indent_left =
+    if indent_left <= 0 then 
+      ""
+    else
+      "    " ^ append_tab (indent_left - 1)
+  in
+  append_tab curr_indent
 
 let rec string_of_expr = function
     LitInt(l) -> string_of_int l
@@ -130,8 +129,6 @@ let rec string_of_expr = function
   | ListInit(_, _, _) -> "ListInit" (* Added this line to handle the ListInit case *)
   (*| DeclExpr(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e*)
   
-
-
 let rec string_of_stmt_list (stmts: stmt list) (curr_indent) = 
   String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) stmts)
 
@@ -151,7 +148,7 @@ and string_of_stmt (stmt) (curr_indent) =
   | IDeclAssign(s, e) -> "let " ^ s ^ " = " ^ string_of_expr e ^ "\n"
   | Fdecl(f) -> string_of_fdecl f (curr_indent)
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
-  |Try(try_block, exn_clauses, finally_block) ->
+  | Try(try_block, exn_clauses, finally_block) ->
     "try:\n" ^
     string_of_stmt_list try_block (curr_indent + 1) ^
     String.concat "" (List.map (string_of_exn_clause (curr_indent + 1)) exn_clauses) ^
@@ -165,6 +162,7 @@ and string_of_fdecl fdecl curr_indent =
   ")" ^ " -> " ^ string_of_typ fdecl.rtyp ^ ":" ^ "\n" ^
   String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt (curr_indent + 1)) fdecl.stmts)
   ^ "\n"
+
 and string_of_exn_clause indent exn_clause =
   string_of_indent indent ^
   "except " ^

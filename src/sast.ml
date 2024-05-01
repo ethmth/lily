@@ -1,70 +1,178 @@
-(* Semantically-checked Abstract Syntax Tree and functions for printing it *)
+(* Author: Michaela Gary *)
+(* Last Edited: May 1, 2024 *)
+(* Semantically-checked Abstract Syntax Tree and functions for printing it in Lily *)
 
 open Ast
 
-type sexpr = typ * sx
-and sx =
-    SLiteral of int
-  | SBoolLit of bool
+(* Operators definition *)
+type sop = SPlus | SMinus | STimes | SDivide | SEq | SNeq | SLt | SLeq | SGt | SGeq | SMap | SFilter | SReduce
+
+(* Unary operator definition *)
+type sunary_op = SNegate
+
+(* Types definition *)
+type styp = SInt | SBool | SChar | SFloat | SString | SList of styp
+
+type sbind = styp * string
+
+(* Definition of list operations *)
+type slist_op = 
+  | SElwiseAdd
+
+type sexpr = styp * expr_detail
+and expr_detail =
+    SLitInt of int
+  | SLitBool of bool
+  | SLitFloat of float
+  | SLitChar of char
+  | SLitString of string
   | SId of string
-  | SBinop of sexpr * op * sexpr
-  | SAssign of string * sexpr
-  (* call *)
+  | SBinop of sexpr * sop * sexpr
   | SCall of string * sexpr list
+  | SListExpr of sexpr list
+  | SUnaryOp of sunary_op * sexpr
+  | SListLit of sexpr list 
+  | SListInit of string * styp * sexpr list
+  (* | SDeclExpr of styp * string * sexpr *)
+  | SListBinop of sexpr * slist_op * sexpr
+  | SMethodCall of sexpr * string * sexpr list
+  | SMap of sexpr * sexpr       
+  | SFilter of sexpr * sexpr    
+  | SReduce of sexpr * sexpr * sexpr
 
-type sstmt =
-    SBlock of sstmt list
-  | SExpr of sexpr
-  | SIf of sexpr * sstmt * sstmt
-  | SWhile of sexpr * sstmt
-  (* return *)
+and sstmt =
+  | SIf of sexpr * sstmt list
+  | SElif of sexpr * sstmt list
+  | SElse of sstmt list
+  | SWhile of sexpr * sstmt list
+  | SFor of sexpr * sexpr * sstmt list
+  | SExprStmt of sexpr
   | SReturn of sexpr
+  | SDecl of styp * string
+  | SDeclAssign of styp * string * sexpr
+  | SIDecl of string
+  | SIDeclAssign of string * sexpr
+  | SFdecl of sfdecl
+  | SAssign of string * sexpr
+  | STry of sstmt list * sexn_clause list * sstmt list option
 
-(* func_def: ret_typ fname formals locals body *)
-type sfunc_def = {
-  srtyp: typ;
-  sfname: string;
-  sformals: bind list;
-  slocals: bind list;
-  sbody: sstmt list;
+and sexn_clause = {
+  sexn_type: styp option;
+  sexn_var: string option;
+  shandler: sstmt list;
 }
 
-type sprogram = bind list * sfunc_def list
+and sfdecl = {
+  srtyp: styp;
+  sfname: string;
+  sparameters: sbind list;
+  sstmts: sstmt list;
+}
 
+let string_of_sop = function
+    SPlus -> "+" 
+  | SMinus -> "-"
+  | STimes -> "*"
+  | SDivide -> "/" 
+  | SEq -> "==" 
+  | SNeq -> "!=" 
+  | SLt -> "<" 
+  | SLeq -> "<="
+  | SGt -> ">" 
+  | SGeq -> ">="
+  | SMap -> "=>"       
+  | SFilter -> "=>?"   
+  | SReduce -> "=>/"  
 
+let string_of_sunary_op = function
+    SNegate -> "!"
+
+let string_of_slist_op = function
+  | SElwiseAdd -> ".+"
+
+let string_of_styp = function
+    SInt -> "int"
+  | SBool -> "bool"
+  | SChar -> "char"
+  | SFloat -> "float"
+  | SString -> "string"
+  | SList _ -> "list"
+
+(* Program type, consisting of variable declarations and functions *)
+type sprogram = sstmt list
 
 (* Pretty-printing functions *)
-let rec string_of_sexpr (t, e) =
-  "(" ^ string_of_typ t ^ " : " ^ (match e with
-        SLiteral(l) -> string_of_int l
-      | SBoolLit(true) -> "true"
-      | SBoolLit(false) -> "false"
-      | SId(s) -> s
-      | SBinop(e1, o, e2) ->
-        string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
-      | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
-      | SCall(f, el) ->
-          f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
-    ) ^ ")"
+let string_of_sindent (curr_indent) =
+  let rec append_stab indent_left =
+    if indent_left <= 0 then 
+      ""
+    else
+      "    " ^ append_stab (indent_left - 1)
+  in
+  append_stab curr_indent
 
-let rec string_of_sstmt = function
-    SBlock(stmts) ->
-    "{\n" ^ String.concat "" (List.map string_of_sstmt stmts) ^ "}\n"
-  | SExpr(expr) -> string_of_sexpr expr ^ ";\n"
-  | SReturn(expr) -> "return " ^ string_of_sexpr expr ^ ";\n"
-  | SIf(e, s1, s2) ->  "if (" ^ string_of_sexpr e ^ ")\n" ^
-                       string_of_sstmt s1 ^ "else\n" ^ string_of_sstmt s2
-  | SWhile(e, s) -> "while (" ^ string_of_sexpr e ^ ") " ^ string_of_sstmt s
+let rec string_of_sexpr = function
+    SLitInt(l) -> string_of_int l
+  | SLitBool(b) -> string_of_bool b
+  | SLitFloat(f) -> string_of_float(f)
+  | SLitChar(c) -> "\'" ^ String.make 1 c ^ "\'"
+  | SLitString(s) -> "\"" ^ s ^ "\""
+  | SId(s) -> s 
+  | SBinop(e1, o, e2) -> string_of_sexpr e1 ^ " " ^ string_of_sop o ^ " " ^ string_of_sexpr e2
+  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+  | SListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_sexpr el) ^ "]"
+  | SUnaryOp(op, e) -> string_of_sunary_op op ^ string_of_sexpr e
+  | SMethodCall(e,s,el) -> string_of_sexpr e ^ "." ^ s ^ string_of_sexpr (ListExpr(el))
+  | SMap(list, func) -> string_of_sexpr list ^ " => " ^ string_of_sexpr func
+  | SFilter(list, predicate) -> string_of_sexpr list ^ " =>? " ^ string_of_sexpr predicate
+  | SReduce(list, func, init) -> string_of_sexpr list ^ " =>/ " ^ string_of_sexpr func ^ " with " ^ string_of_sexpr init
+  | SListLit(el) -> "[" ^ String.concat ", " (List.map string_of_sexpr el) ^ "]"
+  | SListBinop(e1, op, e2) -> string_of_sexpr e1 ^ " " ^ string_of_slist_op op ^ " " ^ string_of_sexpr e2
+  | SListInit(_, _, _) -> "ListInit" (* Added this line to handle the ListInit case *)
+  (*| SDeclExpr(t, s, e) -> "let " ^ s ^ " : " ^ string_of_styp t ^ " = " ^ string_of_sexpr e*)
 
-let string_of_sfdecl fdecl =
-  string_of_typ fdecl.srtyp ^ " " ^
-  fdecl.sfname ^ "(" ^ String.concat ", " (List.map snd fdecl.sformals) ^
-  ")\n{\n" ^
-  String.concat "" (List.map string_of_vdecl fdecl.slocals) ^
-  String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
-  "}\n"
+let rec string_of_sstmt_list (sstmts: sstmt list) (curr_indent) = 
+  String.concat "" (List.map (fun local_sstmt -> string_of_sstmt local_sstmt curr_indent) sstmts)
 
-let string_of_sprogram (vars, funcs) =
-  "\n\nSementically checked program: \n\n" ^
-  String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-  String.concat "\n" (List.map string_of_sfdecl funcs)
+and string_of_sstmt (stmt) (curr_indent) = 
+  string_of_sindent curr_indent ^
+  match stmt with
+  | SExprStmt(sexpr) -> string_of_sexpr sexpr ^ "\n"
+  | SReturn(sexpr) -> "return " ^ string_of_sexpr sexpr ^ "\n"
+  | SIf(se, ss) -> "if (" ^ string_of_sexpr se ^ "):\n" ^ string_of_sstmt_list ss (curr_indent + 1)
+  | SElif(se, ss) -> "elif (" ^ string_of_sexpr se ^ "):\n" ^ string_of_sstmt_list ss (curr_indent + 1)
+  | SElse(ss) -> "else:\n" ^ string_of_sstmt_list ss (curr_indent + 1)
+  | SWhile(se, ss) -> "while (" ^ string_of_sexpr se ^ "):\n" ^ string_of_sstmt_list ss (curr_indent + 1)
+  | SFor(se1, se2, ss) -> "for (" ^ string_of_sexpr se1 ^ ", " ^ string_of_sexpr se2 ^ "):\n" ^ string_of_sstmt_list ss (curr_indent + 1)
+  | SDecl(t, s) -> "let " ^ s ^ " : " ^ string_of_styp t ^ "\n"
+  | SDeclAssign(t, s, se) -> "let " ^ s ^ " : " ^ string_of_styp t ^ " = " ^ string_of_sexpr se ^ "\n"
+  | SIDecl(s) -> "let " ^ s ^ "\n"
+  | SIDeclAssign(s, se) -> "let " ^ s ^ " = " ^ string_of_sexpr se ^ "\n"
+  | SFdecl(sf) -> string_of_sfdecl sf (curr_indent)
+  | SAssign(v, se) -> v ^ " = " ^ string_of_sexpr se ^ "\n"
+  | STry(try_block, exn_clauses, finally_block) ->
+    "try:\n" ^
+    string_of_sstmt_list try_block (curr_indent + 1) ^
+    String.concat "" (List.map (string_of_sexn_clause (curr_indent + 1)) exn_clauses) ^
+    (match finally_block with
+    | Some(fb) -> "finally:\n" ^ string_of_sstmt_list fb (curr_indent + 1)
+    | None -> "")
+
+and string_of_sexn_clause indent sexn_clause =
+  string_of_sindent indent ^
+  "except " ^
+  (match sexn_clause.sexn_type with
+    | Some(t) -> "(" ^ string_of_styp t ^ " " ^ (match sexn_clause.sexn_var with Some(v) -> v | None -> "") ^ ") "
+    | None -> "") ^
+  ":\n" ^ string_of_sstmt_list sexn_clause.shandler (indent + 1)
+
+and string_of_sfdecl sfdecl curr_indent =
+  "def " ^ sfdecl.sfname ^ "(" ^ 
+  String.concat ", " (List.map (fun (t, id) ->  id ^ " : " ^ string_of_styp t) sfdecl.sparameters) ^ 
+  ")" ^ " -> " ^ string_of_styp sfdecl.srtyp ^ ":" ^ "\n" ^
+  String.concat "" (List.map (fun local_sstmt -> string_of_sstmt local_sstmt (curr_indent + 1)) sfdecl.sstmts)
+  ^ "\n"
+
+  let string_of_sprogram (sstmts : sstmt list) =
+  "\n\nParsed program: \n\n" ^
+  string_of_sstmt_list sstmts 0
