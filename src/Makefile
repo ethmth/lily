@@ -10,7 +10,7 @@ test1 : ast.ml irgen.ml lily.ml parser.mly sast.ml scanner.mll semant.ml  tokeni
 	ocamlbuild test1.native
 
 test2 : ast.ml irgen.ml lily.ml parser.mly sast.ml scanner.mll semant.ml tokenize.ml test2.ml clean
-	ocamlbuild test2.native
+	ocamlbuild -r test2.native
 
 
 .PHONY : clean
