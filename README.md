@@ -46,6 +46,31 @@ Things that need done for the parser:
  
 **`lily.ml` - tests everything** - to use, run `make lily` and `./lily.native ...`
 
+## Environment
+
+### Tested Package versions
+- Ocaml - 5.1.1
+- `llvm` - 16.0.6+nnp
+
+### Setup Procedure
+1. [Install and Initialize](https://ocaml.org/docs/installing-ocaml) `opam`
+
+2. Create the `lily` environment switch:
+```sh
+opam update
+opam switch create lily 5.1.1
+
+# restart your shell
+# and verify you're on switch lily:
+opam switch
+```
+
+3. Install necessary packages:
+
+```sh
+opam install ocaml-lsp-server.1.17.0 odoc.2.4.2 ocamlformat.0.26.2 utop.2.14.0 dune.3.15.2 llvm.16.0.6+nnp
+```
+
 ## How to run tests
 
 ```sh
