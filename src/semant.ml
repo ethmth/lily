@@ -1,5 +1,6 @@
 (* Semantic checking for the LILY compiler *)
 
+open Libparser
 open Ast
 open Sast
 
