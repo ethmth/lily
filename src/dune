@@ -2,22 +2,15 @@
 
 (library
  (name lilylib)
- (modules scanner tokenize parser ast))
+ (modules scanner tokenize parser parserscanner ast astscanner))
 (ocamllex scanner)
 (ocamlyacc parser)
-; (ocamlyacc parserscanner)
+(ocamlyacc parserscanner)
 
-; (library
-;  (name lilylib)
-;  (modules scanner tokenize parserscanner astscanner))
-; (ocamllex scanner)
-; (ocamlyacc parser)
-; (ocamlyacc parserscanner)
-
-; (executable
-;  (name test0)
-;  (modules test0)
-;  (libraries lilylib))
+(executable
+ (name test0)
+ (modules test0)
+ (libraries lilylib))
 
 (executable
  (name test1)

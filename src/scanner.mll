@@ -74,8 +74,8 @@ rule token = parse
 | '!'      { NOT }
 
 (*List*)
-| "[]"      { Parser.EMPTY_LIST }  (* This matches '[]' and returns the EMPTY_LIST token *)
-| "::"    { Parser.COLON_COLON }  (* This represents '::' *)
+| "[]"      { EMPTY_LIST }  (* This matches '[]' and returns the EMPTY_LIST token *)
+| "::"    { COLON_COLON }  (* This represents '::' *)
 
 (* Additional functional operator for REDUCE *)
 | "with"   { WITH }

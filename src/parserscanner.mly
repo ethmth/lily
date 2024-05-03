@@ -9,8 +9,9 @@ open Astscanner
 /* New Line */
 %token NEWLINE
 
-/* Seperators */
+/* Separators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
+
 
 /* Punctuation */
 %token COLON COMMA ARROW
@@ -18,6 +19,7 @@ open Astscanner
 
 /* Binary Operators */
 %token PLUS MINUS TIMES DIVIDE
+%token ELWISE_ADD  // Adding the new operator as a token (CHIMA)
 
 /* Assignment Operators */
 %token ASSIGN
@@ -32,13 +34,18 @@ open Astscanner
 %token AND OR NOT
 
 /* Control Flow */
-%token IF IS IN NONE ELSE ELIF FOR TRY CATCH WHILE FINALLY BREAK RETURN CONTINUE
+%token IF IS IN NONE ELSE ELIF FOR TRY EXCEPT WHILE FINALLY BREAK RETURN CONTINUE
 
 /* Declaration */
 %token CONST DEF LET
 
 /* Types */
 %token BOOL INT FLOAT CHAR STRING
+
+/* List */
+%token LIST
+%token EMPTY_LIST
+%token COLON_COLON
 
 /* Literals */
 %token <int> INT_LIT 
@@ -47,6 +54,11 @@ open Astscanner
 %token <char> CHAR_LIT
 %token <string> STRING_LIT
 %token <string> ID
+
+
+/* Additional functional operator for REDUCE */
+%token WITH
+
 
 /* Miscellaneous */
 %token EOF
@@ -116,7 +128,7 @@ token:
   | ELIF      { StringToken("ELIF")}
   | FOR       { StringToken("FOR")}
   | TRY       { StringToken("TRY")}
-  | CATCH      { StringToken("CATCH")}
+  | EXCEPT      { StringToken("EXCEPT")}
   | WHILE     { StringToken("WHILE")}
   | FINALLY     { StringToken("FINALLY")}
   | BREAK     { StringToken("BREAK")}
