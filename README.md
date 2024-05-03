@@ -4,15 +4,6 @@ LILY (Lightweight Integrated List Syntax), is a Programming Language implemented
 
 Currently, the programming language implementation can be found in the `src/` directory, and examples can be found in the `test/` directory.
 
-## Todo by 04/14
-
-Things that need done for the parser:
-
-- Try, except, finally statements - Tani
-- Lists/List declarations - Chima
-- Parse functional operators - Jay
-
-
 ## Team Members
 
 - [Chimaobi Onwuka](https://github.com/chimaobionwuka) - ceo2134 - Language Guru
@@ -31,8 +22,8 @@ Things that need done for the parser:
 
 **`test0` - tests scanner (everything above this)** - to run `test0`, run `make test0` (see "How to run tests") after changing `scanner.mll` and `tokenize.ml` to open `Parserscanner` instead of `Parser`.
 
-- [ ] `parser.mly` - Parser. The parser still needs major work (see `TODO`s). It currently has a very limited subset of features. However, currently there are no Shift/Reduce conflicts and it parses the 3 sample files. Try not to commit anything that doesn't build or causes Shift/Reduce conflicts (meaning test the parser on the sample programs using `test1` before you commit).
-- [ ] `ast.ml` - AST. AST still needs major work as changes are made to the parser. Similarly, the pretty-print functions need to be adjusted to use LILY syntax instead of MicroC syntax.
+- [x] `parser.mly` - Parser. The parser still needs major work (see `TODO`s). It currently has a very limited subset of features. However, currently there are no Shift/Reduce conflicts and it parses the 3 sample files. Try not to commit anything that doesn't build or causes Shift/Reduce conflicts (meaning test the parser on the sample programs using `test1` before you commit).
+- [x] `ast.ml` - AST. AST still needs major work as changes are made to the parser. Similarly, the pretty-print functions need to be adjusted to use LILY syntax instead of MicroC syntax.
 
 **`test1` - tests parser and ast (everything above this)** - to run `test1`, run `make test1` and follow the "How to run tests" instructions below.
 
@@ -51,6 +42,7 @@ Things that need done for the parser:
 ### Tested Package versions
 - Ocaml - 5.1.1
 - `llvm` - 16.0.6+nnp
+- `dune` - 3.15.2
 
 ### Setup Procedure
 1. [Install and Initialize](https://ocaml.org/docs/installing-ocaml) `opam`
@@ -94,44 +86,3 @@ cat ../test/example.lily | ./test1.native
 ```sh
 make clean
 ```
-
-
-
-## Hello World Front-End Progress Update
-
-So far, we have begun implementation on the scanner, parser, and AST.
-
-### `scanner.mll`
-
-Since our language is indentation-based like python, we've added
-special tokens INDENT and DEDENT that detect increases and decreases in
-tab indentation. ~~The implementation of this scanning is crude and does not
-yet allow for multiple DEDENTs at once (for example, ending a function and 
-its nested if statement at once), but works for the limited subset of programs
-we have so far.~~
-
-~~More work needs to done on the scanner (see `TODO`s in `scanner.mll`) to parse 
-for multiple DEDENTs, as well as to determine whether NEWLINE tokens are needed.~~
-
-We have also implemented a dummy parser `parserscanner.mly` and `astscanner.ml`
-that simply prints out the lexxed tokens for testing and debug purposes.
-
-### `parser.mly`
-
-Currently, our parser works for a very limited set of sample LILY programs,
-specifically `example.lily`, `gcd.lily`, and `hello_world.lily`. ~~Our parser still has 10+
-shift/reduce conflicts that need to be sorted out.~~ The parser still needs
-to implement a lot of LILY functionality that it is currently missing, specifically 
-lists, elifs, for loops, and try statements.
-
-### `ast.ml`
-
-Our AST currently works hand-in-hand with our parser, containing the different 
-expression and statement types as well as useful functions. The same improvements
-that need to be made to our parser need to be made in the corresponding location in
-`ast.ml`. The pretty-printing functions in `ast.ml` must also be updated to use LILY syntax instead of MicroC syntax.
-
-### Other Files
-
-Currently, ~~all~~ most of the other files are taken directly from the MicroC example
-and we do not claim ownership of the code.
