@@ -22,7 +22,7 @@ let string_of_value = function
   | ValString(s) -> s
   | ValChar(c) -> String.make 1 c
 
-let rec string_of_token(t: toke): string = 
+let string_of_token(t: toke): string = 
   match t with
   | StringToken(s) -> s ^ "\n"
   | StringAndValueToken(s, v) -> s ^ " " ^ string_of_value v ^ "\n"

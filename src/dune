@@ -1,5 +1,25 @@
-(executable
- (name test1)
- (modules test1 ast parser scanner tokenize))
+; (include_subdirs  unqualified)
+
+(library
+ (name lilylib)
+ (modules scanner tokenize parser ast))
 (ocamllex scanner)
 (ocamlyacc parser)
+; (ocamlyacc parserscanner)
+
+; (library
+;  (name lilylib)
+;  (modules scanner tokenize parserscanner astscanner))
+; (ocamllex scanner)
+; (ocamlyacc parser)
+; (ocamlyacc parserscanner)
+
+; (executable
+;  (name test0)
+;  (modules test0)
+;  (libraries lilylib))
+
+(executable
+ (name test1)
+ (modules test1)
+ (libraries lilylib))
