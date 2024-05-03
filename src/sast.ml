@@ -1,5 +1,5 @@
 (* Semantically-checked Abstract Syntax Tree and functions for printing it *)
-
+open Libparser
 open Ast
 
 type sexpr = typ * sx

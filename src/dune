@@ -1,0 +1,30 @@
+(library
+ (name libparser)
+ (modules scanner parser ast))
+(ocamllex scanner)
+(ocamlyacc parser)
+
+(library
+ (name libsemant)
+ (modules sast semant)
+(libraries libparser))
+
+(library
+ (name libirgen)
+ (modules irgen)
+(libraries libparser libsemant llvm))
+
+(executable
+ (name test1)
+ (modules test1)
+ (libraries libparser))
+
+(executable
+ (name test2)
+ (modules test2)
+ (libraries libparser libsemant))
+
+(executable
+ (name lily)
+ (modules lily)
+ (libraries libparser libsemant libirgen))

@@ -2,6 +2,9 @@
    check the resulting AST and generate an SAST from it, generate LLVM IR,
    and dump the module *)
 
+open Libparser
+open Libsemant
+open Libirgen
 type action = Ast | Sast | LLVM_IR
 
 let () =
