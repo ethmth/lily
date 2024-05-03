@@ -19,6 +19,10 @@ test2 : $(FILES)
 	dune build test2.exe
 	ln -s ./_build/default/test2.exe test2.native
 
+.PHONY : watch
+watch :
+	dune build --watch --terminal-persistence=clear-on-rebuild
+
 .PHONY : clean
 clean :
 	dune clean
