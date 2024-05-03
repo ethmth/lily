@@ -1,7 +1,7 @@
 (* Author: Michaela Gary *)
 (* Last Edited: May 1, 2024 *)
 (* Semantically-checked Abstract Syntax Tree and functions for printing it in Lily *)
-
+open Libparser
 open Ast
 
 type sexpr = typ * expr_detail

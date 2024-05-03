@@ -1,10 +1,11 @@
 FILES = dune dune-project ast.ml astscanner.ml irgen.ml lily.ml parser.mly parserscanner.mly sast.ml scanner.mll semant.ml test0.ml test1.ml test2.ml tokenize.ml
 OUT_FILES = test1.exe test0.exe test2.exe lily.exe test1.native test0.native test2.native lily.native scanner.ml parser.ml parser.mli parserscanner.ml parserscanner.mli *.cmi *.cmo
 
-all : test1
+all : test1 test2
 
 lily : $(FILES)
-	ocamlbuild -pkgs llvm lily.native
+	dune build lily.exe
+	ln -s ./_build/default/lily.exe lily.native
 
 test0 : $(FILES)
 	dune build test0.exe
@@ -15,7 +16,8 @@ test1 : $(FILES)
 	ln -s ./_build/default/test1.exe test1.native
 
 test2 : $(FILES)
-	ocamlbuild -r test2.native
+	dune build test2.exe
+	ln -s ./_build/default/test2.exe test2.native
 
 .PHONY : clean
 clean :

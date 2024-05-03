@@ -1,18 +1,36 @@
-; (include_subdirs  unqualified)
-
 (library
- (name lilylib)
+ (name libparser)
  (modules scanner tokenize parser parserscanner ast astscanner))
 (ocamllex scanner)
 (ocamlyacc parser)
 (ocamlyacc parserscanner)
 
+(library
+ (name libsemant)
+ (modules sast semant)
+(libraries libparser))
+
+(library
+ (name libirgen)
+ (modules irgen)
+(libraries libparser libsemant llvm))
+
 (executable
  (name test0)
  (modules test0)
- (libraries lilylib))
+ (libraries libparser))
 
 (executable
  (name test1)
  (modules test1)
- (libraries lilylib))
+ (libraries libparser))
+
+(executable
+ (name test2)
+ (modules test2)
+ (libraries libparser libsemant))
+
+(executable
+ (name lily)
+ (modules lily)
+ (libraries libparser libsemant libirgen))

@@ -1,3 +1,4 @@
+open Libsemant
 open Sast
 
 let _ =
