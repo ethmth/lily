@@ -7,8 +7,9 @@
 
    Detailed documentation on the OCaml LLVM library:
 
-   http://llvm.moe/
-   http://llvm.moe/ocaml/
+   http://llvm.moe/ (OUTDATED)
+   http://llvm.moe/ocaml/ (OUTDATED)
+   https://ocaml.org/p/llvm/16.0.6%2Bnnp/doc/Llvm/index.html
 
 *)
 
@@ -30,7 +31,7 @@ let translate (globals, functions) =
 
   (* Get types from the context *)
   let i32_t      = L.i32_type    context
-  and i8_t       = L.i8_type     context
+  (* and i8_t       = L.i8_type     context *)
   and i1_t       = L.i1_type     context in
 
   (* Return the LLVM type for a MicroC type *)
@@ -47,7 +48,7 @@ let translate (globals, functions) =
     List.fold_left global_var StringMap.empty globals in
 
   let printf_t : L.lltype =
-    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
+    L.var_arg_function_type i32_t [| L.pointer_type context |] in
   let printf_func : L.llvalue =
     L.declare_function "printf" printf_t the_module in
 
@@ -98,10 +99,10 @@ let translate (globals, functions) =
     in
 
     (* Construct code for an expression; return its value *)
-    let rec build_expr builder ((_, e) : sexpr) = match e with
+    let rec build_expr builder ((t, e) : sexpr) = match e with
         SLiteral i  -> L.const_int i32_t i
       | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
-      | SId s       -> L.build_load (lookup s) s builder
+      | SId s       -> L.build_load (ltype_of_typ t) (lookup s) s builder
       | SAssign (s, e) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup s) builder); e'
       | SBinop (e1, op, e2) ->
@@ -117,13 +118,13 @@ let translate (globals, functions) =
          | A.Less    -> L.build_icmp L.Icmp.Slt
         ) e1' e2' "tmp" builder
       | SCall ("print", [e]) ->
-        L.build_call printf_func [| int_format_str ; (build_expr builder e) |]
+        L.build_call (ltype_of_typ t) printf_func [| int_format_str ; (build_expr builder e) |]
           "printf" builder
       | SCall (f, args) ->
-        let (fdef, fdecl) = StringMap.find f function_decls in
+        let (fdef, _) = StringMap.find f function_decls in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = f ^ "_result" in
-        L.build_call fdef (Array.of_list llargs) result builder
+        L.build_call (ltype_of_typ t) fdef (Array.of_list llargs) result builder
     in
 
     (* LLVM insists each basic block end with exactly one "terminator"
