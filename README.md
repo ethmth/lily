@@ -51,6 +51,8 @@ Currently, the programming language implementation can be found in the `src/` di
 ```sh
 opam update
 opam switch create lily 5.1.1
+# For testing the original MicroC:
+# opam switch create microc 4.14.2
 
 # restart your shell
 # and verify you're on switch lily:
@@ -61,6 +63,8 @@ opam switch
 
 ```sh
 opam install ocaml-lsp-server.1.17.0 odoc.2.4.2 ocamlformat.0.26.2 utop.2.14.0 dune.3.15.2 llvm.16.0.6+nnp
+# For testing the original MicroC:
+# opam install ocaml-lsp-server.1.17.0 odoc.2.4.2 ocamlformat.0.26.2 utop.2.14.0 dune.3.15.2 llvm.14.0.6
 ```
 
 ## How to run tests
