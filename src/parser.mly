@@ -40,7 +40,7 @@ open Ast
 %token CONST DEF LET
 
 /* Types */
-%token BOOL INT FLOAT CHAR STRING
+%token BOOL INT FLOAT CHAR STRING VOID
 
 /* List */
 %token LIST
@@ -118,7 +118,6 @@ stmt_compound:
 
 /* stmt_simple */
 
-// TODO (Ethan) Implement declaration: Allow for multiple ways of declaration
 declaration: 
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
@@ -207,8 +206,8 @@ typ:
   | FLOAT { Float }
   | CHAR  { Char }
   | STRING { String }
+  | VOID   { Void }
   | LIST typ { List($2) }
-
 
 /* Lists */
 
@@ -219,11 +218,6 @@ list_elements_opt:
  list_elements:
    expression { [$1] }
    | expression COMMA list_elements { $1 :: $3 }
-
-// TODO: (Chima) Implement Lists
-// list_literal:
-//    LBRACKET list_elements_opt RBRACKET { ListLit($2) }
-
 
 /* Expressions */
 
@@ -267,12 +261,9 @@ arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
 
+list_literal:
+  LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-// (Chima) Implement Lists (COMPLETED)
-   list_literal:
-      LBRACKET list_elements_opt RBRACKET { ListLit($2) }
-
-// (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
   | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
   //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }

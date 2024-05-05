@@ -31,7 +31,7 @@ rule token = parse
 | "#"     { comment lexbuf }           (* Comments *)
 
 
-(* Seperators *)
+(* Separators *)
 | '('      { LPAREN }
 | ')'      { RPAREN }
 | '{'      { LBRACE }
@@ -107,6 +107,7 @@ rule token = parse
 | "float"  { FLOAT }
 | "char"   { CHAR }
 | "string" { STRING }
+| "void"   { VOID }
 
 (* Literals *)
 | "True"   { BOOL_LIT(true)  }

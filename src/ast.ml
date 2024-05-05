@@ -9,7 +9,7 @@ type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map |
 type unary_op = Negate
 
 (* Types definition *)
-type typ = Int | Bool | Char | Float | String | List of typ
+type typ = Int | Bool | Char | Float | String | Void | List of typ
 
 type bind = typ * string
 
@@ -97,6 +97,7 @@ let string_of_typ = function
   | Char -> "char"
   | Float -> "float"
   | String -> "string" (*CHIMA NEW: Added this line*)
+  | Void -> "void"
   | List _ -> "list" (*CHIMA NEW: Added this line*)
 
 (* Pretty-printing functions *)
