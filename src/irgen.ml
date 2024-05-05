@@ -133,7 +133,8 @@ let translate (globals, functions) =
          | A.Less    -> L.build_icmp L.Icmp.Slt
         ) e1' e2' "tmp" builder
       | SCall ("print", [e]) ->
-        L.build_call (ltype_of_typ t) printf_func [| int_format_str ; (build_expr builder e) |]
+        let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e))])) in 
+        L.build_call func_type printf_func [| int_format_str ; (build_expr builder e) |]
           "printf" builder
       | SCall (f, args) ->
         let (fdef, _) = StringMap.find f function_decls in
