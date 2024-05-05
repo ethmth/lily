@@ -37,17 +37,17 @@ Currently, the programming language implementation can be found in the `src/` di
  
 **`lily.ml` - tests everything** - to use, run `make lily` and `./lily.native ...`
 
-## Environment
+## Environment Setup
 
 ### Tested Package versions
-- Ocaml - 5.1.1
+- OCaml - 5.1.1
 - `llvm` - 16.0.6+nnp
 - `dune` - 3.15.2
 
 ### Setup Procedure
 1. [Install and Initialize](https://ocaml.org/docs/installing-ocaml) `opam`
 
-2. Create the `lily` environment switch:
+2. Create the `lily` environment switch with OCaml 5.1.1:
 ```sh
 opam update
 opam switch create lily 5.1.1
@@ -67,19 +67,25 @@ opam install ocaml-lsp-server.1.17.0 odoc.2.4.2 ocamlformat.0.26.2 utop.2.14.0 d
 # opam install ocaml-lsp-server.1.17.0 odoc.2.4.2 ocamlformat.0.26.2 utop.2.14.0 dune.3.15.2 llvm.14.0.6
 ```
 
-## How to run tests
+## Parser Instructions
 
 ```sh
 cd src/
 ```
 
-### Build the test
+### Build the LILY parser
 
 ```sh
 make test1
 ```
 
-### Run the test on a specific file
+### Run the LILY parser
+
+```sh
+./test1.native
+```
+
+### Test on specific file
 
 ```sh
 cat ../test/example.lily | ./test1.native
@@ -89,4 +95,21 @@ cat ../test/example.lily | ./test1.native
 
 ```sh
 make clean
+```
+
+## Compiler Instructions
+
+You must have the llvm 16 OCaml package installed (see above instructions).
+
+### Build the LILY compiler
+
+```sh
+make lily
+```
+
+### Run the LILY compiler on a file
+
+```sh
+# lli may not work. Try lli-16 if not.
+cat ../test/example.lily | ./lily.native | lli
 ```
