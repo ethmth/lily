@@ -39,6 +39,21 @@ let translate (globals, functions) =
       A.Int   -> i32_t
     | A.Bool  -> i1_t
   in
+  let ltypes_of_typs (l:A.typ list): L.lltype list =
+   List.map ltype_of_typ l
+  in
+  let type_of_sexpr (l:sexpr): A.typ = 
+    match l with (t, _) -> t
+  in
+  let types_of_sexprs (l: sexpr list): A.typ list =
+    List.map type_of_sexpr l
+  in
+  (* let type_of_bind (l:A.bind): A.typ = 
+    match l with (t, _) -> t
+  in
+  let types_of_binds (l: A.bind list): A.typ list =
+    List.map type_of_bind l
+  in *)
 
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
@@ -124,7 +139,9 @@ let translate (globals, functions) =
         let (fdef, _) = StringMap.find f function_decls in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = f ^ "_result" in
-        L.build_call (ltype_of_typ t) fdef (Array.of_list llargs) result builder
+        let arg_types = ltypes_of_typs (types_of_sexprs args) in
+        let func_type = L.function_type (ltype_of_typ t) (Array.of_list arg_types) in 
+        L.build_call func_type fdef (Array.of_list llargs) result builder
     in
 
     (* LLVM insists each basic block end with exactly one "terminator"
