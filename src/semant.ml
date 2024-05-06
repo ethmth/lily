@@ -20,40 +20,22 @@ let check (program_block) =
     in
 
     let is_var_local (id: string): bool =
-      (* try StringMap.find id l_vmap
-      with Not_found ->  false
-      | _ -> true *)
       StringMap.mem id l_vmap
     in
     let is_var (id: string): bool =
       if is_var_local id then true else (StringMap.mem id b_vmap)
-    (* with Not_found ->  false
-      | _ -> true) *)
     in
     let check_var (id: string) : typ =
       if is_var_local id then (StringMap.find id l_vmap) else (
         if is_var id then (StringMap.find id b_vmap) else  
           raise (Failure ("Undeclared variable " ^ id)))
     in
-
     let add_var (id: string) (t: typ) =
       if is_var_local id then raise (Failure ("Already declared variable " ^ id ^ " in current scope")) 
       else StringMap.add id t l_vmap
     in
 
-
-    (* let check_expr_typ (e:expr): typ =
-      match e with 
-      LitInt(_) -> Int
-      | LitBool(_) -> Bool
-      | LitFloat(_) -> Float
-      | LitChar(_) -> Char
-      | Id(_id) -> Int
-      | _ -> Int
-    in *)
     let rec check_expr (e: expr): sexpr =
-      (* ( *)
-      (* check_expr_typ e,  *)
       match e with
       LitInt(l) ->  (Int, SLitInt(l))
       | LitBool(l) -> (Bool, SLitBool(l))
@@ -64,7 +46,6 @@ let check (program_block) =
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in if t1 != t2 then raise(Failure("variables of different types in binop")) else (t1, SBinop((t1, se1), op, (t2, se2))))
       | Call(s, el) -> SCall(s, el)
       | UnaryOp(op, e) -> SUnaryOp(op, e)
-      (* ) *)
     in
 
     let check_stmt (s: stmt): sstmt =
@@ -74,23 +55,9 @@ let check (program_block) =
       (* Assign(var, e) -> ignore(add_var var (check_expr_typ e)); SAssign(var, check_expr e) *)
       | _ -> SReturn(Int, SLitInt(3))
     in
-    (* let rec check_stmt_list (slist: stmt list): sstmt list =
-      match slist with
-      [] -> []
-      | s:: sl -> check_stmt s :: check_stmt_list sl
-    in *)
-
-    (* let empty_block : sblock = 
-      ignore(block);
-      ignore(b_fmap);
-      ignore(b_smap);
-      SBlock([])
-    in
-    empty_block *)
 
     match block with
     Block(sl) -> SBlock(List.map check_stmt sl)
-
   in
 
   check_block program_block StringMap.empty StringMap.empty

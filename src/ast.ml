@@ -3,13 +3,17 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 (* Operators definition *)
-type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map | Filter | Reduce
+(* type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map | Filter | Reduce *)
+type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq
 
 (* Unary operator definition *)
 type unary_op = Negate
 
 (* Types definition *)
-type typ = Int | Bool | Char | Float | String | Void | List of typ
+(* type typ = Int | Bool | Char | Float | String | Void | List of typ *)
+type typ = Int | Bool | Char | Float | Void 
+
+(* type func_typ = typ * typ list *)
 
 type bind = typ * string
 
@@ -82,9 +86,9 @@ let string_of_op = function
   | Leq -> "<="
   | Gt -> ">" 
   | Geq -> ">="
-  | Map -> "=>"       
-  | Filter -> "=>?"   
-  | Reduce -> "=>/"  
+  (* | Map -> "=>"        *)
+  (* | Filter -> "=>?"    *)
+  (* | Reduce -> "=>/"   *)
 
 let string_of_unary_op = function
     Negate -> "!"
@@ -97,9 +101,9 @@ let string_of_typ = function
   | Bool -> "bool"
   | Char -> "char"
   | Float -> "float"
-  | String -> "string" (*CHIMA NEW: Added this line*)
+  (*| String -> "string"*) (*CHIMA NEW: Added this line*)
   | Void -> "void"
-  | List _ -> "list" (*CHIMA NEW: Added this line*)
+  (*| List _ -> "list"*) (*CHIMA NEW: Added this line*)
 
 (* Pretty-printing functions *)
 let string_of_indent (curr_indent) =
