@@ -90,7 +90,10 @@ open Ast
 /* The grammar rules below here are for LILY from the LRM Parser section. */
 
 program:
-  NEWLINE statements EOF { $2 }
+  NEWLINE block EOF { Block($2) }
+
+block:
+  statements { $1 }
 
 statements:
   /* nothing */ { [] }
@@ -112,17 +115,17 @@ stmt_compound:
   | for_loop  { $1 }
   | while_loop  { $1 }
   | if_statement { $1 }
-  | elif_statement { $1 }
-  | else_statement { $1 }
-  | try_statement { $1 }
+  // | elif_statement { $1 }
+  // | else_statement { $1 }
+  // | try_statement { $1 }
 
 /* stmt_simple */
 
 declaration: 
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
-  | LET ID ASSIGN expression { IDeclAssign($2, $4) }
-  | LET ID { IDecl($2) }
+  // | LET ID ASSIGN expression { IDeclAssign($2, $4) }
+  // | LET ID { IDecl($2) }
 
 assignment:
   | ID ASSIGN expression {Assign($1, $3)}
@@ -136,15 +139,7 @@ expression_statement:
 /* stmt_compound */
 
 function_def:
-  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON NEWLINE INDENT statements DEDENT
-  {
-    Fdecl({
-      rtyp=$7;
-      fname=$2;
-      parameters=$4;
-      stmts=$11
-    })
-  }
+  DEF ID LPAREN parameters_opt RPAREN ARROW typ COLON NEWLINE INDENT block DEDENT { Fdecl($7, $2, $4, Block($11)) }
 
 parameters_opt:
     /*nothing*/ { [] }
@@ -158,45 +153,46 @@ binding:
   ID COLON typ { ($3, $1) }
 
 for_loop:
-  FOR LPAREN expression COMMA expression RPAREN COLON NEWLINE INDENT statements DEDENT { For($3, $5, $10) }
+  FOR LPAREN expression COMMA expression RPAREN COLON NEWLINE INDENT block DEDENT { For($3, $5, Block($10)) }
 
 while_loop:
-  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { While($3, $8) }
+  WHILE LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { While($3, Block($8)) }
 
 if_statement:
-  IF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { If($3, $8) }
+  IF LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT ELSE COLON NEWLINE INDENT block DEDENT { If($3, Block($8), Block($14)) }
+  | IF LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { If($3, Block($8), Block([])) }
 
-elif_statement:
-  ELIF LPAREN expression RPAREN COLON NEWLINE INDENT statements DEDENT { Elif($3, $8) }
+// elif_statement:
+//   ELIF LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { Elif($3, $8) }
 
-else_statement:
-  ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
+// else_statement:
+//   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
-try_statement:
-  | TRY COLON NEWLINE INDENT statements except_clauses finally_clause DEDENT
-    {
-      Try($5, $6, Some($7))
-    }
-  | TRY COLON NEWLINE INDENT statements except_clauses DEDENT
-    {
-      Try($5, $6, None)
-    }
-except_clauses:
-  | except_clause except_clauses { $1 :: $2 }
-  | /* nothing */ { [] }
+// try_statement:
+//   | TRY COLON NEWLINE INDENT statements except_clauses finally_clause DEDENT
+//     {
+//       Try($5, $6, Some($7))
+//     }
+//   | TRY COLON NEWLINE INDENT statements except_clauses DEDENT
+//     {
+//       Try($5, $6, None)
+//     }
+// except_clauses:
+//   | except_clause except_clauses { $1 :: $2 }
+//   | /* nothing */ { [] }
 
-except_clause:
-  EXCEPT LPAREN typ ID RPAREN COLON NEWLINE INDENT statements DEDENT
-  {
-    { exn_type=Some $3; exn_var=Some $4; handler=$9 }
-  }
-  | EXCEPT COLON NEWLINE INDENT statements DEDENT
-  {
-    { exn_type=None; exn_var=None; handler=$5 }
-  }
-finally_clause:
-  FINALLY COLON NEWLINE INDENT statements DEDENT { $5 }
+// except_clause:
+//   EXCEPT LPAREN typ ID RPAREN COLON NEWLINE INDENT statements DEDENT
+//   {
+//     { exn_type=Some $3; exn_var=Some $4; handler=$9 }
+//   }
+//   | EXCEPT COLON NEWLINE INDENT statements DEDENT
+//   {
+//     { exn_type=None; exn_var=None; handler=$5 }
+//   }
+// finally_clause:
+//   FINALLY COLON NEWLINE INDENT statements DEDENT { $5 }
 
 /* Types */
 
@@ -205,19 +201,19 @@ typ:
   | BOOL  { Bool  }
   | FLOAT { Float }
   | CHAR  { Char }
-  | STRING { String }
+  // | STRING { String }
   | VOID   { Void }
-  | LIST typ { List($2) }
+  // | LIST typ { List($2) }
 
 /* Lists */
 
-list_elements_opt:
-   /* nothing */ { [] }
-   | list_elements { $1 }
+// list_elements_opt:
+//    /* nothing */ { [] }
+//    | list_elements { $1 }
 
- list_elements:
-   expression { [$1] }
-   | expression COMMA list_elements { $1 :: $3 }
+//  list_elements:
+//    expression { [$1] }
+//    | expression COMMA list_elements { $1 :: $3 }
 
 /* Expressions */
 
@@ -226,7 +222,7 @@ expression:
   | BOOL_LIT { LitBool($1) }
   | CHAR_LIT { LitChar($1) }
   | FLOAT_LIT { LitFloat($1) }
-  | STRING_LIT { LitString($1) }
+  // | STRING_LIT { LitString($1) }
   | ID          { Id($1) }
   | expression PLUS expression { Binop($1, Plus,   $3) }
   | expression MINUS expression { Binop($1, Minus,   $3) }
@@ -238,16 +234,15 @@ expression:
   | expression LEQ expression { Binop($1, Leq,   $3) }
   | expression GT expression { Binop($1, Gt,   $3) }
   | expression GEQ expression { Binop($1, Geq,   $3) }
-  | expression MAP expression { Map($1, $3) }      
-  | expression FILTER expression { Filter($1, $3) }   
-  | expression REDUCE expression WITH expression { Reduce($1, $3, $5) }
-  | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  (*// New element-wise addition (CHIMA)*)
+  // | expression MAP expression { Map($1, $3) }      
+  // | expression FILTER expression { Filter($1, $3) }   
+  // | expression REDUCE expression WITH expression { Reduce($1, $3, $5) }
+  // | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  (*// New element-wise addition (CHIMA)*)
   | function_call { $1 }
-  | list_declaration { $1 }
-  | list_literal { $1 }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
-  // | LET ID COLON typ ASSIGN expression { DeclExpr($4, $2, $6) }  (*// Adding new expression type for inline declarations*)
+  // | list_declaration { $1 }
+  // | list_literal { $1 }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
   | LPAREN expression RPAREN { $2 } (*// For grouping and precedence*)
-  | LPAREN expression RPAREN DOT ID LPAREN arguments_opt RPAREN { MethodCall($2, $5, $7) }
+  // | LPAREN expression RPAREN DOT ID LPAREN arguments_opt RPAREN { MethodCall($2, $5, $7) }
 
 
 function_call:
@@ -261,20 +256,20 @@ arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
 
-list_literal:
-  LBRACKET list_elements_opt RBRACKET { ListLit($2) }
+// list_literal:
+//   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-list_declaration:
-  | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
+// list_declaration:
+  // | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
   //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
   // | LET ID COLON_COLON typ '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
   //|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
- elements_opt:
-   /*nothing*/ { [] }
-   | elements { $1 }
+//  elements_opt:
+//    /*nothing*/ { [] }
+//    | elements { $1 }
 
- elements:
-   expression  { [$1] }
-   | expression COMMA elements { $1::$3 }
+//  elements:
+//    expression  { [$1] }
+//    | expression COMMA elements { $1::$3 }
 
