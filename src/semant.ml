@@ -13,15 +13,84 @@ module StringMap = Map.Make(String)
 
 let check (program_block) =
 
-  let check_block (block: block): sblock =
-    print_endline "Hi";
+  let check_block (block: block) (b_fmap: typ StringMap.t) (b_vmap: typ StringMap.t): sblock =
+    let l_fmap: typ StringMap.t = StringMap.empty 
+    in
+    let l_vmap: typ StringMap.t = StringMap.empty
+    in
+
+    let is_var_local (id: string): bool =
+      (* try StringMap.find id l_vmap
+      with Not_found ->  false
+      | _ -> true *)
+      StringMap.mem id l_vmap
+    in
+    let is_var (id: string): bool =
+      if is_var_local id then true else (StringMap.mem id b_vmap)
+    (* with Not_found ->  false
+      | _ -> true) *)
+    in
+    let check_var (id: string) : typ =
+      if is_var_local id then (StringMap.find id l_vmap) else (
+        if is_var id then (StringMap.find id b_vmap) else  
+          raise (Failure ("Undeclared variable " ^ id)))
+    in
+
+    let add_var (id: string) (t: typ) =
+      if is_var_local id then raise (Failure ("Already declared variable " ^ id ^ " in current scope")) 
+      else StringMap.add id t l_vmap
+    in
 
 
+    (* let check_expr_typ (e:expr): typ =
+      match e with 
+      LitInt(_) -> Int
+      | LitBool(_) -> Bool
+      | LitFloat(_) -> Float
+      | LitChar(_) -> Char
+      | Id(_id) -> Int
+      | _ -> Int
+    in *)
+    let rec check_expr (e: expr): sexpr =
+      (* ( *)
+      (* check_expr_typ e,  *)
+      match e with
+      LitInt(l) ->  (Int, SLitInt(l))
+      | LitBool(l) -> (Bool, SLitBool(l))
+      | LitFloat(l) -> (Float, SLitFloat(l))
+      | LitChar(l) -> (Char, SLitChar(l))
+      | Id(id) -> (check_var id, SId(id))
+      (* TODO: Add some Binop support between different types? *)
+      | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in if t1 != t2 then raise(Failure("variables of different types in binop")) else (t1, SBinop((t1, se1), op, (t2, se2))))
+      | Call(s, el) -> SCall(s, el)
+      | UnaryOp(op, e) -> SUnaryOp(op, e)
+      (* ) *)
+    in
 
-    let empty_block (_unused_block: block): sblock = 
+    let check_stmt (s: stmt): sstmt =
+      (* ignore(s);
+      SReturn(Int, SLitInt(3)) *)
+      match s with 
+      (* Assign(var, e) -> ignore(add_var var (check_expr_typ e)); SAssign(var, check_expr e) *)
+      | _ -> SReturn(Int, SLitInt(3))
+    in
+    (* let rec check_stmt_list (slist: stmt list): sstmt list =
+      match slist with
+      [] -> []
+      | s:: sl -> check_stmt s :: check_stmt_list sl
+    in *)
+
+    (* let empty_block : sblock = 
+      ignore(block);
+      ignore(b_fmap);
+      ignore(b_smap);
       SBlock([])
     in
-    empty_block block
+    empty_block *)
+
+    match block with
+    Block(sl) -> SBlock(List.map check_stmt sl)
+
   in
 
-  check_block program_block
+  check_block program_block StringMap.empty StringMap.empty
