@@ -31,7 +31,7 @@ rule token = parse
 | "#"     { comment lexbuf }           (* Comments *)
 
 
-(* Seperators *)
+(* Separators *)
 | '('      { LPAREN }
 | ')'      { RPAREN }
 | '{'      { LBRACE }
@@ -74,8 +74,8 @@ rule token = parse
 | '!'      { NOT }
 
 (*List*)
-| "[]"      { Parser.EMPTY_LIST }  (* This matches '[]' and returns the EMPTY_LIST token *)
-| "::"    { Parser.COLON_COLON }  (* This represents '::' *)
+| "[]"      { EMPTY_LIST }  (* This matches '[]' and returns the EMPTY_LIST token *)
+| "::"    { COLON_COLON }  (* This represents '::' *)
 
 (* Additional functional operator for REDUCE *)
 | "with"   { WITH }
@@ -107,6 +107,7 @@ rule token = parse
 | "float"  { FLOAT }
 | "char"   { CHAR }
 | "string" { STRING }
+| "void"   { VOID }
 
 (* Literals *)
 | "True"   { BOOL_LIT(true)  }

@@ -1,0 +1,8 @@
+
+let d = [5,3]
+
+let f = [5, 7, 3]
+
+["Hello", "World!"]
+
+["Hello", "World!", 7]

@@ -1,4 +1,4 @@
-/* Author(s): Michaela Gary, Ethan Thomas */
+/* Author(s): Michaela Gary, Ethan Thomas, Tani Omoyeni */
 /* Last Edited: April 1, 2024 */
 /* Ocamllex parser for LILY */
 
@@ -9,7 +9,7 @@ open Ast
 /* New Line */
 %token NEWLINE
 
-/* Seperators */
+/* Separators */
 %token LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET
 
 
@@ -40,7 +40,7 @@ open Ast
 %token CONST DEF LET
 
 /* Types */
-%token BOOL INT FLOAT CHAR STRING
+%token BOOL INT FLOAT CHAR STRING VOID
 
 /* List */
 %token LIST
@@ -114,11 +114,10 @@ stmt_compound:
   | if_statement { $1 }
   | elif_statement { $1 }
   | else_statement { $1 }
-  // | try_statement { $1 }
+  | try_statement { $1 }
 
 /* stmt_simple */
 
-// TODO (Ethan) Implement declaration: Allow for multiple ways of declaration
 declaration: 
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
@@ -174,14 +173,30 @@ else_statement:
   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
 
 // TODO (Tani) Implement try statements
-// try_statement:
-//   TRY COLON statements catch_clauses
+try_statement:
+  | TRY COLON NEWLINE INDENT statements except_clauses finally_clause DEDENT
+    {
+      Try($5, $6, Some($7))
+    }
+  | TRY COLON NEWLINE INDENT statements except_clauses DEDENT
+    {
+      Try($5, $6, None)
+    }
+except_clauses:
+  | except_clause except_clauses { $1 :: $2 }
+  | /* nothing */ { [] }
 
-// except_clause:
-//   CATCH LPAREN ID type RPAREN COLON statements
-
-// finally_clause:
-//   FINALLY COLON statements
+except_clause:
+  EXCEPT LPAREN typ ID RPAREN COLON NEWLINE INDENT statements DEDENT
+  {
+    { exn_type=Some $3; exn_var=Some $4; handler=$9 }
+  }
+  | EXCEPT COLON NEWLINE INDENT statements DEDENT
+  {
+    { exn_type=None; exn_var=None; handler=$5 }
+  }
+finally_clause:
+  FINALLY COLON NEWLINE INDENT statements DEDENT { $5 }
 
 /* Types */
 
@@ -191,8 +206,8 @@ typ:
   | FLOAT { Float }
   | CHAR  { Char }
   | STRING { String }
+  | VOID   { Void }
   | LIST typ { List($2) }
-
 
 /* Lists */
 
@@ -203,11 +218,6 @@ list_elements_opt:
  list_elements:
    expression { [$1] }
    | expression COMMA list_elements { $1 :: $3 }
-
-// TODO: (Chima) Implement Lists
-// list_literal:
-//    LBRACKET list_elements_opt RBRACKET { ListLit($2) }
-
 
 /* Expressions */
 
@@ -251,12 +261,9 @@ arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
 
+list_literal:
+  LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-// (Chima) Implement Lists (COMPLETED)
-   list_literal:
-      LBRACKET list_elements_opt RBRACKET { ListLit($2) }
-
-// (Chima) Implement List Declaration (COMPLETED)
 list_declaration:
   | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
 
