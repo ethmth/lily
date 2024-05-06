@@ -13,8 +13,6 @@ type unary_op = Negate
 (* type typ = Int | Bool | Char | Float | String | Void | List of typ *)
 type typ = Int | Bool | Char | Float | Void 
 
-(* type func_typ = typ * typ list *)
-
 type bind = typ * string
 
 (* Definition of list operations *)
@@ -191,3 +189,74 @@ let string_of_program (blk : block) =
     "\n\nParsed program: \n\n" ^
     (* string_of_stmt_list stmts 0 *)
     string_of_block blk 0
+
+
+(* FUNCTIONS FOR CUSTOM FuncTyp *)
+
+(* type func_id = string * typ list *)
+
+(* module FuncModule : Map.OrderedType = struct
+
+  let compare_typ t1 t2 =
+    match t1, t2 with
+    | Int, Int | Bool, Bool | Char, Char | Float, Float | Void, Void -> 0
+    | Int, _ -> -1
+    | _, Int -> 1
+    | Bool, _ -> -1
+    | _, Bool -> 1
+    | Char, _ -> -1
+    | _, Char -> 1
+    | Float, _ -> -1
+    | _, Float -> 1
+
+  type t = string * typ list
+
+  let rec compare_list l1 l2 = match l1, l2 with
+    | [], [] -> 0
+    | _, [] -> 1
+    | [], _ -> -1
+    | h1 :: t1, h2 :: t2 ->
+      match compare_typ h1 h2 with
+      | 0 -> compare_list t1 t2
+      | c -> c
+
+  let compare (x: t) (y: t) =
+    match (x, y) with 
+    | (s1, l1), (s2, l2) ->
+    match String.compare s1 s2 with
+    | 0 -> compare_list l1 l2
+    | c -> c
+end *)
+
+module FuncModule : Map.OrderedType = struct
+
+  let compare_typ t1 t2 =
+    match t1, t2 with
+    | Int, Int | Bool, Bool | Char, Char | Float, Float | Void, Void -> 0
+    | Int, _ -> -1
+    | _, Int -> 1
+    | Bool, _ -> -1
+    | _, Bool -> 1
+    | Char, _ -> -1
+    | _, Char -> 1
+    | Float, _ -> -1
+    | _, Float -> 1
+
+  type t = string * typ list
+
+  let rec compare_list l1 l2 = match l1, l2 with
+    | [], [] -> 0
+    | _, [] -> 1
+    | [], _ -> -1
+    | h1 :: t1, h2 :: t2 ->
+      match compare_typ h1 h2 with
+      | 0 -> compare_list t1 t2
+      | c -> c
+
+  let compare (x: t) (y: t) =
+    match (x, y) with 
+    | (s1, l1), (s2, l2) ->
+    match String.compare s1 s2 with
+    | 0 -> compare_list l1 l2
+    | c -> c
+end
