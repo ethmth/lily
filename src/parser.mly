@@ -153,7 +153,7 @@ binding:
   ID COLON typ { ($3, $1) }
 
 for_loop:
-  FOR LPAREN expression COMMA expression RPAREN COLON NEWLINE INDENT block DEDENT { For($3, $5, Block($10)) }
+  FOR LPAREN expression COMMA assignment RPAREN COLON NEWLINE INDENT block DEDENT { For($3, $5, Block($10)) }
 
 while_loop:
   WHILE LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { While($3, Block($8)) }

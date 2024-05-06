@@ -27,7 +27,7 @@ type expr =
   | Id of string
   | Binop of expr * op * expr
   | Call of string * expr list
-  | ListExpr of expr list
+  (* | ListExpr of expr list *)
   | UnaryOp of unary_op * expr
   (*| ListLit of expr list*)  (*Chima New: Represents list literals*)
   (*| ListInit of string * typ * expr list*)  (*Chima New: Represents list initialization*)
@@ -45,7 +45,7 @@ and stmt =
   (* | Elif of expr * block *)
   (* | Else of block *)
   | While of expr * block
-  | For of expr * expr * block
+  | For of expr * stmt * block
   | ExprStmt of expr
   | Return of expr
   | Decl of typ * string
@@ -120,7 +120,7 @@ let rec string_of_expr = function
   | Id(s) -> s
   | Binop(e1, o, e2) -> string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
-  | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]"
+  (* | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]" *)
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
   (* | MethodCall(e,s,el) -> string_of_expr e ^ "." ^ s ^ string_of_expr (ListExpr(el)) *)
   (* | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func *)
@@ -143,7 +143,7 @@ and string_of_stmt (stmt) (curr_indent) =
   (* | Elif(e, s) -> "elif (" ^ string_of_expr e ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   (* | Else(s) -> "else:\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   | While(e, b) -> "while (" ^ string_of_expr e ^ "):\n" ^ string_of_block b (curr_indent + 1)
-  | For(e1,e2,b) -> "for (" ^ string_of_expr e1 ^ ", " ^ string_of_expr e2 ^ "):\n" ^ string_of_block b (curr_indent + 1)
+  | For(e,s,b) -> "for (" ^ string_of_expr e ^ ", " ^ (match s with Assign(v, e) -> v ^ " = " ^ string_of_expr e | _ -> "STATEMENT") ^ "):\n" ^ string_of_block b (curr_indent + 1)
   | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | DeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e ^ "\n"
   (* | IDecl(s) -> "let " ^ s ^ "\n" *)
