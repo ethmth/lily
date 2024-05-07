@@ -24,7 +24,7 @@ let () =
   let ast = Parser.program Tokenize.tokenize lexbuf in
   match !action with
     Ast -> print_string (Ast.string_of_program ast)
-  | _ -> let (sast, functions, globals) = Semant.check ast in
+  | _ -> let (sast, globals, functions) = Semant.check ast in
     match !action with
       Ast     -> ()
     | Sast    -> print_string (Sast.string_of_sprogram sast)

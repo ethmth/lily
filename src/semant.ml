@@ -64,7 +64,7 @@ let check (program_block) =
         let vname_number = update_vnames id in 
         let cname = (id ^ "!" ^ (string_of_int vname_number)) in
         ignore(l_vmap := StringMap.add id (t, cname) !l_vmap);
-        ignore(globals := Decl(t, id)::!globals);
+        ignore(globals := (t, id, cname)::!globals);
         cname))
     in
     let add_var_bind (bind: bind): sbind = 

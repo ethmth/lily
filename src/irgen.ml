@@ -22,7 +22,7 @@ module A = Ast
 module StringMap = Map.Make(String)
 
 (* translate : Sast.program -> Llvm.module *)
-let translate (globals, functions) =
+let translate ((globals: (A.typ * string * string) list), functions) =
   let context    = L.global_context () in
 
   (* Create the LLVM compilation module into which
@@ -62,11 +62,13 @@ let translate (globals, functions) =
   in *)
 
   (* Create a map of global variables after creating each *)
-  (* let global_vars : L.llvalue StringMap.t =
-    let global_var m (t, n) =
+  let global_vars : L.llvalue StringMap.t =
+    let global_var m ((t: A.typ), (_: string), (cname: string)) =
       let init = L.const_int (ltype_of_typ t) 0
-      in StringMap.add n (L.define_global n init the_module) m in
-    List.fold_left global_var StringMap.empty globals in *)
+      in StringMap.add cname (L.define_global cname init the_module) m in
+    List.fold_left global_var StringMap.empty globals in
+
+  ignore(global_vars);
 
   (* let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type context |] in
@@ -190,7 +192,8 @@ let translate (globals, functions) =
   in
   *)
   (* List.iter build_function_body functions; *)
-  ignore(globals);
+  (* ignore(global_vars); *)
+  (* ignore(globals); *)
   ignore(functions);
   (* ignore(global_vars); *)
   ignore(ltype_of_typ Int);
