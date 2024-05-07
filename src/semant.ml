@@ -153,4 +153,5 @@ let check (program_block) =
     Block(sl) -> SBlock(List.map check_stmt sl)
   in
 
-  check_block program_block FuncMap.empty StringMap.empty [] Void "root"
+  let built_in_funcs = FuncMap.add {id="print"; args=[Int]} Void FuncMap.empty in
+  check_block program_block built_in_funcs StringMap.empty [] Void "root"
