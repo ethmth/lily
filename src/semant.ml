@@ -183,9 +183,25 @@ let check (program_block) =
     Block(sl) -> (fbinds, SBlock(List.map check_stmt sl))
   in
 
+  let get_built_in_funcs (funcs_list: (typ * string * typ list) list): bind FuncMap.t =
+    let add_func (func: typ * string * typ list) (map: bind FuncMap.t): bind FuncMap.t =
+      match func with (t, name, args) ->
+        let cnumber = update_fnames name in let cname =("print" ^ "!" ^ (string_of_int cnumber)) in
+        FuncMap.add {id=name; args=args} (t, cname) map
+    in
+    let rec add_funcs (func_list: (typ * string * typ list) list) (map: bind FuncMap.t): bind FuncMap.t =
+      match func_list with
+      | [] -> map
+      | h::t -> let m = add_func h map in add_funcs t m
+    in
+
+    add_funcs funcs_list FuncMap.empty
+  in
+  let built_in = [(Int, "print", [Int]); (Void, "print2", [Float])] in
   (* let built_in_funcs = FuncMap.add {id="print"; args=[Int]} (Void, "print") FuncMap.empty in *)
-  let built_in_funcs = 
+  (* let built_in_funcs = 
     let cnumber = update_fnames "print" in let cname = ("print" ^ "!" ^ (string_of_int cnumber)) in
-    FuncMap.add {id="print"; args=[Int]} (Void, cname) FuncMap.empty in
+    FuncMap.add {id="print"; args=[Int]} (Void, cname) FuncMap.empty in *)
+  let built_in_funcs = get_built_in_funcs built_in in
   let (_, sprogram_block) = check_block program_block built_in_funcs StringMap.empty [] Void "root" in
   sprogram_block
