@@ -77,6 +77,16 @@ let check (program_block) =
       l_fmap := FuncMap.add {id=name; args=args} t !l_fmap
     in
 
+    let is_boolean_op (op: op): bool =
+      match op with 
+      Eq -> true
+      | Neq -> true
+      | Lt -> true
+      | Leq -> true
+      | Gt -> true
+      | Geq -> true
+      | _ -> false
+    in
     let rec check_expr (e: expr): sexpr =
       match e with
       LitInt(l) ->  (Int, SLitInt(l))
@@ -85,7 +95,11 @@ let check (program_block) =
       | LitChar(l) -> (Char, SLitChar(l))
       | Id(id) -> (find_var id, SId(id))
       (* TODO: Add some Binop support between different types? *)
-      | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in if t1 != t2 then raise(Failure("variables of different types in binop")) else (t1, SBinop((t1, se1), op, (t2, se2))))
+      | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 
+        if t1 != t2 then raise(Failure("variables of different types in binop")) 
+        else (
+          let op_typ = if is_boolean_op op then Bool else t1 in
+          op_typ, SBinop((t1, se1), op, (t2, se2))))
       (* TODO more call checks *)
       | Call(name, el) -> 
         let sel = List.map check_expr el in
