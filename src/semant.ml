@@ -19,9 +19,17 @@ let check (program_block) =
     match se with
       (t, _) -> t
   in
+  (* let map_merge (prio_key) (other_key) =
+    match prio_key, other_key with 
+    | Some prio_key, Some _ -> Some prio_key
+    | Some prio_key, None -> Some prio_key
+    | None, Some other_key -> Some other_key
+    | None, None -> None
+  in *)
+  let pick_fst _ v1 _ = Some v1 in
 
 
-  let check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t): sblock =
+  let rec check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t): sblock =
     let l_fmap: typ FuncMap.t = FuncMap.empty 
     in
     let l_vmap: typ StringMap.t = StringMap.empty
@@ -57,9 +65,9 @@ let check (program_block) =
           raise (Failure ("Function "^ name ^ " with proper args not visible in scope"))
       )
     in
-    let add_func (name: string) (args: typ list) (t: typ) =
+    (* let add_func (name: string) (args: typ list) (t: typ) =
       FuncMap.add {id=name; args=args} t l_fmap
-    in
+    in *)
 
     let rec check_expr (e: expr): sexpr =
       match e with
@@ -70,33 +78,24 @@ let check (program_block) =
       | Id(id) -> (find_var id, SId(id))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in if t1 != t2 then raise(Failure("variables of different types in binop")) else (t1, SBinop((t1, se1), op, (t2, se2))))
+      (* TODO more call checks *)
       | Call(name, el) -> 
         let sel = List.map check_expr el in
         let args = List.map sexpr_to_typ sel in
         (find_func name args, 
         SCall(name, sel))
-        (* let name = find_func fname in
-        let param_length = List.length fd.formals in
-        if List.length args != param_length then
-          raise (Failure ("expecting " ^ string_of_int param_length ^
-                          " arguments in " ^ string_of_expr call))
-        else let check_call (ft, _) e =
-               let (et, e') = check_expr e in
-               let err = "illegal argument found " ^ string_of_typ et ^
-                         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
-               in (check_assign ft et err, e')
-          in
-          let args' = List.map2 check_call fd.formals args
-          in (fd.rtyp, SCall(fname, args')) *)
+      (* TODO more unary op checks based on operators *)
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (t, SUnaryOp(op, (t, se)))
     in
 
     let check_stmt (s: stmt): sstmt =
-      (* ignore(s);
-      SReturn(Int, SLitInt(3)) *)
       match s with 
-      (* Assign(var, e) -> ignore(add_var var (check_expr_typ e)); SAssign(var, check_expr e) *)
-      | _ -> SReturn(Int, SLitInt(3))
+      Assign(var, e) -> let (t, se) = check_expr e in ignore(add_var var t); SAssign(var, (t, se))
+      | If (e, b1, b2) -> let (t, se) = check_expr e in let _ = if t != Bool then raise (Failure ("If statement expression not boolean")) in
+        let sb1 = check_block b1 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+        let sb2 = check_block b2 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+        SIf((t, se), sb1, sb2)
+      | _ -> SReturn((Bool, SLitBool(true)))
     in
 
     match block with
