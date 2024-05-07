@@ -24,7 +24,7 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 (* translate : Sast.program -> Llvm.module *)
-let translate (program) =
+let translate (functions) (globals) =
   let context    = L.global_context () in
 
   (* Get types from the context *)

@@ -9,6 +9,8 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
+  let functions = ref [] in 
+  let globals = ref [] in
   let vnames: int StringMap.t ref = ref StringMap.empty in
   let fnames: int StringMap.t ref = ref StringMap.empty in 
   let update_vnames (id: string):int = 
@@ -62,6 +64,7 @@ let check (program_block) =
         let vname_number = update_vnames id in 
         let cname = (id ^ "!" ^ (string_of_int vname_number)) in
         ignore(l_vmap := StringMap.add id (t, cname) !l_vmap);
+        ignore(globals := Decl(t, id)::!globals);
         cname))
     in
     let add_var_bind (bind: bind): sbind = 
@@ -89,6 +92,7 @@ let check (program_block) =
       )
     in
     let add_func (name: string) (args: typ list) (t: typ): string =
+      if name == "root" then (raise (Failure ("Cannot name a function root"))) else 
       if is_func_local name args then (raise (Failure ("Already declared variable " ^ name ^ " in current scope"))) (*else*)
       else (
         let func_number = update_fnames name in 
@@ -143,7 +147,9 @@ let check (program_block) =
       let args = bind_list_to_typ_list binds in
       let cname = add_func name args t in
       let (sbinds, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t name in
-      SFdecl(t, name, sbinds, sb, cname)
+      let sfdecl = SFdecl(t, name, sbinds, sb, cname) in
+      ignore(functions := sfdecl::!functions);
+      sfdecl
     in
     let rec check_stmt (s: stmt): sstmt =
       match s with 
@@ -186,5 +192,7 @@ let check (program_block) =
   in
   let built_in = [(Int, "print", [Int])] in
   let built_in_funcs = get_built_in_funcs built_in in
+
   let (_, sprogram_block) = check_block program_block built_in_funcs StringMap.empty [] Void "root" in
-  sprogram_block
+  let funcs = SFdecl(Void, "root", [], sprogram_block, "root")::!functions in
+  (sprogram_block, !globals, funcs)

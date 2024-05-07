@@ -29,7 +29,7 @@ and sstmt =
   | SFdecl of typ * string * sbind list * sblock * string
   | SAssign of string * sexpr * string
 
-type sprogram = sblock
+type sprogram = sblock * sstmt list * bind list
 
 let rec string_of_sexpr (t, e) =
   "{" ^
