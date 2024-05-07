@@ -88,13 +88,24 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (t, SUnaryOp(op, (t, se)))
     in
 
-    let check_stmt (s: stmt): sstmt =
+    let rec check_stmt (s: stmt): sstmt =
       match s with 
-      Assign(var, e) -> let (t, se) = check_expr e in ignore(add_var var t); SAssign(var, (t, se))
-      | If (e, b1, b2) -> let (t, se) = check_expr e in let _ = if t != Bool then raise (Failure ("If statement expression not boolean")) in
+      (* TODO: make assignment an expression? Implicit assignment seems easy here? *)
+      Assign(var, e) -> let (t, se) = check_expr e in let et = find_var var in if t == et then SAssign(var, (t, se)) else raise (Failure "Assigning variable that wasn't declared.")
+      | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
         let sb1 = check_block b1 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
         let sb2 = check_block b2 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
         SIf((t, se), sb1, sb2)
+      | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
+        let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+        SWhile((t, se), sb)
+      | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
+        let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+        SFor((t, se), check_stmt s , sb)
+      | ExprStmt(e) -> SExprStmt(check_expr e)
+      | Return(e) -> SReturn(check_expr e)
+      | Decl(typ, id) -> ignore(add_var id typ); SDecl(typ, id)
+      | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure "Assigning variable that wasn't declared.")
       | _ -> SReturn((Bool, SLitBool(true)))
     in
 
