@@ -4,6 +4,7 @@
 open Libparser
 open Ast
 
+type sbind = typ * string * string
 type sexpr = typ * expr_detail
 and expr_detail =
     SLitInt of int
@@ -25,7 +26,7 @@ and sstmt =
   | SReturn of sexpr
   | SDecl of typ * string * string
   | SDeclAssign of typ * string * sexpr * string
-  | SFdecl of typ * string * bind list * sblock * string
+  | SFdecl of typ * string * sbind list * sblock * string
   | SAssign of string * sexpr * string
 
 type sprogram = sblock
@@ -58,7 +59,7 @@ and string_of_sstmt (sstmt) (curr_indent) =
   | SDeclAssign(t, s, e, cname) -> "let " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t ^ " = " ^ string_of_sexpr e ^ "\n"
   | SAssign(v, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">" ^ " = " ^ string_of_sexpr e ^ "\n"
   | SFdecl(t, s, p, b, cname) -> "def " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ "(" ^ 
-      String.concat ", " (List.map (fun (t, id) ->  id ^ " : " ^ string_of_typ t) p) ^ 
+      String.concat ", " (List.map (fun (t, id, cname) ->  "<" ^ id ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t) p) ^ 
       ")" ^ " -> " ^ string_of_typ t ^ ":" ^ "\n"
       ^ string_of_sblock b (curr_indent + 1)
 

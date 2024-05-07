@@ -42,7 +42,7 @@ let check (program_block) =
   let pick_fst _ v1 _ = Some v1 in
 
 
-  let rec check_block (block: block) (b_fmap: bind FuncMap.t) (b_vmap: bind StringMap.t) (starting_vars: bind list) (block_return: typ) (block_name: string): sblock =
+  let rec check_block (block: block) (b_fmap: bind FuncMap.t) (b_vmap: bind StringMap.t) (starting_vars: bind list) (block_return: typ) (block_name: string): sbind list * sblock =
     let l_fmap: bind FuncMap.t ref = ref FuncMap.empty in
     let l_vmap: bind StringMap.t ref = ref StringMap.empty in
 
@@ -71,11 +71,13 @@ let check (program_block) =
         ignore(l_vmap := StringMap.add id (t, cname) !l_vmap);
         cname))
     in
-    let add_var_bind (bind: bind) = 
+    let add_var_bind (bind: bind): sbind = 
       match bind with
-      (t, id) -> add_var id t false
+      (t, id) -> 
+        let cname = add_var id t true in
+        (t, id, cname)
     in
-    let add_var_binds (binds: bind list) = 
+    let add_var_binds (binds: bind list): sbind list = 
       List.map add_var_bind binds
     in
 
@@ -149,22 +151,22 @@ let check (program_block) =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
       let cname = add_func name args t in
-      let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t name in
-      SFdecl(t, name, binds, sb, cname)
+      let (sbinds, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t name in
+      SFdecl(t, name, sbinds, sb, cname)
     in
     let rec check_stmt (s: stmt): sstmt =
       match s with 
       (* TODO: make assignment an expression? Implicit assignment seems easy here? *)
       Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t == et then SAssign(var, (t, se), cname) else raise (Failure ("In " ^ block_name ^ ":Assigning variable that wasn't declared."))
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statement expression not boolean")));
-        let sb1 = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
-        let sb2 = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
+        let (_, sb1) = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
+        let (_, sb2) = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SIf((t, se), sb1, sb2)
       | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statemen rec t expression not boolean")));
-        let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
+        let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SWhile((t, se), sb)
       | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statement expression not boolean")));
-        let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
+        let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SFor((t, se), check_stmt s , sb)
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("In " ^ block_name ^ ":Returned invalid type")) else SReturn(t, se)
@@ -174,14 +176,16 @@ let check (program_block) =
       (* | _ -> SReturn((Bool, SLitBool(true))) *)
     in
 
-    ignore(add_var_binds starting_vars);
+    (* ignore(add_var_binds starting_vars); *)
+    let fbinds = add_var_binds starting_vars in
     (* ignore(print_endline ("DEBUG: STARTING BLOCK " ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap))); *)
     match block with
-    Block(sl) -> SBlock(List.map check_stmt sl)
+    Block(sl) -> (fbinds, SBlock(List.map check_stmt sl))
   in
 
   (* let built_in_funcs = FuncMap.add {id="print"; args=[Int]} (Void, "print") FuncMap.empty in *)
   let built_in_funcs = 
     let cnumber = update_fnames "print" in let cname = ("print" ^ "!" ^ (string_of_int cnumber)) in
     FuncMap.add {id="print"; args=[Int]} (Void, cname) FuncMap.empty in
-  check_block program_block built_in_funcs StringMap.empty [] Void "root"
+  let (_, sprogram_block) = check_block program_block built_in_funcs StringMap.empty [] Void "root" in
+  sprogram_block
