@@ -10,6 +10,4 @@ def gcd(a:int, b:int) -> int:
 	else:
 		return 4
 
-def main() -> int:
-	print(gcd(4,5))
-	return 0
+gcd(4,5)

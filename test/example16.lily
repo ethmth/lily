@@ -5,11 +5,12 @@ let b:int = 0
 
 # GCD Function (not really)
 def gcd(a:int, b:int) -> int:
-	if (a == b):
+	if (f == b):
 		return 3
 	else:
 		return 4
 
 def main() -> int:
+	let f: int = 6
 	print(gcd(4,5))
 	return 0

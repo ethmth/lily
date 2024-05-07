@@ -11,5 +11,5 @@ def gcd(a:int, b:int) -> int:
 		return 4
 
 def main() -> int:
-	print(gcd(4,5))
+	print(gcd(4.5,5.1))
 	return 0

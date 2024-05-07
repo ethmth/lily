@@ -4,7 +4,7 @@ let b:int = 0
 #let d = 5
 
 # GCD Function (not really)
-def gcd(a:int, b:int) -> int:
+def gcd(a:int, a:int) -> int:
 	if (a == b):
 		return 3
 	else:
