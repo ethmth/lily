@@ -142,7 +142,7 @@ let check (program_block) =
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("In " ^ block_name ^ ":Returned invalid type")) else SReturn(t, se)
       | Decl(typ, id) -> ignore(add_var id typ); SDecl(typ, id)
-      | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure ("In " ^ block_name ^ ": Assigning variable that wasn't declared."))
+      | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure ("In " ^ block_name ^ ": DeclAssigning variable that wasn't declared."))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
       (* | _ -> SReturn((Bool, SLitBool(true))) *)
     in

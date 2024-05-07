@@ -1,0 +1,16 @@
+let a:int
+let b:int = 0
+#let c
+#let d = 5
+
+# GCD Function (not really)
+def gcd(a:int, b:int) -> int:
+	if (a == b):
+		return 3
+	else:
+		return 4
+
+def main() -> int:
+	let b: float = 5
+	print(gcd(4,5))
+	return 0
