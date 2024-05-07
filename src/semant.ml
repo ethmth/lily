@@ -9,27 +9,20 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
-  (* let bind_to_typ (bind: bind): typ =
+  let bind_to_typ (bind: bind): typ =
     match bind with (t, _) -> t
   in
   let bind_list_to_typ_list (bl: bind list): typ list =
     List.map bind_to_typ bl
-  in *)
+  in
   let sexpr_to_typ (se: sexpr): typ =
     match se with
       (t, _) -> t
   in
-  (* let map_merge (prio_key) (other_key) =
-    match prio_key, other_key with 
-    | Some prio_key, Some _ -> Some prio_key
-    | Some prio_key, None -> Some prio_key
-    | None, Some other_key -> Some other_key
-    | None, None -> None
-  in *)
   let pick_fst _ v1 _ = Some v1 in
 
 
-  let rec check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t): sblock =
+  let rec check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t) (starting_vars: bind list) (block_return: typ): sblock =
     let l_fmap: typ FuncMap.t = FuncMap.empty 
     in
     let l_vmap: typ StringMap.t = StringMap.empty
@@ -42,13 +35,22 @@ let check (program_block) =
       if is_var_local id then true else (StringMap.mem id b_vmap)
     in
     let find_var (id: string) : typ =
+      ignore(print_endline ("DEBUG: finding var " ^ id));
       if is_var_local id then (StringMap.find id l_vmap) else (
         if is_var id then (StringMap.find id b_vmap) else  
           raise (Failure ("Undeclared variable " ^ id)))
     in
     let add_var (id: string) (t: typ) =
+      ignore(print_endline ("DEBUG: adding var " ^ id));
       if is_var_local id then raise (Failure ("Already declared variable " ^ id ^ " in current scope")) 
       else StringMap.add id t l_vmap
+    in
+    let add_var_bind (bind: bind) = 
+      match bind with
+      (t, id) -> add_var id t
+    in
+    let add_var_binds (binds: bind list) = 
+      List.map add_var_bind binds
     in
 
     let is_func_local (name: string) (args: typ list):bool =
@@ -65,9 +67,10 @@ let check (program_block) =
           raise (Failure ("Function "^ name ^ " with proper args not visible in scope"))
       )
     in
-    (* let add_func (name: string) (args: typ list) (t: typ) =
+    let add_func (name: string) (args: typ list) (t: typ) =
+      if is_func_local name args then (raise (Failure ("Already declared variable " ^ name ^ " in current scope"))) else
       FuncMap.add {id=name; args=args} t l_fmap
-    in *)
+    in
 
     let rec check_expr (e: expr): sexpr =
       match e with
@@ -88,29 +91,46 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (t, SUnaryOp(op, (t, se)))
     in
 
+    let check_binds (binds : (typ * string) list) =
+      let rec dups = function
+          [] -> ()
+        |	((_,n1) :: (_,n2) :: _) when n1 = n2 ->
+          raise (Failure ("duplicate bind " ^ n1))
+        | _ :: t -> dups t
+      in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
+    in
+    let check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
+      ignore(check_binds binds); 
+      let args = bind_list_to_typ_list binds in
+      ignore(add_func name args t);
+      let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) binds t in
+      SFdecl(t, name, binds, sb)
+    in
     let rec check_stmt (s: stmt): sstmt =
       match s with 
       (* TODO: make assignment an expression? Implicit assignment seems easy here? *)
       Assign(var, e) -> let (t, se) = check_expr e in let et = find_var var in if t == et then SAssign(var, (t, se)) else raise (Failure "Assigning variable that wasn't declared.")
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
-        let sb1 = check_block b1 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
-        let sb2 = check_block b2 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+        let sb1 = check_block b1 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) [] Void in 
+        let sb2 = check_block b2 (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) [] Void in 
         SIf((t, se), sb1, sb2)
-      | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
-        let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+      | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statemen rec t expression not boolean")));
+        let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) [] Void in 
         SWhile((t, se), sb)
       | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
-        let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) in 
+        let sb = check_block b (FuncMap.union pick_fst l_fmap b_fmap) (StringMap.union pick_fst l_vmap b_vmap) [] Void in 
         SFor((t, se), check_stmt s , sb)
       | ExprStmt(e) -> SExprStmt(check_expr e)
-      | Return(e) -> SReturn(check_expr e)
+      | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Returned invalid type")) else SReturn(t, se)
       | Decl(typ, id) -> ignore(add_var id typ); SDecl(typ, id)
       | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure "Assigning variable that wasn't declared.")
-      | _ -> SReturn((Bool, SLitBool(true)))
+      | Fdecl(t, name, binds, b) -> check_func t name binds b
+      (* | _ -> SReturn((Bool, SLitBool(true))) *)
     in
 
+    ignore(add_var_binds starting_vars);
     match block with
     Block(sl) -> SBlock(List.map check_stmt sl)
   in
 
-  check_block program_block FuncMap.empty StringMap.empty
+  check_block program_block FuncMap.empty StringMap.empty [] Void
