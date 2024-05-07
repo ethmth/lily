@@ -58,18 +58,22 @@ let check (program_block) =
         if is_var id then (StringMap.find id b_vmap) else  
           raise (Failure ("Undeclared variable " ^ id)))
     in
-    let add_var (id: string) (t: typ): string =
+    let add_var (id: string) (t: typ) (global: bool): string =
       (* ignore(print_endline ("DEBUG: adding var " ^ id ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap))); *)
       if is_var_local id then raise (Failure ("Already declared variable " ^ id ^ " in current scope")) 
       else (
+        if not global then (
+          ignore(l_vmap := StringMap.add id (t, id) !l_vmap);
+          id
+        ) else (
         let vname_number = update_vnames id in 
         let cname = (id ^ "!" ^ (string_of_int vname_number)) in
         ignore(l_vmap := StringMap.add id (t, cname) !l_vmap);
-        cname)
+        cname))
     in
     let add_var_bind (bind: bind) = 
       match bind with
-      (t, id) -> add_var id t
+      (t, id) -> add_var id t false
     in
     let add_var_binds (binds: bind list) = 
       List.map add_var_bind binds
@@ -164,8 +168,8 @@ let check (program_block) =
         SFor((t, se), check_stmt s , sb)
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("In " ^ block_name ^ ":Returned invalid type")) else SReturn(t, se)
-      | Decl(typ, id) -> let cname = add_var id typ in SDecl(typ, id, cname)
-      | DeclAssign(et, id, e) ->  let cname = add_var id et in let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("In " ^ block_name ^ ": DeclAssigning variable that wasn't declared."))
+      | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
+      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("In " ^ block_name ^ ": DeclAssigning variable that wasn't declared."))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
       (* | _ -> SReturn((Bool, SLitBool(true))) *)
     in
