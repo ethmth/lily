@@ -1,6 +1,6 @@
 (library
  (name libparser)
- (modules scanner tokenize parser parserscanner ast astscanner))
+ (modules scanner tokenize parser parserscanner ast astscanner modules))
 (ocamllex scanner)
 (ocamlyacc parser)
 (ocamlyacc parserscanner)

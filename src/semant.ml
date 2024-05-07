@@ -3,68 +3,45 @@
 open Libparser
 open Ast
 open Sast
+open Modules
 
 module StringMap = Map.Make(String)
+module FuncMap = Map.Make(FuncId)
 
-(* module FuncModule : Map.OrderedType = struct
+(* type point = { x : int; y : int }
 
-  let compare_typ t1 t2 =
-    match t1, t2 with
-    | Int, Int | Bool, Bool | Char, Char | Float, Float | Void, Void -> 0
-    | Int, _ -> -1
-    | _, Int -> 1
-    | Bool, _ -> -1
-    | _, Bool -> 1
-    | Char, _ -> -1
-    | _, Char -> 1
-    | Float, _ -> -1
-    | _, Float -> 1
-
-  type t = string * typ list
-
-  let rec compare_list l1 l2 = match l1, l2 with
-    | [], [] -> 0
-    | _, [] -> 1
-    | [], _ -> -1
-    | h1 :: t1, h2 :: t2 ->
-      match compare_typ h1 h2 with
-      | 0 -> compare_list t1 t2
-      | c -> c
-
-  let compare (x: t) (y: t) =
-    match (x, y) with 
-    | (s1, l1), (s2, l2) ->
-    match String.compare s1 s2 with
-    | 0 -> compare_list l1 l2
+module PointCompare = struct
+  type t = point
+  let compare p1 p2 =
+    match compare p1.x p2.x with
+    | 0 -> compare p1.y p2.y  (* If x coordinates are equal, compare y coordinates *)
     | c -> c
-end *)
-module FuncMap = Map.Make(FuncModule)
+end
+
+module PointMap = Map.Make(PointCompare) *)
 
 
-(* Semantic checking of the AST. Returns an SAST if successful,
-   throws an exception if something is wrong.
 
-   Check each global variable, then check each function *)
 
 let check (program_block) =
-
-  (* Util functions *)
-  let bind_to_typ (bind: bind): typ =
+  (* let bind_to_typ (bind: bind): typ =
     match bind with (t, _) -> t
   in
   let bind_list_to_typ_list (bl: bind list): typ list =
     List.map bind_to_typ bl
+  in *)
+
+  (* let map = PointMap.empty  (* Creates an empty map *) in
+let map = PointMap.add {x=1; y=2} "Point at (1,2)" map in
+let map = PointMap.add {x=3; y=4} "Point at (3,4)" map in *)
+
+  let funcMapAdd (t: FuncMap.key) (map: typ FuncMap.t) =
+    FuncMap.add t Int map
   in
 
-  let check_block (block: block) (b_fmap) (b_vmap: typ StringMap.t): sblock =
-    let l_fmap = FuncMap.empty 
+  let check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t): sblock =
+    let l_fmap: typ FuncMap.t = FuncMap.empty 
     in
-    (* let l_fmap : string FuncMap.t = 
-      let open FuncMap in 
-      empty
-      |> add (FuncId ("function1", [Int; Bool])) "Data for function1"
-      |> add (FuncId ("function2", [Float])) "Data for function2"
-    in *)
     let l_vmap: typ StringMap.t = StringMap.empty
     in
 
@@ -83,16 +60,10 @@ let check (program_block) =
       if is_var_local id then raise (Failure ("Already declared variable " ^ id ^ " in current scope")) 
       else StringMap.add id t l_vmap
     in
-(* 
-    let example_map = 
-      let open FuncMap in 
-      empty
-      |> add ("function1", [Int; Bool]) "Data for function1"
-      |> add ("function2", [Float]) "Data for function2"
-    in *)
-    let is_func_local (t: FuncModule.t) =
+
+    let is_func_local (id: string) (args: typ list) =
       (* let t = (id, args) in *)
-      FuncMap.add t l_fmap
+      funcMapAdd {id; args} l_fmap
     in
 
     let rec check_expr (e: expr): sexpr =
