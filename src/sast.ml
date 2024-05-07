@@ -10,9 +10,9 @@ and expr_detail =
   | SLitBool of bool
   | SLitFloat of float
   | SLitChar of char
-  | SId of string
+  | SId of string * string
   | SBinop of sexpr * op * sexpr
-  | SCall of string * sexpr list
+  | SCall of string * sexpr list * string
   | SUnaryOp of unary_op * sexpr
 
 and sblock = SBlock of sstmt list
@@ -23,10 +23,10 @@ and sstmt =
   | SFor of sexpr * sstmt * sblock
   | SExprStmt of sexpr
   | SReturn of sexpr
-  | SDecl of typ * string
-  | SDeclAssign of typ * string * sexpr
-  | SFdecl of typ * string * bind list * sblock
-  | SAssign of string * sexpr
+  | SDecl of typ * string * string
+  | SDeclAssign of typ * string * sexpr * string
+  | SFdecl of typ * string * bind list * sblock * string
+  | SAssign of string * sexpr * string
 
 type sprogram = sblock
 
@@ -37,9 +37,9 @@ let rec string_of_sexpr (t, e) =
   | SLitBool(b) -> string_of_bool b
   | SLitFloat(f) -> string_of_float(f)
   | SLitChar(c) -> "\'" ^ String.make 1 c ^ "\'"
-  | SId(s) -> s
+  | SId(s, cname) -> "<" ^ s ^ " as " ^ cname ^ ">"
   | SBinop(e1, o, e2) -> string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
-  | SCall(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
+  | SCall(f, el, cname) -> "<" ^ f ^ " as " ^ cname ^ ">" ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
   | SUnaryOp(op, e) -> string_of_unary_op op ^ string_of_sexpr e
   ) ^ " is " ^ string_of_typ t ^ "}"
   
@@ -53,11 +53,11 @@ and string_of_sstmt (sstmt) (curr_indent) =
   | SReturn(expr) -> "return " ^ string_of_sexpr expr ^ "\n"
   | SIf(e, b1, b2) -> "if (" ^ string_of_sexpr e ^ "):\n" ^ string_of_sblock b1 (curr_indent + 1) ^ (match b2 with SBlock(sl) -> if sl == [] then "" else string_of_indent curr_indent ^ "else:\n" ^ string_of_sblock b2 (curr_indent + 1))
   | SWhile(e, b) -> "while (" ^ string_of_sexpr e ^ "):\n" ^ string_of_sblock b (curr_indent + 1)
-  | SFor(e,s,b) -> "for (" ^ string_of_sexpr e ^ ", " ^ (match s with SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e | _ -> "STATEMENT") ^ "):\n" ^ string_of_sblock b (curr_indent + 1)
-  | SDecl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
-  | SDeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_sexpr e ^ "\n"
-  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e ^ "\n"
-  | SFdecl(t, s, p, b) -> "def " ^ s ^ "(" ^ 
+  | SFor(e,s,b) -> "for (" ^ string_of_sexpr e ^ ", " ^ (match s with SAssign(v, e, _) -> v ^ " = " ^ string_of_sexpr e | _ -> "STATEMENT") ^ "):\n" ^ string_of_sblock b (curr_indent + 1)
+  | SDecl(t, s, cname) -> "let " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t ^ "\n"
+  | SDeclAssign(t, s, e, cname) -> "let " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t ^ " = " ^ string_of_sexpr e ^ "\n"
+  | SAssign(v, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">" ^ " = " ^ string_of_sexpr e ^ "\n"
+  | SFdecl(t, s, p, b, cname) -> "def " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ "(" ^ 
       String.concat ", " (List.map (fun (t, id) ->  id ^ " : " ^ string_of_typ t) p) ^ 
       ")" ^ " -> " ^ string_of_typ t ^ ":" ^ "\n"
       ^ string_of_sblock b (curr_indent + 1)

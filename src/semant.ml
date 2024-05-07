@@ -8,12 +8,27 @@ open Modules
 module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
-let map_to_str m = 
+(* let map_to_str m = 
   let inners = List.map (fun (k, v) -> k ^ " -> " ^ (string_of_typ v)) (StringMap.bindings m)
-  in "[" ^ (String.concat ", " inners) ^ "]"
+  in "[" ^ (String.concat ", " inners) ^ "]" *)
 
 
 let check (program_block) =
+  let vnames: int StringMap.t ref = ref StringMap.empty in
+  let fnames: int StringMap.t ref = ref StringMap.empty in 
+  let update_vnames (id: string):int = 
+    if StringMap.mem id !vnames then (
+      let curr_val = StringMap.find id !vnames in 
+        ignore(vnames := StringMap.add id (curr_val + 1) !vnames); (curr_val + 1))
+    else (ignore(vnames := StringMap.add id 0 !vnames); 0)
+  in
+  let update_fnames (id: string):int = 
+    if StringMap.mem id !fnames then (
+      let curr_val = StringMap.find id !fnames in 
+        ignore(fnames := StringMap.add id (curr_val + 1) !fnames); (curr_val + 1))
+    else (ignore(fnames := StringMap.add id 0 !fnames); 0)
+  in
+
   let bind_to_typ (bind: bind): typ =
     match bind with (t, _) -> t
   in
@@ -27,11 +42,9 @@ let check (program_block) =
   let pick_fst _ v1 _ = Some v1 in
 
 
-  let rec check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t) (starting_vars: bind list) (block_return: typ) (block_name: string): sblock =
-    let l_fmap: typ FuncMap.t ref = ref FuncMap.empty 
-    in
-    let l_vmap: typ StringMap.t ref = ref StringMap.empty
-    in
+  let rec check_block (block: block) (b_fmap: bind FuncMap.t) (b_vmap: bind StringMap.t) (starting_vars: bind list) (block_return: typ) (block_name: string): sblock =
+    let l_fmap: bind FuncMap.t ref = ref FuncMap.empty in
+    let l_vmap: bind StringMap.t ref = ref StringMap.empty in
 
     let is_var_local (id: string): bool =
       StringMap.mem id !l_vmap
@@ -39,16 +52,20 @@ let check (program_block) =
     let is_var (id: string): bool =
       if is_var_local id then true else (StringMap.mem id b_vmap)
     in
-    let find_var (id: string) : typ =
-      ignore(print_endline ("DEBUG: finding var " ^ id ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap)));
+    let find_var (id: string) : bind =
+      (* ignore(print_endline ("DEBUG: finding var " ^ id ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap))); *)
       if is_var_local id then (StringMap.find id !l_vmap) else (
         if is_var id then (StringMap.find id b_vmap) else  
           raise (Failure ("Undeclared variable " ^ id)))
     in
-    let add_var (id: string) (t: typ) =
-      ignore(print_endline ("DEBUG: adding var " ^ id ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap)));
+    let add_var (id: string) (t: typ): string =
+      (* ignore(print_endline ("DEBUG: adding var " ^ id ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap))); *)
       if is_var_local id then raise (Failure ("Already declared variable " ^ id ^ " in current scope")) 
-      else l_vmap := StringMap.add id t !l_vmap
+      else (
+        let vname_number = update_vnames id in 
+        let cname = (id ^ "!" ^ (string_of_int vname_number)) in
+        ignore(l_vmap := StringMap.add id (t, cname) !l_vmap);
+        cname)
     in
     let add_var_bind (bind: bind) = 
       match bind with
@@ -66,15 +83,21 @@ let check (program_block) =
         FuncMap.mem {id=name; args=args} b_fmap
       )
     in
-    let find_func (name: string) (args: typ list):typ =
+    let find_func (name: string) (args: typ list):bind =
       if is_func_local name args then (FuncMap.find {id=name; args=args} !l_fmap) else (
         if is_func name args then (FuncMap.find {id=name; args=args} b_fmap) else
           raise (Failure ("Function "^ name ^ " with proper args not visible in scope"))
       )
     in
-    let add_func (name: string) (args: typ list) (t: typ) =
-      if is_func_local name args then (raise (Failure ("Already declared variable " ^ name ^ " in current scope"))) else
-      l_fmap := FuncMap.add {id=name; args=args} t !l_fmap
+    let add_func (name: string) (args: typ list) (t: typ): string =
+      if is_func_local name args then (raise (Failure ("Already declared variable " ^ name ^ " in current scope"))) (*else*)
+      else (
+        let func_number = update_fnames name in 
+        let cname = (name ^ "!" ^ (string_of_int func_number)) in
+        ignore(l_fmap := FuncMap.add {id=name; args=args} (t, cname) !l_fmap);
+        cname)
+      (* ignore(l_fmap := FuncMap.add {id=name; args=args} t !l_fmap); *)
+      (* let func_number = update_fnames name in (name ^ (string_of_int func_number)) *)
     in
 
     let is_boolean_op (op: op): bool =
@@ -93,7 +116,7 @@ let check (program_block) =
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
       | LitChar(l) -> (Char, SLitChar(l))
-      | Id(id) -> (find_var id, SId(id))
+      | Id(id) -> let (t, cname) = find_var id in (t, SId(id, cname))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 
         if t1 != t2 then raise(Failure("variables of different types in binop")) 
@@ -104,8 +127,8 @@ let check (program_block) =
       | Call(name, el) -> 
         let sel = List.map check_expr el in
         let args = List.map sexpr_to_typ sel in
-        (find_func name args, 
-        SCall(name, sel))
+        let (t, cname) = find_func name args in
+        (t, SCall(name, sel, cname))
       (* TODO more unary op checks based on operators *)
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (t, SUnaryOp(op, (t, se)))
     in
@@ -121,14 +144,14 @@ let check (program_block) =
     let check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
-      ignore(add_func name args t);
+      let cname = add_func name args t in
       let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t name in
-      SFdecl(t, name, binds, sb)
+      SFdecl(t, name, binds, sb, cname)
     in
     let rec check_stmt (s: stmt): sstmt =
       match s with 
       (* TODO: make assignment an expression? Implicit assignment seems easy here? *)
-      Assign(var, e) -> let (t, se) = check_expr e in let et = find_var var in if t == et then SAssign(var, (t, se)) else raise (Failure ("In " ^ block_name ^ ":Assigning variable that wasn't declared."))
+      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t == et then SAssign(var, (t, se), cname) else raise (Failure ("In " ^ block_name ^ ":Assigning variable that wasn't declared."))
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statement expression not boolean")));
         let sb1 = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let sb2 = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
@@ -141,17 +164,20 @@ let check (program_block) =
         SFor((t, se), check_stmt s , sb)
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("In " ^ block_name ^ ":Returned invalid type")) else SReturn(t, se)
-      | Decl(typ, id) -> ignore(add_var id typ); SDecl(typ, id)
-      | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure ("In " ^ block_name ^ ": DeclAssigning variable that wasn't declared."))
+      | Decl(typ, id) -> let cname = add_var id typ in SDecl(typ, id, cname)
+      | DeclAssign(et, id, e) ->  let cname = add_var id et in let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("In " ^ block_name ^ ": DeclAssigning variable that wasn't declared."))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
       (* | _ -> SReturn((Bool, SLitBool(true))) *)
     in
 
     ignore(add_var_binds starting_vars);
-    ignore(print_endline ("DEBUG: STARTING BLOCK " ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap)));
+    (* ignore(print_endline ("DEBUG: STARTING BLOCK " ^ "LOCALS: " ^ (map_to_str !l_vmap) ^ " GLOBALS: " ^ (map_to_str b_vmap))); *)
     match block with
     Block(sl) -> SBlock(List.map check_stmt sl)
   in
 
-  let built_in_funcs = FuncMap.add {id="print"; args=[Int]} Void FuncMap.empty in
+  (* let built_in_funcs = FuncMap.add {id="print"; args=[Int]} (Void, "print") FuncMap.empty in *)
+  let built_in_funcs = 
+    let cnumber = update_fnames "print" in let cname = ("print" ^ "!" ^ (string_of_int cnumber)) in
+    FuncMap.add {id="print"; args=[Int]} (Void, cname) FuncMap.empty in
   check_block program_block built_in_funcs StringMap.empty [] Void "root"
