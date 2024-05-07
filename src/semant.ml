@@ -8,21 +8,6 @@ open Modules
 module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
-(* type point = { x : int; y : int }
-
-module PointCompare = struct
-  type t = point
-  let compare p1 p2 =
-    match compare p1.x p2.x with
-    | 0 -> compare p1.y p2.y  (* If x coordinates are equal, compare y coordinates *)
-    | c -> c
-end
-
-module PointMap = Map.Make(PointCompare) *)
-
-
-
-
 let check (program_block) =
   (* let bind_to_typ (bind: bind): typ =
     match bind with (t, _) -> t
@@ -30,14 +15,11 @@ let check (program_block) =
   let bind_list_to_typ_list (bl: bind list): typ list =
     List.map bind_to_typ bl
   in *)
-
-  (* let map = PointMap.empty  (* Creates an empty map *) in
-let map = PointMap.add {x=1; y=2} "Point at (1,2)" map in
-let map = PointMap.add {x=3; y=4} "Point at (3,4)" map in *)
-
-  let funcMapAdd (t: FuncMap.key) (map: typ FuncMap.t) =
-    FuncMap.add t Int map
+  let sexpr_to_typ (se: sexpr): typ =
+    match se with
+      (t, _) -> t
   in
+
 
   let check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t): sblock =
     let l_fmap: typ FuncMap.t = FuncMap.empty 
@@ -51,7 +33,7 @@ let map = PointMap.add {x=3; y=4} "Point at (3,4)" map in *)
     let is_var (id: string): bool =
       if is_var_local id then true else (StringMap.mem id b_vmap)
     in
-    let check_var (id: string) : typ =
+    let find_var (id: string) : typ =
       if is_var_local id then (StringMap.find id l_vmap) else (
         if is_var id then (StringMap.find id b_vmap) else  
           raise (Failure ("Undeclared variable " ^ id)))
@@ -61,9 +43,22 @@ let map = PointMap.add {x=3; y=4} "Point at (3,4)" map in *)
       else StringMap.add id t l_vmap
     in
 
-    let is_func_local (id: string) (args: typ list) =
-      (* let t = (id, args) in *)
-      funcMapAdd {id; args} l_fmap
+    let is_func_local (name: string) (args: typ list):bool =
+      FuncMap.mem {id=name; args=args} l_fmap
+    in
+    let is_func (name: string) (args: typ list):bool =
+      if is_func_local name args then true else (
+        FuncMap.mem {id=name; args=args} b_fmap
+      )
+    in
+    let find_func (name: string) (args: typ list):typ =
+      if is_func_local name args then (FuncMap.find {id=name; args=args} l_fmap) else (
+        if is_func name args then (FuncMap.find {id=name; args=args} b_fmap) else
+          raise (Failure ("Function "^ name ^ " with proper args not visible in scope"))
+      )
+    in
+    let add_func (name: string) (args: typ list) (t: typ) =
+      FuncMap.add {id=name; args=args} t l_fmap
     in
 
     let rec check_expr (e: expr): sexpr =
@@ -72,11 +67,28 @@ let map = PointMap.add {x=3; y=4} "Point at (3,4)" map in *)
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
       | LitChar(l) -> (Char, SLitChar(l))
-      | Id(id) -> (check_var id, SId(id))
+      | Id(id) -> (find_var id, SId(id))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in if t1 != t2 then raise(Failure("variables of different types in binop")) else (t1, SBinop((t1, se1), op, (t2, se2))))
-      | Call(s, el) -> SCall(s, el)
-      | UnaryOp(op, e) -> SUnaryOp(op, e)
+      | Call(name, el) -> 
+        let sel = List.map check_expr el in
+        let args = List.map sexpr_to_typ sel in
+        (find_func name args, 
+        SCall(name, sel))
+        (* let name = find_func fname in
+        let param_length = List.length fd.formals in
+        if List.length args != param_length then
+          raise (Failure ("expecting " ^ string_of_int param_length ^
+                          " arguments in " ^ string_of_expr call))
+        else let check_call (ft, _) e =
+               let (et, e') = check_expr e in
+               let err = "illegal argument found " ^ string_of_typ et ^
+                         " expected " ^ string_of_typ ft ^ " in " ^ string_of_expr e
+               in (check_assign ft et err, e')
+          in
+          let args' = List.map2 check_call fd.formals args
+          in (fd.rtyp, SCall(fname, args')) *)
+      | UnaryOp(op, e) -> let (t, se) = check_expr e in (t, SUnaryOp(op, (t, se)))
     in
 
     let check_stmt (s: stmt): sstmt =
