@@ -14,10 +14,10 @@
 *)
 
 open Libparser
-open Libsemant
+(* open Libsemant *)
 module L = Llvm
 module A = Ast
-open Sast
+(* open Sast *)
 
 module StringMap = Map.Make(String)
 
@@ -27,19 +27,25 @@ let translate (globals, functions) =
 
   (* Create the LLVM compilation module into which
      we will generate code *)
-  let the_module = L.create_module context "MicroC" in
+  let the_module = L.create_module context "LILY" in
 
   (* Get types from the context *)
-  let i32_t      = L.i32_type    context
-  (* and i8_t       = L.i8_type     context *)
-  and i1_t       = L.i1_type     context in
+  let i64_t      = L.i64_type    context
+  (* and i32_t      = L.i32_type    context *)
+  and i8_t       = L.i8_type     context
+  and i1_t       = L.i1_type     context
+  and float_t    = L.double_type context
+  in
 
   (* Return the LLVM type for a MicroC type *)
   let ltype_of_typ = function
-      A.Int   -> i32_t
+      A.Int   -> i64_t
     | A.Bool  -> i1_t
+    | A.Char  -> i8_t
+    | A.Float -> float_t
+    | A.Void  -> i1_t
   in
-  let ltypes_of_typs (l:A.typ list): L.lltype list =
+  (* let ltypes_of_typs (l:A.typ list): L.lltype list =
    List.map ltype_of_typ l
   in
   let type_of_sexpr (l:sexpr): A.typ = 
@@ -47,7 +53,7 @@ let translate (globals, functions) =
   in
   let types_of_sexprs (l: sexpr list): A.typ list =
     List.map type_of_sexpr l
-  in
+  in *)
   (* let type_of_bind (l:A.bind): A.typ = 
     match l with (t, _) -> t
   in
@@ -56,38 +62,35 @@ let translate (globals, functions) =
   in *)
 
   (* Create a map of global variables after creating each *)
-  let global_vars : L.llvalue StringMap.t =
+  (* let global_vars : L.llvalue StringMap.t =
     let global_var m (t, n) =
       let init = L.const_int (ltype_of_typ t) 0
       in StringMap.add n (L.define_global n init the_module) m in
-    List.fold_left global_var StringMap.empty globals in
+    List.fold_left global_var StringMap.empty globals in *)
 
-  let printf_t : L.lltype =
+  (* let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type context |] in
   let printf_func : L.llvalue =
-    L.declare_function "printf" printf_t the_module in
+    L.declare_function "printf" printf_t the_module in *)
 
   (* Define each function (arguments and return type) so we can
      call it even before we've created its body *)
-  let function_decls : (L.llvalue * sfunc_def) StringMap.t =
+  (* let function_decls : (L.llvalue * sfunc_def) StringMap.t =
     let function_decl m fdecl =
       let name = fdecl.sfname
       and formal_types =
         Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.sformals)
       in let ftype = L.function_type (ltype_of_typ fdecl.srtyp) formal_types in
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
-    List.fold_left function_decl StringMap.empty functions in
+    List.fold_left function_decl StringMap.empty functions in *)
 
   (* Fill in the body of the given function *)
-  let build_function_body fdecl =
+  (* let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.sfname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
 
-    (* Construct the function's "locals": formal arguments and locally
-       declared variables.  Allocate each on the stack, initialize their
-       value, if appropriate, and remember their values in the "locals" map *)
     let local_vars =
       let add_formal m (t, n) p =
         L.set_value_name n p;
@@ -95,8 +98,6 @@ let translate (globals, functions) =
         ignore (L.build_store p local builder);
         StringMap.add n local m
 
-      (* Allocate space for any locally declared variables and add the
-       * resulting registers to our map *)
       and add_local m (t, n) =
         let local_var = L.build_alloca (ltype_of_typ t) n builder
         in StringMap.add n local_var m
@@ -107,13 +108,10 @@ let translate (globals, functions) =
       List.fold_left add_local formals fdecl.slocals
     in
 
-    (* Return the value for a variable or formal argument.
-       Check local names first, then global names *)
     let lookup n = try StringMap.find n local_vars
       with Not_found -> StringMap.find n global_vars
     in
 
-    (* Construct code for an expression; return its value *)
     let rec build_expr builder ((t, e) : sexpr) = match e with
         SLiteral i  -> L.const_int i32_t i
       | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
@@ -145,18 +143,11 @@ let translate (globals, functions) =
         L.build_call func_type fdef (Array.of_list llargs) result builder
     in
 
-    (* LLVM insists each basic block end with exactly one "terminator"
-       instruction that transfers control.  This function runs "instr builder"
-       if the current block does not already have a terminator.  Used,
-       e.g., to handle the "fall off the end of the function" case. *)
     let add_terminal builder instr =
       match L.block_terminator (L.insertion_block builder) with
         Some _ -> ()
       | None -> ignore (instr builder) in
-
-    (* Build the code for the given statement; return the builder for
-       the statement's successor (i.e., the next instruction will be built
-       after the one generated by this call) *)
+    
     let rec build_stmt builder = function
         SBlock sl -> List.fold_left build_stmt builder sl
       | SExpr e -> ignore(build_expr builder e); builder
@@ -170,7 +161,7 @@ let translate (globals, functions) =
         ignore (build_stmt (L.builder_at_end context else_bb) else_stmt);
 
         let end_bb = L.append_block context "if_end" the_function in
-        let build_br_end = L.build_br end_bb in (* partial function *)
+        let build_br_end = L.build_br end_bb in
         add_terminal (L.builder_at_end context then_bb) build_br_end;
         add_terminal (L.builder_at_end context else_bb) build_br_end;
 
@@ -179,7 +170,7 @@ let translate (globals, functions) =
 
       | SWhile (predicate, body) ->
         let while_bb = L.append_block context "while" the_function in
-        let build_br_while = L.build_br while_bb in (* partial function *)
+        let build_br_while = L.build_br while_bb in
         ignore (build_br_while builder);
         let while_builder = L.builder_at_end context while_bb in
         let bool_val = build_expr while_builder predicate in
@@ -193,13 +184,14 @@ let translate (globals, functions) =
         L.builder_at_end context end_bb
 
     in
-    (* Build the code for each statement in the function *)
     let func_builder = build_stmt builder (SBlock fdecl.sbody) in
-
-    (* Add a return if the last block falls off the end *)
-    add_terminal func_builder (L.build_ret (L.const_int i32_t 0))
+    add_terminal func_builder (L.build_ret (L.const_int i32_t 0)) 
 
   in
-
-  List.iter build_function_body functions;
+  *)
+  (* List.iter build_function_body functions; *)
+  ignore(globals);
+  ignore(functions);
+  (* ignore(global_vars); *)
+  ignore(ltype_of_typ Int);
   the_module
