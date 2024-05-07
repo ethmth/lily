@@ -27,7 +27,7 @@ let check (program_block) =
   let pick_fst _ v1 _ = Some v1 in
 
 
-  let rec check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t) (starting_vars: bind list) (block_return: typ): sblock =
+  let rec check_block (block: block) (b_fmap: typ FuncMap.t) (b_vmap: typ StringMap.t) (starting_vars: bind list) (block_return: typ) (block_name: string): sblock =
     let l_fmap: typ FuncMap.t ref = ref FuncMap.empty 
     in
     let l_vmap: typ StringMap.t ref = ref StringMap.empty
@@ -122,27 +122,27 @@ let check (program_block) =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
       ignore(add_func name args t);
-      let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t in
+      let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t name in
       SFdecl(t, name, binds, sb)
     in
     let rec check_stmt (s: stmt): sstmt =
       match s with 
       (* TODO: make assignment an expression? Implicit assignment seems easy here? *)
-      Assign(var, e) -> let (t, se) = check_expr e in let et = find_var var in if t == et then SAssign(var, (t, se)) else raise (Failure "Assigning variable that wasn't declared.")
-      | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
-        let sb1 = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] Void in 
-        let sb2 = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] Void in 
+      Assign(var, e) -> let (t, se) = check_expr e in let et = find_var var in if t == et then SAssign(var, (t, se)) else raise (Failure ("In " ^ block_name ^ ":Assigning variable that wasn't declared."))
+      | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statement expression not boolean")));
+        let sb1 = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
+        let sb2 = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SIf((t, se), sb1, sb2)
-      | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statemen rec t expression not boolean")));
-        let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] Void in 
+      | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statemen rec t expression not boolean")));
+        let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SWhile((t, se), sb)
-      | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("If statement expression not boolean")));
-        let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] Void in 
+      | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statement expression not boolean")));
+        let sb = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SFor((t, se), check_stmt s , sb)
       | ExprStmt(e) -> SExprStmt(check_expr e)
-      | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Returned invalid type")) else SReturn(t, se)
+      | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("In " ^ block_name ^ ":Returned invalid type")) else SReturn(t, se)
       | Decl(typ, id) -> ignore(add_var id typ); SDecl(typ, id)
-      | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure "Assigning variable that wasn't declared.")
+      | DeclAssign(et, id, e) ->  ignore(add_var id et); let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se)) else raise (Failure ("In " ^ block_name ^ ": Assigning variable that wasn't declared."))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
       (* | _ -> SReturn((Bool, SLitBool(true))) *)
     in
@@ -153,4 +153,4 @@ let check (program_block) =
     Block(sl) -> SBlock(List.map check_stmt sl)
   in
 
-  check_block program_block FuncMap.empty StringMap.empty [] Void
+  check_block program_block FuncMap.empty StringMap.empty [] Void "root"
