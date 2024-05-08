@@ -73,7 +73,8 @@ rule token = parse
 | "and"     { AND }
 | "or"     { OR }
 | "||"      { OR}
-| '!'      { NOT }
+| "!"      { NOT }
+| "not"   { NOT }
 
 (*List*)
 | "[]"      { EMPTY_LIST }  (* This matches '[]' and returns the EMPTY_LIST token *)

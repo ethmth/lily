@@ -143,7 +143,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
-      | SBinop (e1, o, e2) (* TODO *) ->
+      | SBinop (e1, o, e2) ->
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
         let e1_t = (match e1 with (e1_typ, _) -> e1_typ) in
@@ -154,11 +154,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
          | A.Divide   -> if e1_t = A.Float then L.build_fdiv else L.build_sdiv
          | A.And     -> L.build_and
          | A.Or      -> L.build_or
-         (* TODO: Make these fcmp when its floats *)
          | A.Eq   -> if e1_t = A.Float then  L.build_fcmp L.Fcmp.Oeq else L.build_icmp L.Icmp.Eq
          | A.Neq   -> if e1_t = A.Float then L.build_fcmp L.Fcmp.One else L.build_icmp L.Icmp.Ne 
          | A.Lt    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Olt else L.build_icmp L.Icmp.Slt
-         (* TODO: All of these are Less Thans rn *)
          | A.Leq    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Ole else L.build_icmp L.Icmp.Sle
          | A.Gt     -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Ogt else L.build_icmp L.Icmp.Sgt
          | A.Geq    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Oge else L.build_icmp L.Icmp.Sge
@@ -166,8 +164,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SUnaryOp (o, e) ->
         let e' = build_expr builder e in 
         (match o with
-           A.Negate    ->  L.build_neg
-        ) e' "tmp" builder
+           A.Negate    ->  L.build_not
+        ) e' "tmpu" builder
       | SCall ("print", arg_list, _) ->
           build_print_call arg_list builder
       | SCall (_, args, cname) ->

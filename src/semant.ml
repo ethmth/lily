@@ -160,7 +160,6 @@ let check (program_block) =
         let args = List.map sexpr_to_typ sel in
         let (t, cname) = find_func name args in
         (t, SCall(name, sel, cname))
-      (* TODO more unary op checks based on operators *)
       | UnaryOp(op, e) -> let (t, se) = check_expr e in 
       match op with
       Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)) 
