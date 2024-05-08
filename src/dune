@@ -33,4 +33,5 @@
 (executable
  (name lily)
  (modules lily)
- (libraries libparser libsemant libirgen))
+ (libraries libparser libsemant libirgen)
+ (flags :standard -ccopt -fno-lto))
