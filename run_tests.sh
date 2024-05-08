@@ -16,7 +16,7 @@ OUT_EXT=".out"
 
 WORKING_DIR="working"
 PARSER_DIR="parser_error"
-PARSER_ERROR="Parser Error"
+PARSER_ERROR="Parse_error"
 SEMANT_DIR="semantics_error"
 SEMANT_ERROR="Semantics Error"
 SCANNER_DIR="scanner_error"
@@ -58,57 +58,64 @@ for i in "${!directories[@]}"; do
     curr_count=0
     curr_total=0
 
+    printf "========================================================\n"
     printf "\tRunning tests for $action\n"
+    printf "========================================================\n"
     for file in "$directory"/*; do
         passed=1
         if ! [[ -f "$file" && "$file" == *.lily ]]; then
             continue
         fi
         base_file=$(basename -- "$file")
+        base_file="${base_file%.*}"
 
-        printf "\tChecking $base_file\n"
-        output=$(cat $file | $EXECUTABLE_PATH)
+        output=$(cat $file | $EXECUTABLE_PATH 2>&1)
 
         if [ "$action" == "OUTFILE" ]; then
-            output=$(cat $output | $LLI_COMMAND)
+            output=$(echo $output | $LLI_COMMAND 2>&1)
             output="${output#"${output%%[![:space:]]*}"}"
             output="${output%"${output##*[![:space:]]}"}"
             if ! [ -f "$directory/$base_file$OUT_EXT" ]; then
                 passed=0
+                output="$base_file$OUT_EXT does not exist."
             else
                 expected_output=$(cat "$directory/$base_file$OUT_EXT")
                 expected_output="${expected_output#"${expected_output%%[![:space:]]*}"}"
                 expected_output="${expected_output%"${expected_output##*[![:space:]]}"}"
-                if [ "$output" != "$expected_output"]; then 
+                if [ "$output" != "$expected_output" ]; then 
                     passed=0
                 fi
             fi
         else
             target_string=$action
-            if ! [[ "$output" == *"$target_string" ]]; then
+            if ! [[ "$output" == *"$target_string"* ]]; then
                 passed=0
             fi
         fi
 
         if ((passed)); then
-            ((curr_count++))
-            ((count++))
+            ((curr_count=curr_count+1))
+            ((count=count+1))
             printf "\t\tPassed $base_file\n"
         else
-            printf "\tFAILED $base_file test: Expected $action, got:\n$output\n"
+            printf "\t\t\e[1;37mFAILED\e[0m $base_file test: Expected $action, got:\n"
+            echo -e "\e[1;31m$output\e[0m"
         fi
-        ((total++))
+        ((total=total+1))
+        ((curr_total=curr_total+1))
     done
 
+    printf "========================================================\n"
     if [ "$curr_count" == "$curr_total" ]; then
         printf "\tPassed $curr_count/$curr_total tests for $action\n"
     else
-        printf "FAILED tests for $action with $curr_count/$curr_total correct\n"
+        printf "\t\e[1;37mFAILED\e[0m tests for $action with $curr_count/$curr_total correct\n"
     fi
+    printf "========================================================\n"
 done
 
- if [ "$count" == "$total" ]; then
+if [ "$count" == "$total" ]; then
     printf "All $total TESTS Passed.\n"
 else
-    printf "FAILED: Only passed $count/$total tests.\n"
+    printf "\e[1;37mFAILED\e[0m: Only passed $count/$total tests.\n"
 fi
