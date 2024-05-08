@@ -104,6 +104,7 @@ statement:
   | stmt_compound { $1 }        // multi-line "block" statements
 stmt_simple:
     declaration { $1 }
+  | list_declaration { $1 }
   | assignment { $1 }
   | expression_statement { $1 }
   | return_statement { $1 }
@@ -126,6 +127,13 @@ declaration:
   | LET ID COLON typ { Decl($4, $2) }
   // | LET ID ASSIGN expression { IDeclAssign($2, $4) }
   // | LET ID { IDecl($2) }
+
+list_declaration:
+  | LET ID COLON_COLON typ ASSIGN list_literal { ListDeclAssign($4, $2, $6) }
+  // | LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
+  | LET ID COLON_COLON typ { ListDecl($4, $2) }
+  // | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
+  // |  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
 assignment:
   | ID ASSIGN expression {Assign($1, $3)}
@@ -203,17 +211,21 @@ typ:
   | CHAR  { Char }
   // | STRING { String }
   | VOID   { Void }
-  // | LIST typ { List($2) }
+  | LIST typ { List($2) }
 
 /* Lists */
 
-// list_elements_opt:
-//    /* nothing */ { [] }
-//    | list_elements { $1 }
+list_literal:
+  LBRACKET arguments_opt RBRACKET { $2 }
 
-//  list_elements:
-//    expression { [$1] }
-//    | expression COMMA list_elements { $1 :: $3 }
+list_elements_opt:
+   /* nothing */ { [] }
+   | list_elements { $1 }
+
+ list_elements:
+   expression { [$1] }
+   | expression COMMA list_elements { $1 :: $3 }
+
 
 /* Expressions */
 
@@ -224,6 +236,7 @@ expression:
   | FLOAT_LIT { LitFloat($1) }
   // | STRING_LIT { LitString($1) }
   | ID          { Id($1) }
+  | list_literal { LitList($1) }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
   | expression PLUS expression { Binop($1, Plus,   $3) }
   | expression MINUS expression { Binop($1, Minus,   $3) }
   | expression TIMES expression { Binop($1, Times,   $3) }
@@ -243,7 +256,6 @@ expression:
   // | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  (*// New element-wise addition (CHIMA)*)
   | function_call { $1 }
   // | list_declaration { $1 }
-  // | list_literal { $1 }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
   | LPAREN expression RPAREN { $2 } (*// For grouping and precedence*)
   // | LPAREN expression RPAREN DOT ID LPAREN arguments_opt RPAREN { MethodCall($2, $5, $7) }
 
@@ -259,14 +271,7 @@ arguments:
   expression  { [$1] }
   | expression COMMA arguments { $1::$3 }
 
-// list_literal:
-//   LBRACKET list_elements_opt RBRACKET { ListLit($2) }
 
-// list_declaration:
-  // | LET ID COLON_COLON typ ASSIGN LBRACKET elements_opt RBRACKET { ListInit($2, $4, $7) }
-  //| LET ID COLON_COLON typ EMPTY_LIST '=' empty_list { ListInit($2, $4, []) }
-  // | LET ID COLON_COLON typ '=' LBRACKET elements_opt RBRACKET { ListInit($2, $4, $8) }  // Added rule for list init w/o empty list
-  //|  LET ID COLON typ ASSIGN expression { DeclAssign($2, $4, $6) }  // Existing rule for simple types
 
 //  elements_opt:
 //    /*nothing*/ { [] }

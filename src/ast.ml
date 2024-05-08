@@ -11,7 +11,7 @@ type unary_op = Negate
 
 (* Types definition *)
 (* type typ = Int | Bool | Char | Float | String | Void | List of typ *)
-type typ = Int | Bool | Char | Float | Void 
+type typ = Int | Bool | Char | Float | Void | List of typ
 
 type bind = typ * string
 
@@ -26,13 +26,13 @@ type expr =
   | LitFloat of float
   | LitChar of char
   (* | LitString of string *)
+  | LitList of expr list
   | Id of string
   | Binop of expr * op * expr
   | Call of string * expr list
   (* | ListExpr of expr list *)
   | UnaryOp of unary_op * expr
-  (*| ListLit of expr list*)  (*Chima New: Represents list literals*)
-  (*| ListInit of string * typ * expr list*)  (*Chima New: Represents list initialization*)
+  (*| ListDecl of string * typ * expr list *)  (*Chima New: Represents list initialization*)
   (* | DeclExpr of typ * string * expr  (* New type to treat declarations as expressions CHIMA *)*)
   (*| ListBinop of expr * list_op * expr*)   (* Adding this line *)
   (*| MethodCall of expr * string * expr list*)  (* Chima New: Represents method calls on expressions *) (*TODO Ethan note: maybe change this to list call?*)
@@ -52,11 +52,14 @@ and stmt =
   | Return of expr
   | Decl of typ * string
   | DeclAssign of typ * string * expr
+  | ListDecl of typ * string
+  | ListDeclAssign of typ * string * expr list
   (* | IDecl of string *)
   (* | IDeclAssign of string * expr *)
   | Fdecl of typ * string * bind list * block
   | Assign of string * expr
   (* | Try of stmt list * exn_clause list * stmt list option *)
+
 
 (* and exn_clause = {
   exn_type: typ option;
@@ -96,13 +99,14 @@ let string_of_unary_op = function
 let string_of_list_op = function
   | ElwiseAdd -> ".+" (*CHIMA NEW: Added this line*)
 
-let string_of_typ = function
+let rec string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
   | Char -> "char"
   | Float -> "float"
   (*| String -> "string"*) (*CHIMA NEW: Added this line*)
   | Void -> "void"
+  | List(t) -> ((string_of_typ t) ^ " list")
   (*| List _ -> "list"*) (*CHIMA NEW: Added this line*)
 
 (* Pretty-printing functions *)
@@ -115,12 +119,18 @@ let string_of_indent (curr_indent) =
   in
   append_tab curr_indent
 
-let rec string_of_expr = function
+
+
+let rec string_of_list (exprs: expr list): string =
+  "[" ^ String.concat ", " (List.map string_of_expr exprs) ^ "]"
+
+and string_of_expr = function
     LitInt(l) -> string_of_int l
   | LitBool(b) -> string_of_bool b
   | LitFloat(f) -> string_of_float(f)
   | LitChar(c) -> "\'" ^ String.make 1 c ^ "\'"
   (* | LitString(s) -> "\"" ^ s ^ "\"" *)
+  | LitList(el) -> string_of_list el
   | Id(s) -> s
   | Binop(e1, o, e2) -> string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
@@ -132,7 +142,7 @@ let rec string_of_expr = function
   (* | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init *)
   (* | ListLit(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]" *)
   (* | ListBinop(e1, op, e2) -> string_of_expr e1 ^ " " ^ string_of_list_op op ^ " " ^ string_of_expr e2 *)
-  (*| ListInit(_, _, _) -> "ListInit"*) (* Added this line to handle the ListInit case *)
+  (*| ListInit(_, _, _) -> "ListInit" *) (* Added this line to handle the ListInit case *)
   (*| DeclExpr(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e*)
   
 let rec string_of_stmt_list (stmts: stmt list) (curr_indent) = 
@@ -153,6 +163,8 @@ and string_of_stmt (stmt) (curr_indent) =
   (* | IDecl(s) -> "let " ^ s ^ "\n" *)
   (* | IDeclAssign(s, e) -> "let " ^ s ^ " = " ^ string_of_expr e ^ "\n" *)
   (* | Fdecl(f) -> string_of_fdecl f (curr_indent) *)
+  | ListDecl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
+  | ListDeclAssign(t, s, el) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_list el ^ "\n"
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
   (* | Try(try_block, exn_clauses, finally_block) ->
     "try:\n" ^
