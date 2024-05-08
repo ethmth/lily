@@ -12,6 +12,21 @@ Currently, the programming language implementation can be found in the `src/` di
 - [Tani Omoyeni](https://github.com/tmo2121) - tmo2121 - Tester
 - [Jianjie Sun](https://github.com/cszswx) - js6412 - Tester
 
+## Language Features
+- [x] **Python-style indentation** - Lily parser using indentation-style instead of C-style
+where blocks are parsed using special `{}` characters.
+- [x] **Nested Functions** - Lily allows for nested functions.
+- [x] **Python-style printing** - The built in print function can take an arbitrary number of 
+arguments to print in Python-style.
+- [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM.
+- [ ] **String** - Lily does not yet support strings.
+- [ ] **Lists** - Lily does not yet support lists.
+- [ ] **Standard Library** - Lily does not yet support a standard library of functions that can be called on lists.
+- [ ] **Providing System Arguments** - Lily does not yet support taking lists provided as system arguments.
+- [ ] **List Operations** - No list operations implemented yet.
+- [ ] **Tuples and Dictionaries** - Not gonna happen.
+- [ ] **Type inference/implicit types** - Not gonna happen
+- [ ] **Elifs** - Lily does not yet support `elif`s
 
 ## Current Progress
 
@@ -27,13 +42,13 @@ Currently, the programming language implementation can be found in the `src/` di
 
 **`test1` - tests parser and ast (everything above this)** - to run `test1`, run `make test1` and follow the "How to run tests" instructions below.
 
-- [ ] `semant.ml` - Semantic checker.
-- [ ] `sast.ml`
+- [x] `semant.ml` - Semantic checker.
+- [x] `sast.ml`
 
 **`test2` - tests semantic checking (everything above this)** - to run `test2`, run `make test2` and follow the "How to run tests" instructions below.
 
 
-- [ ] `irgen.ml` - IR Generation
+- [x] `irgen.ml` - IR Generation
  
 **`lily.ml` - tests everything** - to use, run `make lily` and `./lily.native ...`
 

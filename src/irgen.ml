@@ -62,13 +62,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     List.fold_left global_var StringMap.empty globals in
   ignore(global_vars);
 
-  let printf_t : L.lltype =
-    L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
-  let printf_func : L.llvalue =
-    L.declare_function "printf" printf_t the_module in
-
-  (* Define each function (arguments and return type) so we can
-     call it even before we've created its body *)
   let function_decls : (L.llvalue * sstmt) StringMap.t =
     let function_decl m fdecl =
       match fdecl with 
@@ -89,8 +82,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     let (the_function, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure("IR Error (build_function_body): function " ^ cname ^ " not found.")) in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
-
     let lookup n = 
       try StringMap.find n global_vars with Not_found -> raise (Failure ("IR Error (lookup): lookup failure"))
     in
@@ -107,7 +98,46 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       (Array.to_list (L.params the_function)) in
     ignore(formals);
 
-    let rec build_expr builder ((t, e) : sexpr) = match e with
+     (* Util/Built-in function definitions *)
+    let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder): L.llvalue =
+      (* TODO: Good bool printing function; printing strings, lists, etc. *)
+      let typ_to_fmt (t: A.typ): string =
+        match t with
+        | Int -> "%lu"
+        | Float -> "%f"
+        | Char -> "%c"
+        | Bool -> "%B"
+        | _ -> ""
+      in
+      let rec get_format_str (typ_list: A.typ list): string =
+        match typ_list with
+        [] -> "\n"
+        | [last] -> typ_to_fmt last ^ "\n"
+        | h::t -> (typ_to_fmt h) ^ " " ^ (get_format_str t)
+      in 
+      let get_typ (arg: sexpr) =
+        match arg with (t, _) -> t
+      in
+      let rec build_expr_list (li) (builder): L.llvalue list = 
+        match li with
+        [] -> []
+        | h::t -> [(build_expr builder h)] @ (build_expr_list t builder)
+      in
+      let typ_list = List.map get_typ arg_list in
+      let ltyp_list = List.map ltype_of_typ typ_list in
+      let format_str = get_format_str typ_list in
+      let fmt_str = L.build_global_stringptr format_str "fmt" builder in
+      let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list (ltyp_list)) in
+      let printf_t : L.lltype =
+        L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
+      let printf_func : L.llvalue =
+        L.declare_function "printf" printf_t the_module in 
+      let built_expr_list = build_expr_list arg_list builder in
+      L.build_call func_type printf_func (Array.of_list ([fmt_str] @ built_expr_list))
+        "printf" builder 
+
+    and build_expr (builder: L.llbuilder) ((t,e ): sexpr): L.llvalue = 
+      match e with
         SLitInt i -> L.const_int (ltype_of_typ A.Int) i
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (int_of_char c)
@@ -137,12 +167,13 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         (match o with
            A.Negate    ->  L.build_neg
         ) e' "tmp" builder
-      | SCall ("print", [e], _) (* TODO *) ->
-          let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e))])) in 
-          L.build_call func_type printf_func [| int_format_str ; (build_expr builder e) |]
-            "printf" builder
+      | SCall ("print", arg_list, _) (* TODO *) ->
+          build_print_call arg_list builder
+          (* let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e)); (ltype_of_typ (type_of_sexpr e2))])) in 
+          L.build_call func_type printf_func [| int_format_str ; (build_expr builder e);  (build_expr builder e2)|]
+            "printf" builder *)
       | SCall (_, args, cname) ->
-        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ "not found.")) in
+        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ " not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = cname ^ "_result" in
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
@@ -202,7 +233,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     in
     let sl = match sblock with SBlock(sl) -> sl in
     let func_builder = List.fold_left build_stmt builder sl in
-    add_terminal func_builder (L.build_ret ((if rtyp == A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
+    add_terminal func_builder (L.build_ret ((if rtyp = A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
 
     | _ -> raise (Failure("IR Error (build_function_body): Unexpected non-function statement."))
   in
