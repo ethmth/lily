@@ -1,13 +1,13 @@
 (library
  (name libparser)
- (modules scanner tokenize parser parserscanner ast astscanner modules))
+ (modules scanner tokenize parser parserscanner ast astscanner))
 (ocamllex scanner)
 (ocamlyacc parser)
 (ocamlyacc parserscanner)
 
 (library
  (name libsemant)
- (modules sast semant)
+ (modules sast semant structs)
 (libraries libparser))
 
 (library

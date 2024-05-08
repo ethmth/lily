@@ -55,7 +55,6 @@ let tokenize =
       | NEWLINEI(x) -> last_token := 
             (if !first_line then 
               (first_line := false; NEWLINE) else
-              (* if (x > 0) then raise(Failure("Tokenize Failure: First line cannot be indented."))); *)
             process_newline x queue curr_indent); !last_token
       | EOF -> process_eof queue curr_indent last_token
       | _ -> last_token := 
@@ -64,10 +63,3 @@ let tokenize =
                queue := !queue @ [stokens]; 
                NEWLINE) 
             else stokens); !last_token
-
-(* let lexbuf_insert_newline =
-  let first_line_read = ref true in
-  if !first_line_read then 
-    (first_line_read := false; Lexing.from_string "\n") 
-  else
-    (Lexing.from_channel stdin) *)

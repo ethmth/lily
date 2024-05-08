@@ -3,7 +3,7 @@
 open Libparser
 open Ast
 open Sast
-open Modules
+open Structs
 
 module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
