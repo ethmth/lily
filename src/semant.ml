@@ -164,7 +164,10 @@ let check (program_block) =
         SWhile((t, se), sb)
       | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("In " ^ block_name ^ ":If statement expression not boolean")));
         let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
-        SFor((t, se), check_stmt s , sb)
+        let sl = match sb with SBlock(sl) -> sl in
+        let sl_new = (check_stmt s)::sl in
+        (* SFor((t, se), check_stmt s , sb) *)
+        SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("In " ^ block_name ^ ":Returned invalid type")) else SReturn(t, se)
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)

@@ -107,39 +107,43 @@ let translate ((globals: (A.typ * string * string) list), functions) =
 
 
   let build_function_body fdecl =
-    match fdecl with SFdecl(rtyp, _, _, sblock, cname) ->
+    match fdecl with SFdecl(rtyp, _, args, sblock, cname) ->
     let (the_function, _) = StringMap.find cname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
 
+    let lookup n = 
+      try StringMap.find n global_vars with Not_found -> raise (Failure ("lookup failure"))
+    in
 
     (* TODO Assign args to global vars *)
 
-    (* let local_vars =
-      let add_formal m (t, n) p =
+    (* let local_vars = *)
+      let add_formal m (t, n, cname) p =
         L.set_value_name n p;
         let local = L.build_alloca (ltype_of_typ t) n builder in
         ignore (L.build_store p local builder);
+        (* let e' = build_expr builder e in *)
+        ignore(L.build_store local (lookup cname) builder);
         StringMap.add n local m
-
-      and add_local m (t, n) =
-        let local_var = L.build_alloca (ltype_of_typ t) n builder
-        in StringMap.add n local_var m
       in
 
-      let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals
+      (* and add_local m (t, n) =
+        let local_var = L.build_alloca (ltype_of_typ t) n builder
+        in StringMap.add n local_var m
+      in *)
+
+      let formals = List.fold_left2 add_formal StringMap.empty args
           (Array.to_list (L.params the_function)) in
-      List.fold_left add_local formals fdecl.slocals
-    in *)
+      ignore(formals);
+      (* List.fold_left add_local formals fdecl.slocals *)
+    (* in *)
 
     (* let lookup n = try StringMap.find n local_vars
       with Not_found -> StringMap.find n global_vars
     in *)
 
-    let lookup n = 
-      try StringMap.find n global_vars with Not_found -> raise (Failure ("lookup failure"))
-    in
 
     let rec build_expr builder ((t, e) : sexpr) = match e with
         SLitInt i  -> L.const_int (ltype_of_typ A.Int) i
@@ -239,12 +243,10 @@ let translate ((globals: (A.typ * string * string) list), functions) =
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
-        (* TODO: Implement For Loops *)
-      | SFor (_, _, _) -> builder
+      | SFor (_, _, _) -> builder (* FOR LOOPS ARE CONVERTED TO WHILE LOOPS IN SEMANTICS STAGE *)
       | SDecl(_, _, _) -> builder
       | SFdecl(_, _, _, _, _) -> builder
       (* | _ -> builder; *)
-
     in
     (* let func_builder = build_stmt builder (SBlock fdecl.sbody) in *)
     let sl = match sblock with SBlock(sl) -> sl in
