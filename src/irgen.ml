@@ -100,7 +100,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       L.set_value_name n p;
       let local = L.build_alloca (ltype_of_typ t) n builder in
       ignore (L.build_store p local builder);
-      ignore(L.build_store local (lookup cname) builder);
+      ignore(L.build_store p (lookup cname) builder);
       StringMap.add n local m
     in
     let formals = List.fold_left2 add_formal StringMap.empty args

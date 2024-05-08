@@ -1,9 +1,6 @@
 #!/bin/bash
 
-if ! [[ $EUID -ne 0 ]]; then
-	echo "This script should not be run with root/sudo privileges."
-	exit 1
-fi
+################# CONSTANTS ########################
 
 LLI_COMMAND="lli-16"
 MAKE_DIR="src"
@@ -22,6 +19,13 @@ SEMANT_ERROR="Semantics Error"
 SCANNER_DIR="scanner_error"
 SCANNER_ERROR="Scanner Error"
 
+#######################################################
+
+if ! [[ $EUID -ne 0 ]]; then
+	echo "This script should not be run with root/sudo privileges."
+	exit 1
+fi
+
 # Get script path
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
@@ -33,18 +37,18 @@ EXECUTABLE_PATH="$SCRIPT_PATH/$MAKE_DIR/$EXECUTABLE_NAME"
 
 # Create a list of directories
 directories=(
-    "$SCRIPT_PATH/$TEST_DIR/$WORKING_DIR"
-    # "$SCRIPT_PATH/$TEST_DIR/$SCANNER_DIR"
+    "$SCRIPT_PATH/$TEST_DIR/$SCANNER_DIR"
     "$SCRIPT_PATH/$TEST_DIR/$PARSER_DIR"
     "$SCRIPT_PATH/$TEST_DIR/$SEMANT_DIR"
+    "$SCRIPT_PATH/$TEST_DIR/$WORKING_DIR"
 )
 
 # And their matching error message
 actions=(
-    "OUTFILE"
-    # "$SCANNER_ERROR"
+    "$SCANNER_ERROR"
     "$PARSER_ERROR"
     "$SEMANT_ERROR"
+    "OUTFILE"
 )
 
 count=0
@@ -69,10 +73,14 @@ for i in "${!directories[@]}"; do
         base_file=$(basename -- "$file")
         base_file="${base_file%.*}"
 
-        output=$(cat $file | $EXECUTABLE_PATH 2>&1)
+        output=""
+        if [ "$action" == "OUTFILE" ]; then
+            output=$(cat $file | $EXECUTABLE_PATH | $LLI_COMMAND 2>&1)
+        else
+            output=$(cat $file | $EXECUTABLE_PATH 2>&1)
+        fi
 
         if [ "$action" == "OUTFILE" ]; then
-            output=$(echo $output | $LLI_COMMAND 2>&1)
             output="${output#"${output%%[![:space:]]*}"}"
             output="${output%"${output##*[![:space:]]}"}"
             if ! [ -f "$directory/$base_file$OUT_EXT" ]; then
@@ -93,12 +101,17 @@ for i in "${!directories[@]}"; do
             fi
         fi
 
+
+        expected=$action
+        if [ "$action" == "OUTFILE" ]; then
+            expected=$expected_output
+        fi
         if ((passed)); then
             ((curr_count=curr_count+1))
             ((count=count+1))
             printf "\t\tPassed $base_file\n"
         else
-            printf "\t\t\e[1;37mFAILED\e[0m $base_file test: Expected $action, got:\n"
+            printf "\t\t\e[1;37mFAILED\e[0m $base_file$OUT_EXT test: Expected $expected, got:\n"
             echo -e "\e[1;31m$output\e[0m"
         fi
         ((total=total+1))

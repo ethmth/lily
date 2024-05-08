@@ -120,7 +120,7 @@ rule token = parse
 
 (* Miscellaneous *)
 | eof { EOF }
-| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+| _ as char { raise (Failure("Scanner Error: Illegal character " ^ Char.escaped char)) }
 
 and comment = parse
   ['\n' '\t' ' ' '\r']* '#' { comment lexbuf }
