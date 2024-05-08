@@ -14,10 +14,10 @@
 *)
 
 open Libparser
-(* open Libsemant *)
+open Libsemant
 module L = Llvm
 module A = Ast
-(* open Sast *)
+open Sast
 
 module StringMap = Map.Make(String)
 
@@ -64,7 +64,7 @@ let translate ((globals: (A.typ * string * string) list), functions) =
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
     let global_var m ((t: A.typ), (_: string), (cname: string)) =
-      let init = L.const_int (ltype_of_typ t) 0
+      let init = if t != A.Float then L.const_int (ltype_of_typ t) 0 else L.const_float (ltype_of_typ t) 0.0
       in StringMap.add cname (L.define_global cname init the_module) m in
     List.fold_left global_var StringMap.empty globals in
 
@@ -77,15 +77,22 @@ let translate ((globals: (A.typ * string * string) list), functions) =
 
   (* Define each function (arguments and return type) so we can
      call it even before we've created its body *)
-  (* let function_decls : (L.llvalue * sfunc_def) StringMap.t =
+  let function_decls : (L.llvalue * sstmt) StringMap.t =
     let function_decl m fdecl =
-      let name = fdecl.sfname
-      and formal_types =
-        Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.sformals)
-      in let ftype = L.function_type (ltype_of_typ fdecl.srtyp) formal_types in
-      StringMap.add name (L.define_function name ftype the_module, fdecl) m in
-    List.fold_left function_decl StringMap.empty functions in *)
+      match fdecl with 
+      SFdecl(rtyp, _, args, _, cname) ->
+      (* let name = fdecl.sfname *)
+      let bind_from_args (arg: A.typ * string * string) =
+        match arg with (t, _ ,cname) -> (t, cname)
+      in
+      let formal_types =
+        Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) (List.map bind_from_args args))
+      in let ftype = L.function_type (ltype_of_typ rtyp) formal_types in
+      StringMap.add cname (L.define_function cname ftype the_module, fdecl) m 
+    | _ -> raise (Failure ("Unexpected statement in function_decls")) in
+    List.fold_left function_decl StringMap.empty functions in
 
+    ignore(function_decls);
   (* Fill in the body of the given function *)
   (* let build_function_body fdecl =
     let (the_function, _) = StringMap.find fdecl.sfname function_decls in
