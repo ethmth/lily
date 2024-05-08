@@ -21,8 +21,7 @@ open Sast
 
 module StringMap = Map.Make(String)
 
-(* translate : Sast.program -> Llvm.module *)
-let translate ((globals: (A.typ * string * string) list), functions) =
+let translate ((globals: (A.typ * string * string) list), (functions: sstmt list)) =
   let context    = L.global_context () in
 
   (* Create the LLVM compilation module into which
@@ -31,13 +30,13 @@ let translate ((globals: (A.typ * string * string) list), functions) =
 
   (* Get types from the context *)
   let i64_t      = L.i64_type    context
-  (* and i32_t      = L.i32_type    context *)
+  and _          = L.i32_type    context
   and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
   in
 
-  (* Return the LLVM type for a MicroC type *)
+  (* Return the LLVM type for a LILY type *)
   let ltype_of_typ = function
       A.Int   -> i64_t
     | A.Bool  -> i1_t
@@ -54,12 +53,6 @@ let translate ((globals: (A.typ * string * string) list), functions) =
   let types_of_sexprs (l: sexpr list): A.typ list =
     List.map type_of_sexpr l
   in
-  (* let type_of_bind (l:A.bind): A.typ = 
-    match l with (t, _) -> t
-  in
-  let types_of_binds (l: A.bind list): A.typ list =
-    List.map type_of_bind l
-  in *)
 
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
@@ -69,15 +62,10 @@ let translate ((globals: (A.typ * string * string) list), functions) =
     List.fold_left global_var StringMap.empty globals in
   ignore(global_vars);
 
-  (* let printf_t : L.lltype =
-    L.var_arg_function_type i64_t [| L.pointer_type context |] in
+  let printf_t : L.lltype =
+    L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
   let printf_func : L.llvalue =
-    L.declare_function "print" printf_t the_module in *)
-
-  let print_t : L.lltype =
-    L.var_arg_function_type i64_t [| i64_t|] in
-  let print_func : L.llvalue =
-    L.declare_function "printf" print_t the_module in
+    L.declare_function "printf" printf_t the_module in
 
   (* Define each function (arguments and return type) so we can
      call it even before we've created its body *)
@@ -85,7 +73,6 @@ let translate ((globals: (A.typ * string * string) list), functions) =
     let function_decl m fdecl =
       match fdecl with 
       SFdecl(rtyp, _, args, _, cname) ->
-      (* let name = fdecl.sfname *)
       let bind_from_args (arg: A.typ * string * string) =
         match arg with (t, _ ,cname) -> (t, cname)
       in
@@ -93,68 +80,40 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) (List.map bind_from_args args))
       in let ftype = L.function_type (ltype_of_typ rtyp) formal_types in
       StringMap.add cname (L.define_function cname ftype the_module, fdecl) m 
-    | _ -> raise (Failure ("Unexpected statement in function_decls")) in
+    | _ -> raise (Failure ("IR Error (function_decls): Unexpected non-Function statement ")) in
     List.fold_left function_decl StringMap.empty functions in
     ignore(function_decls);
 
-  (* Fill in the body of the given function *)
-
-  (* let build_block (sblock: sblock) (builder: L.llbuilder) = 
-    let lookup n = 
-      StringMap.find n global_vars
-    in
-  in *)
-
-
   let build_function_body fdecl =
     match fdecl with SFdecl(rtyp, _, args, sblock, cname) ->
-    let (the_function, _) = StringMap.find cname function_decls in
+    let (the_function, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure("IR Error (build_function_body): function " ^ cname ^ " not found.")) in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
 
     let lookup n = 
-      try StringMap.find n global_vars with Not_found -> raise (Failure ("lookup failure"))
+      try StringMap.find n global_vars with Not_found -> raise (Failure ("IR Error (lookup): lookup failure"))
     in
 
-    (* TODO Assign args to global vars *)
-
-    (* let local_vars = *)
-      let add_formal m (t, n, cname) p =
-        L.set_value_name n p;
-        let local = L.build_alloca (ltype_of_typ t) n builder in
-        ignore (L.build_store p local builder);
-        (* let e' = build_expr builder e in *)
-        ignore(L.build_store local (lookup cname) builder);
-        StringMap.add n local m
-      in
-
-      (* and add_local m (t, n) =
-        let local_var = L.build_alloca (ltype_of_typ t) n builder
-        in StringMap.add n local_var m
-      in *)
-
-      let formals = List.fold_left2 add_formal StringMap.empty args
-          (Array.to_list (L.params the_function)) in
-      ignore(formals);
-      (* List.fold_left add_local formals fdecl.slocals *)
-    (* in *)
-
-    (* let lookup n = try StringMap.find n local_vars
-      with Not_found -> StringMap.find n global_vars
-    in *)
-
+    (* Assign parameters passed in to their matching global vars *)
+    let add_formal m (t, n, cname) p =
+      L.set_value_name n p;
+      let local = L.build_alloca (ltype_of_typ t) n builder in
+      ignore (L.build_store p local builder);
+      ignore(L.build_store local (lookup cname) builder);
+      StringMap.add n local m
+    in
+    let formals = List.fold_left2 add_formal StringMap.empty args
+      (Array.to_list (L.params the_function)) in
+    ignore(formals);
 
     let rec build_expr builder ((t, e) : sexpr) = match e with
-        SLitInt i  -> L.const_int (ltype_of_typ A.Int) i
+        SLitInt i -> L.const_int (ltype_of_typ A.Int) i
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
-      (* | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0) *)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (int_of_char c)
-      | SLitFloat f -> L.const_float (ltype_of_typ A.Float) f
+      | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
-      (* | SAssign (s, e, cname) -> let e' = build_expr builder e in
-        ignore(L.build_store e' (lookup cname) builder); e' *)
-      | SBinop (e1, o, e2) ->
+      | SBinop (e1, o, e2) (* TODO *) ->
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
         (match o with
@@ -173,21 +132,17 @@ let translate ((globals: (A.typ * string * string) list), functions) =
          | A.Gt     -> L.build_icmp L.Icmp.Slt
          | A.Geq    -> L.build_icmp L.Icmp.Slt
         ) e1' e2' "tmp" builder
-      (* | SCall ("print", [e]) ->
-        let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e))])) in 
-        L.build_call func_type printf_func [| int_format_str ; (build_expr builder e) |]
-          "printf" builder *)
       | SUnaryOp (o, e) ->
         let e' = build_expr builder e in 
         (match o with
            A.Negate    ->  L.build_neg
         ) e' "tmp" builder
-      | SCall ("print", [e], _) ->
+      | SCall ("print", [e], _) (* TODO *) ->
           let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e))])) in 
-          L.build_call func_type print_func [| int_format_str ; (build_expr builder e) |]
+          L.build_call func_type printf_func [| int_format_str ; (build_expr builder e) |]
             "printf" builder
       | SCall (_, args, cname) ->
-        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("SCall function " ^ cname ^ "not found.")) in
+        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ "not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = cname ^ "_result" in
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
@@ -201,14 +156,13 @@ let translate ((globals: (A.typ * string * string) list), functions) =
       | None -> ignore (instr builder) in
     
     let rec build_stmt builder = function
-        (* SBlock sl -> List.fold_left build_stmt builder sl *)
       | SExprStmt e -> ignore(build_expr builder e); builder
       | SAssign (_, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
-      | SIf (predicate, then_block, else_block) ->
+      | SIf (predicate, then_block, else_block) (* TODO: elifs *) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
         let else_stmt_list = match else_block with SBlock(else_stmt) -> else_stmt in
 
@@ -236,24 +190,21 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         let bool_val = build_expr while_builder predicate in
 
         let body_bb = L.append_block context "while_body" the_function in
-        (* add_terminal (build_stmt (L.builder_at_end context body_bb) body) build_br_while; *)
         add_terminal (List.fold_left build_stmt builder body_stmt_list) build_br_while;
 
         let end_bb = L.append_block context "while_end" the_function in
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
-      | SFor (_, _, _) -> builder (* FOR LOOPS ARE CONVERTED TO WHILE LOOPS IN SEMANTICS STAGE *)
-      | SDecl(_, _, _) -> builder
-      | SFdecl(_, _, _, _, _) -> builder
-      (* | _ -> builder; *)
+      | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)
+      | SDecl(_, _, _) -> builder (* Ignore declarations, which are already covered in 'globals' *)
+      | SFdecl(_, _, _, _, _) -> builder (* Ignore function declarations, which are already covered in 'functions'*)
     in
-    (* let func_builder = build_stmt builder (SBlock fdecl.sbody) in *)
     let sl = match sblock with SBlock(sl) -> sl in
     let func_builder = List.fold_left build_stmt builder sl in
     add_terminal func_builder (L.build_ret ((if rtyp == A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
 
-    | _ -> raise (Failure("Unexpected statement passed to build_function_body"))
+    | _ -> raise (Failure("IR Error (build_function_body): Unexpected non-function statement."))
   in
 
   List.iter build_function_body functions;
