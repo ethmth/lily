@@ -185,22 +185,22 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         Some _ -> ()
       | None -> ignore (instr builder) in
     
-    let build_stmt builder = function
+    let rec build_stmt builder = function
         (* SBlock sl -> List.fold_left build_stmt builder sl *)
       | SExprStmt e -> ignore(build_expr builder e); builder
       | SAssign (_, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
-      (* | SIf (predicate, then_block, else_block) ->
+      | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
         let else_stmt_list = match else_block with SBlock(else_stmt) -> else_stmt in
 
         let bool_val = build_expr builder predicate in
 
         let then_bb = L.append_block context "then" the_function in
-        ignore (build_stmt (L.builder_at_end context then_bb) then_stmt);
+        ignore (List.fold_left build_stmt (L.builder_at_end context then_bb) then_stmt_list);
         let else_bb = L.append_block context "else" the_function in
-        ignore (build_stmt (L.builder_at_end context else_bb) else_stmt);
+        ignore (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list);
 
         let end_bb = L.append_block context "if_end" the_function in
         let build_br_end = L.build_br end_bb in
@@ -208,10 +208,10 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         add_terminal (L.builder_at_end context else_bb) build_br_end;
 
         ignore(L.build_cond_br bool_val then_bb else_bb builder);
-        L.builder_at_end context end_bb *)
+        L.builder_at_end context end_bb
 
-
-      (* | SWhile (predicate, body) ->
+      | SWhile (predicate, body) ->
+        let body_stmt_list = match body with SBlock(sl) -> sl in
         let while_bb = L.append_block context "while" the_function in
         let build_br_while = L.build_br while_bb in
         ignore (build_br_while builder);
@@ -219,12 +219,13 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         let bool_val = build_expr while_builder predicate in
 
         let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (build_stmt (L.builder_at_end context body_bb) body) build_br_while;
+        (* add_terminal (build_stmt (L.builder_at_end context body_bb) body) build_br_while; *)
+        add_terminal (List.fold_left build_stmt builder body_stmt_list) build_br_while;
 
         let end_bb = L.append_block context "while_end" the_function in
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
-        L.builder_at_end context end_bb *)
+        L.builder_at_end context end_bb
       | _ -> builder;
 
     in
