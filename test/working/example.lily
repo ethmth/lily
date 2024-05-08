@@ -12,6 +12,7 @@ def gcd(a:int, b:int) -> int:
 
 def main() -> int:
 	print(gcd(4,5))
+	a = 3
 	# print2((4.5))
 	return 0
 

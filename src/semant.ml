@@ -92,7 +92,7 @@ let check (program_block) =
       )
     in
     let add_func (name: string) (args: typ list) (t: typ): string =
-      if name == "root" then (raise (Failure ("Cannot name a function root"))) else 
+      (* if name == "root" then (raise (Failure ("Cannot name a function root"))) else  *)
       if is_func_local name args then (raise (Failure ("Already declared variable " ^ name ^ " in current scope"))) (*else*)
       else (
         let func_number = update_fnames name in 
@@ -142,6 +142,7 @@ let check (program_block) =
         | _ :: t -> dups t
       in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
     in
+    (* TODO CHECK THAT FUNCTION HAS A RETURN STATEMENT IF IT RETURNS NON-VOID *)
     let check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
@@ -193,6 +194,6 @@ let check (program_block) =
   let built_in = [(Int, "print", [Int])] in
   let built_in_funcs = get_built_in_funcs built_in in
 
-  let (_, sprogram_block) = check_block program_block built_in_funcs StringMap.empty [] Void "root" in
-  let funcs = SFdecl(Void, "root", [], sprogram_block, "root")::!functions in
+  let (_, sprogram_block) = check_block program_block built_in_funcs StringMap.empty [] Void "main" in
+  let funcs = SFdecl(Void, "main", [], sprogram_block, "main")::!functions in
   (sprogram_block, !globals, funcs)
