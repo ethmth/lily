@@ -5,15 +5,24 @@ let b:int = 0
 
 # GCD Function (not really)
 def gcd(a:int, b:int) -> int:
-	def lcd(c: int, b:int) -> int:
-		return a + b
+	#print(a)
+	#print(b)
+	def lcd(a:int, b:int) -> int:
+		return 2
+
+	#print(a)
+	#print(b)
+	
 	if (a == b):
-		return 3
+		return lcd(b, a)
 	else:
 		return 4
 
 def main() -> int:
-	print(gcd(4,5))
+	print(gcd(4,4))
 	return 0
+
+def assign() -> int:
+	a = 5
 
 main()
