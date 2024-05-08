@@ -9,6 +9,13 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
+  let reserved_funcs: (typ * string * ((typ list) option)) list ref = ref [
+  (Int,"print", None)
+  ] in
+  let reserved_func_names: string list ref = ref [
+    "print"
+  ] in
+ 
   let functions = ref [] in 
   let globals = ref [] in
   let vnames: int StringMap.t ref = ref StringMap.empty in
@@ -79,6 +86,22 @@ let check (program_block) =
       List.map add_var_bind binds
     in
 
+    let is_func_reserved (name: string) (args: typ list): bind option =
+      ignore(print_endline ("Checking whether " ^ name ^ " is reserved."));
+      let reserved_has_name (name:string): (typ * string * ((typ list) option)) option = 
+        let rec res_check (l) (name: string): (typ * string * ((typ list) option)) option =
+          ignore(print_endline ("Matching" ^ name));
+          match l with
+          [] -> None
+          | h::t -> 
+            match h with (_, hname, _) -> if hname = name then (ignore(print_endline (name ^ " HAS NAME")); Some(h)) else (ignore(print_endline (name ^ " NO NAME " ^ name ^ " != " ^ hname ^ " spaceend")); res_check t name)
+        in
+        res_check !reserved_funcs name
+      in
+      match reserved_has_name name with None -> ignore(print_endline (name ^ " returning None")); None
+      | Some(t, n, xargs) -> match xargs with None -> ignore(print_endline (name ^ " returning Some")); Some(t, n)
+      | Some(rargs) -> if rargs = args then Some(t, n) else None
+    in
     let is_func_local (name: string) (args: typ list):bool =
       FuncMap.mem {id=name; args=args} !l_fmap
     in
@@ -88,14 +111,15 @@ let check (program_block) =
       )
     in
     let find_func (name: string) (args: typ list):bind =
+      match is_func_reserved name args with Some(x, y) -> (x, y) | None -> (
       if is_func_local name args then (FuncMap.find {id=name; args=args} !l_fmap) else (
         if is_func name args then (FuncMap.find {id=name; args=args} b_fmap) else
-          raise (Failure ("Semantics Error (find_func): Function "^ name ^ " with proper args not visible in scope"))
+          raise (Failure ("Semantics Error (find_func): Function "^ name ^ " with proper args not visible in scope")))
       )
     in
     let add_func (name: string) (args: typ list) (t: typ): string =
       (* TODO Check that functions aren't in the reserved functions list (main, print, etc.) *)
-      (* if name == "root" then (raise (Failure ("Cannot name a function root"))) else  *)
+      if List.mem name !reserved_func_names then (raise (Failure ("Semantics Error (add_func): Cannot name a function " ^ name ^ " (reserved)"))) else
       if is_func_local name args then (raise (Failure ("Semantics Error (add_func): Already declared variable " ^ name ^ " in current scope")))
       else (
         let func_number = update_fnames name in 
@@ -128,6 +152,9 @@ let check (program_block) =
           let op_typ = if is_boolean_op op then Bool else t1 in
           op_typ, SBinop((t1, se1), op, (t2, se2))))
       (* TODO more call checks *)
+      (* | Call("printf", el) -> 
+        let sel = List.map check_expr el in
+        (Int, SCall("printf", sel, "printf")) *)
       | Call(name, el) -> 
         let sel = List.map check_expr el in
         let args = List.map sexpr_to_typ sel in
@@ -158,7 +185,7 @@ let check (program_block) =
     in
     let rec check_stmt (s: stmt): sstmt =
       match s with 
-      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t == et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name))
+      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name))
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): If statement expression not boolean in Block " ^ block_name)));
         let (_, sb1) = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let (_, sb2) = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
@@ -174,7 +201,7 @@ let check (program_block) =
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
-      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t == et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
+      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
     in
 
@@ -183,23 +210,24 @@ let check (program_block) =
     Block(sl) -> (fbinds, SBlock(List.map check_stmt sl))
   in
 
-  let get_built_in_funcs (funcs_list: (typ * string * typ list) list): bind FuncMap.t =
-    let add_func (func: typ * string * typ list) (map: bind FuncMap.t): bind FuncMap.t =
-      match func with (t, name, args) ->
-        let cnumber = update_fnames name in let cname =("print" ^ "!" ^ (string_of_int cnumber)) in
-        FuncMap.add {id=name; args=args} (t, cname) map
+  (* let get_built_in_funcs (funcs_list: (typ * string * (typ list option)) list): bind FuncMap.t =
+    let add_func (func: (typ * string * (typ list option))) (map: bind FuncMap.t): bind FuncMap.t =
+      match func with (t, name, xargs) -> (
+        match xargs with Some(args) -> 
+          let cnumber = update_fnames name in let cname =("print" ^ "!" ^ (string_of_int cnumber)) in
+          FuncMap.add {id=name; args=args} (t, cname) map
+        | None -> FuncMap.empty)
     in
-    let rec add_funcs (func_list: (typ * string * typ list) list) (map: bind FuncMap.t): bind FuncMap.t =
+    let rec add_funcs (func_list: (typ * string * (typ list option)) list) (map: bind FuncMap.t): bind FuncMap.t =
       match func_list with
       | [] -> map
       | h::t -> let m = add_func h map in add_funcs t m
     in
-
     add_funcs funcs_list FuncMap.empty
   in
-  let built_in = [(Int, "print", [Int])] in
-  let built_in_funcs = get_built_in_funcs built_in in
+  let built_in = [(Int, "print", None)] in
+  let built_in_funcs = get_built_in_funcs built_in in *)
 
-  let (_, sprogram_block) = check_block program_block built_in_funcs StringMap.empty [] Void "main" in
+  let (_, sprogram_block) = check_block program_block FuncMap.empty StringMap.empty [] Void "main" in
   let funcs = SFdecl(Void, "main", [], sprogram_block, "main")::!functions in
   (sprogram_block, !globals, funcs)

@@ -89,7 +89,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     let (the_function, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure("IR Error (build_function_body): function " ^ cname ^ " not found.")) in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+    let int_format_str = L.build_global_stringptr "%d %d\n" "fmt" builder in
 
     let lookup n = 
       try StringMap.find n global_vars with Not_found -> raise (Failure ("IR Error (lookup): lookup failure"))
@@ -137,9 +137,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         (match o with
            A.Negate    ->  L.build_neg
         ) e' "tmp" builder
-      | SCall ("print", [e], _) (* TODO *) ->
-          let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e))])) in 
-          L.build_call func_type printf_func [| int_format_str ; (build_expr builder e) |]
+      | SCall ("print", [e; e2], _) (* TODO *) ->
+          let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e)); (ltype_of_typ (type_of_sexpr e2))])) in 
+          L.build_call func_type printf_func [| int_format_str ; (build_expr builder e);  (build_expr builder e2)|]
             "printf" builder
       | SCall (_, args, cname) ->
         let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ "not found.")) in
@@ -202,7 +202,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     in
     let sl = match sblock with SBlock(sl) -> sl in
     let func_builder = List.fold_left build_stmt builder sl in
-    add_terminal func_builder (L.build_ret ((if rtyp == A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
+    add_terminal func_builder (L.build_ret ((if rtyp = A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
 
     | _ -> raise (Failure("IR Error (build_function_body): Unexpected non-function statement."))
   in
