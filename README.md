@@ -12,23 +12,27 @@ Currently, the programming language implementation can be found in the `src/` di
 - [Tani Omoyeni](https://github.com/tmo2121) - tmo2121 - Tester
 - [Jianjie Sun](https://github.com/cszswx) - js6412 - Tester
 
-## Language Features
+## Current Progress
+
+### Language Features (in Order of Priority)
 - [x] **Python-style indentation** - Lily parser using indentation-style instead of C-style
 where blocks are parsed using special `{}` characters.
+- [x] **Python-style printing** - The built in print function can take an arbitrary number of arguments to print in Python-style.
 - [x] **Nested Functions** - Lily allows for nested functions.
-- [x] **Python-style printing** - The built in print function can take an arbitrary number of 
-arguments to print in Python-style.
 - [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM.
-- [ ] **String** - Lily does not yet support strings.
-- [ ] **Lists** - Lily does not yet support lists.
-- [ ] **Standard Library** - Lily does not yet support a standard library of functions that can be called on lists.
-- [ ] **Providing System Arguments** - Lily does not yet support taking lists provided as system arguments.
-- [ ] **List Operations** - No list operations implemented yet.
-- [ ] **Tuples and Dictionaries** - Not gonna happen.
-- [ ] **Type inference/implicit types** - Not gonna happen
-- [ ] **Elifs** - Lily does not yet support `elif`s
+- [ ] **Strings** 
+- [ ] **Standard Library**
+- [ ] **Lists**
+- [ ] **List Operations**
+- [ ] **List Standard Library**
+- [ ] **`elif`s**
+- [ ] **Type inference/implicit types** - Probably not gonna happen.
+- [ ] **Providing System Arguments** - Probably not gonna happen.
+- [ ] **Tuples and Dictionaries** - Almost definitely not gonna happen.
+- [ ] **Structs/Classes** - Almost definitely not gonna happen.
 
-## Current Progress
+
+### File Overview
 
 - [x] `scanner.mll` - Scanner. mostly done unless new bugs are detected or extra tokens need added.
 - [x] `tokenize.ml` - This function acts as a middleman between the Scanner and the Parser to produce `INDENT`, `DEDENT`, and `NEWLINE` tokens from detected indentation. Should not need changed.
@@ -46,7 +50,6 @@ arguments to print in Python-style.
 - [x] `sast.ml`
 
 **`test2` - tests semantic checking (everything above this)** - to run `test2`, run `make test2` and follow the "How to run tests" instructions below.
-
 
 - [x] `irgen.ml` - IR Generation
  
@@ -127,4 +130,18 @@ make lily
 ```sh
 # lli may not work. Try lli-16 if not.
 cat ../test/example.lily | ./lily.native | lli
+```
+
+## Run test files
+
+To run a test file, first create the test `.lily` script and determine whether it should compile or not. 
+
+If not, placed it in the corresponding `test/` folder (either `parser_error` for parsing failures, `scanner_error` for scanning failure, or `semantics_error` for semantics failures).
+
+If the `.lily` script is intended to run and produce output, then place it in the `test/working` folder, and create a `.out` file of the same name with the expected output.
+
+Then run the tests by editing the `LLI_COMMAND` field in `run_tests.sh` to the `lli` executable on your system, and run:
+
+```sh
+./run_tests.sh
 ```
