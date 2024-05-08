@@ -105,7 +105,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         match t with
         | Int -> "%lu"
         | Float -> "%f"
-        | Char -> "%c"
+        | Char -> "%d"
         | Bool -> "%B"
         | _ -> ""
       in
@@ -140,38 +140,36 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       match e with
         SLitInt i -> L.const_int (ltype_of_typ A.Int) i
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
-      | SLitChar c -> L.const_int (ltype_of_typ A.Char) (int_of_char c)
+      | SLitChar c -> ignore(print_endline ("Char " ^ (String.make 1 c) ^ " has Ascii value " ^ string_of_int(Char.code c))); L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
       | SBinop (e1, o, e2) (* TODO *) ->
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
+        let e1_t = (match e1 with (e1_typ, _) -> e1_typ) in
         (match o with
-           A.Plus    ->  L.build_add
-         | A.Minus     -> L.build_sub
-         | A.Times    -> L.build_mul
-         | A.Divide   -> L.build_sdiv
-         (* | A.And     -> L.build_and *)
-         (* | A.Or      -> L.build_or *)
+           A.Plus    -> if e1_t = A.Float then L.build_fadd else L.build_add
+         | A.Minus     -> if e1_t = A.Float then L.build_fsub else L.build_sub
+         | A.Times    -> if e1_t = A.Float then L.build_fmul else L.build_mul
+         | A.Divide   -> if e1_t = A.Float then L.build_fdiv else L.build_sdiv
+         | A.And     -> L.build_and
+         | A.Or      -> L.build_or
          (* TODO: Make these fcmp when its floats *)
-         | A.Eq   -> L.build_icmp L.Icmp.Eq
-         | A.Neq   -> L.build_icmp L.Icmp.Ne
-         | A.Lt    -> L.build_icmp L.Icmp.Slt
+         | A.Eq   -> if e1_t = A.Float then  L.build_fcmp L.Fcmp.Oeq else L.build_icmp L.Icmp.Eq
+         | A.Neq   -> if e1_t = A.Float then L.build_fcmp L.Fcmp.One else L.build_icmp L.Icmp.Ne 
+         | A.Lt    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Olt else L.build_icmp L.Icmp.Slt
          (* TODO: All of these are Less Thans rn *)
-         | A.Leq    -> L.build_icmp L.Icmp.Slt
-         | A.Gt     -> L.build_icmp L.Icmp.Slt
-         | A.Geq    -> L.build_icmp L.Icmp.Slt
+         | A.Leq    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Ole else L.build_icmp L.Icmp.Sle
+         | A.Gt     -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Ogt else L.build_icmp L.Icmp.Sgt
+         | A.Geq    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Oge else L.build_icmp L.Icmp.Sge
         ) e1' e2' "tmp" builder
       | SUnaryOp (o, e) ->
         let e' = build_expr builder e in 
         (match o with
            A.Negate    ->  L.build_neg
         ) e' "tmp" builder
-      | SCall ("print", arg_list, _) (* TODO *) ->
+      | SCall ("print", arg_list, _) ->
           build_print_call arg_list builder
-          (* let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list ([(ltype_of_typ (type_of_sexpr e)); (ltype_of_typ (type_of_sexpr e2))])) in 
-          L.build_call func_type printf_func [| int_format_str ; (build_expr builder e);  (build_expr builder e2)|]
-            "printf" builder *)
       | SCall (_, args, cname) ->
         let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ " not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
@@ -193,7 +191,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
-      | SIf (predicate, then_block, else_block) (* TODO: elifs *) ->
+      | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
         let else_stmt_list = match else_block with SBlock(else_stmt) -> else_stmt in
 
