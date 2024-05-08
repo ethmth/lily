@@ -1,7 +1,7 @@
 FILES = dune dune-project ast.ml astscanner.ml irgen.ml lily.ml parser.mly parserscanner.mly sast.ml scanner.mll semant.ml test0.ml test1.ml test2.ml tokenize.ml
 OUT_FILES = test1.exe test0.exe test2.exe lily.exe test1.native test0.native test2.native lily.native scanner.ml parser.ml parser.mli parserscanner.ml parserscanner.mli *.cmi *.cmo
 
-all : test2
+all : lily
 
 lily : $(FILES) clean
 	dune build lily.exe
@@ -32,7 +32,7 @@ watch3 : clean
 	dune build --watch --terminal-persistence=clear-on-rebuild lily.exe
 
 .PHONY : watch
-watch : watch2
+watch : watch3
 
 .PHONY : clean
 clean :
