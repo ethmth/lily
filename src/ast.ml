@@ -4,7 +4,7 @@
 
 (* Operators definition *)
 (* type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | Map | Filter | Reduce *)
-type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq
+type op = Plus | Minus | Times | Divide | Eq | Neq | Lt | Leq | Gt | Geq | And | Or
 
 (* Unary operator definition *)
 type unary_op = Negate
@@ -84,6 +84,8 @@ let string_of_op = function
   | Leq -> "<="
   | Gt -> ">" 
   | Geq -> ">="
+  | And -> "and"
+  | Or -> "or"
   (* | Map -> "=>"        *)
   (* | Filter -> "=>?"    *)
   (* | Reduce -> "=>/"   *)

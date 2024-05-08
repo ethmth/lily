@@ -133,6 +133,8 @@ let check (program_block) =
       | Leq -> true
       | Gt -> true
       | Geq -> true
+      | And -> true
+      | Or -> true
       | _ -> false
     in
     let rec check_expr (e: expr): sexpr =
@@ -144,10 +146,15 @@ let check (program_block) =
       | Id(id) -> let (t, cname) = find_var id in (t, SId(id, cname))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 
-        if t1 != t2 then raise(Failure("Semantics Error (check_expr): Variables of different types in Binop")) 
-        else (
-          let op_typ = if is_boolean_op op then Bool else t1 in
-          op_typ, SBinop((t1, se1), op, (t2, se2))))
+      (if t1 != t2 then raise(Failure("Semantics Error (check_expr): Variables of different types in Binop")) 
+      else (
+        let (_:op) = (
+        match op with 
+          And -> (if t1 != Bool then raise(Failure ("Semantics Error (check_expr): Non-boolean expr in And operation")) else op)
+        | Or -> (if t1 != Bool then raise(Failure ("Semantics Error (check_expr): Non-boolean expr in Or operation")) else op)
+        | _ -> op)
+        in (let op_typ = if is_boolean_op op then Bool else t1 in
+          op_typ, SBinop((t1, se1), op, (t2, se2))))))
       | Call(name, el) -> 
         let sel = List.map check_expr el in
         let args = List.map sexpr_to_typ sel in
