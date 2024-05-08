@@ -130,7 +130,7 @@ let translate ((globals: (A.typ * string * string) list), functions) =
     in *)
 
     let lookup n = 
-      StringMap.find n global_vars
+      try StringMap.find n global_vars with Not_found -> raise (Failure ("lookup failure"))
     in
 
     let rec build_expr builder ((t, e) : sexpr) = match e with
@@ -170,8 +170,9 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         (match o with
            A.Negate    ->  L.build_neg
         ) e' "tmp" builder
+      | SCall ("print", _, _) -> L.const_int (ltype_of_typ A.Int) 0
       | SCall (_, args, cname) ->
-        let (fdef, _) = StringMap.find cname function_decls in
+        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("SCall function " ^ cname ^ "not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = cname ^ "_result" in
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
