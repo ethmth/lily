@@ -93,8 +93,16 @@ let translate ((globals: (A.typ * string * string) list), functions) =
     ignore(function_decls);
 
   (* Fill in the body of the given function *)
+
+  (* let build_block (sblock: sblock) (builder: L.llbuilder) = 
+    let lookup n = 
+      StringMap.find n global_vars
+    in
+  in *)
+
+
   let build_function_body fdecl =
-    match fdecl with SFdecl(rtyp, name, args, sblock, cname) ->
+    match fdecl with SFdecl(_, _, _, sblock, cname) ->
     let (the_function, _) = StringMap.find cname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
@@ -176,13 +184,16 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         Some _ -> ()
       | None -> ignore (instr builder) in
     
-    let rec build_stmt builder = function
+    let build_stmt builder = function
         (* SBlock sl -> List.fold_left build_stmt builder sl *)
-      SAssign (_, e, cname) -> let e' = build_expr builder e in
-        ignore(L.build_store e' (lookup cname) builder); e'
       | SExprStmt e -> ignore(build_expr builder e); builder
+      | SAssign (_, e, cname) -> let e' = build_expr builder e in
+        ignore(L.build_store e' (lookup cname) builder); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
-      | SIf (predicate, then_stmt, else_stmt) ->
+      (* | SIf (predicate, then_block, else_block) ->
+        let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
+        let else_stmt_list = match else_block with SBlock(else_stmt) -> else_stmt in
+
         let bool_val = build_expr builder predicate in
 
         let then_bb = L.append_block context "then" the_function in
@@ -196,9 +207,10 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         add_terminal (L.builder_at_end context else_bb) build_br_end;
 
         ignore(L.build_cond_br bool_val then_bb else_bb builder);
-        L.builder_at_end context end_bb
+        L.builder_at_end context end_bb *)
 
-      | SWhile (predicate, body) ->
+
+      (* | SWhile (predicate, body) ->
         let while_bb = L.append_block context "while" the_function in
         let build_br_while = L.build_br while_bb in
         ignore (build_br_while builder);
@@ -211,14 +223,17 @@ let translate ((globals: (A.typ * string * string) list), functions) =
         let end_bb = L.append_block context "while_end" the_function in
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
-        L.builder_at_end context end_bb
-      | _ -> ignore();
+        L.builder_at_end context end_bb *)
+      | _ -> builder;
 
     in
-    let func_builder = build_stmt builder (SBlock fdecl.sbody) in
-    add_terminal func_builder (L.build_ret (L.const_int i32_t 0)) 
+    (* let func_builder = build_stmt builder (SBlock fdecl.sbody) in *)
+    let sl = match sblock with SBlock(sl) -> sl in
+    let func_builder = List.fold_left build_stmt builder sl in
+    add_terminal func_builder (L.build_ret (L.const_int i64_t 0)) 
 
     | _ -> raise (Failure("Unexpected statement passed to build_function_body"))
   in
- 
+
+  List.iter build_function_body functions;
   the_module
