@@ -142,7 +142,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           L.build_call func_type printf_func [| int_format_str ; (build_expr builder e);  (build_expr builder e2)|]
             "printf" builder
       | SCall (_, args, cname) ->
-        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ "not found.")) in
+        let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ " not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
         let result = cname ^ "_result" in
         let arg_types = ltypes_of_typs (types_of_sexprs args) in

@@ -9,10 +9,10 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
-  let reserved_funcs: (typ * string * ((typ list) option)) list ref = ref [
+  let reserved_funcs: (typ * string * ((typ list) option)) list =[
   (Int,"print", None)
   ] in
-  let reserved_func_names: string list ref = ref [
+  let reserved_func_names: string list = [
     "print"
   ] in
  
@@ -87,19 +87,17 @@ let check (program_block) =
     in
 
     let is_func_reserved (name: string) (args: typ list): bind option =
-      ignore(print_endline ("Checking whether " ^ name ^ " is reserved."));
       let reserved_has_name (name:string): (typ * string * ((typ list) option)) option = 
         let rec res_check (l) (name: string): (typ * string * ((typ list) option)) option =
-          ignore(print_endline ("Matching" ^ name));
           match l with
           [] -> None
           | h::t -> 
-            match h with (_, hname, _) -> if hname = name then (ignore(print_endline (name ^ " HAS NAME")); Some(h)) else (ignore(print_endline (name ^ " NO NAME " ^ name ^ " != " ^ hname ^ " spaceend")); res_check t name)
+            match h with (_, hname, _) -> if hname = name then Some(h) else res_check t name
         in
-        res_check !reserved_funcs name
+        res_check reserved_funcs name
       in
-      match reserved_has_name name with None -> ignore(print_endline (name ^ " returning None")); None
-      | Some(t, n, xargs) -> match xargs with None -> ignore(print_endline (name ^ " returning Some")); Some(t, n)
+      match reserved_has_name name with None ->  None
+      | Some(t, n, xargs) -> match xargs with None -> Some(t, n)
       | Some(rargs) -> if rargs = args then Some(t, n) else None
     in
     let is_func_local (name: string) (args: typ list):bool =
@@ -118,8 +116,7 @@ let check (program_block) =
       )
     in
     let add_func (name: string) (args: typ list) (t: typ): string =
-      (* TODO Check that functions aren't in the reserved functions list (main, print, etc.) *)
-      if List.mem name !reserved_func_names then (raise (Failure ("Semantics Error (add_func): Cannot name a function " ^ name ^ " (reserved)"))) else
+      if List.mem name reserved_func_names then (raise (Failure ("Semantics Error (add_func): Cannot name a function " ^ name ^ " (reserved)"))) else
       if is_func_local name args then (raise (Failure ("Semantics Error (add_func): Already declared variable " ^ name ^ " in current scope")))
       else (
         let func_number = update_fnames name in 
@@ -151,18 +148,15 @@ let check (program_block) =
         else (
           let op_typ = if is_boolean_op op then Bool else t1 in
           op_typ, SBinop((t1, se1), op, (t2, se2))))
-      (* TODO more call checks *)
-      (* | Call("printf", el) -> 
-        let sel = List.map check_expr el in
-        (Int, SCall("printf", sel, "printf")) *)
       | Call(name, el) -> 
         let sel = List.map check_expr el in
         let args = List.map sexpr_to_typ sel in
         let (t, cname) = find_func name args in
         (t, SCall(name, sel, cname))
       (* TODO more unary op checks based on operators *)
-      (* TODO make sure t is Bool? *)
-      | UnaryOp(op, e) -> let (t, se) = check_expr e in (t, SUnaryOp(op, (t, se)))
+      | UnaryOp(op, e) -> let (t, se) = check_expr e in 
+      match op with
+      Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)) 
     in
 
     let check_binds (binds : (typ * string) list) =
@@ -209,24 +203,6 @@ let check (program_block) =
     match block with
     Block(sl) -> (fbinds, SBlock(List.map check_stmt sl))
   in
-
-  (* let get_built_in_funcs (funcs_list: (typ * string * (typ list option)) list): bind FuncMap.t =
-    let add_func (func: (typ * string * (typ list option))) (map: bind FuncMap.t): bind FuncMap.t =
-      match func with (t, name, xargs) -> (
-        match xargs with Some(args) -> 
-          let cnumber = update_fnames name in let cname =("print" ^ "!" ^ (string_of_int cnumber)) in
-          FuncMap.add {id=name; args=args} (t, cname) map
-        | None -> FuncMap.empty)
-    in
-    let rec add_funcs (func_list: (typ * string * (typ list option)) list) (map: bind FuncMap.t): bind FuncMap.t =
-      match func_list with
-      | [] -> map
-      | h::t -> let m = add_func h map in add_funcs t m
-    in
-    add_funcs funcs_list FuncMap.empty
-  in
-  let built_in = [(Int, "print", None)] in
-  let built_in_funcs = get_built_in_funcs built_in in *)
 
   let (_, sprogram_block) = check_block program_block FuncMap.empty StringMap.empty [] Void "main" in
   let funcs = SFdecl(Void, "main", [], sprogram_block, "main")::!functions in
