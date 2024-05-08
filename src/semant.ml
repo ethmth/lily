@@ -142,7 +142,7 @@ let check (program_block) =
       LitInt(l) ->  (Int, SLitInt(l))
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
-      | LitChar(l) -> ignore(print_endline ("Semantics Char " ^ String.make 1 l)); (Char, SLitChar(l))
+      | LitChar(l) -> (Char, SLitChar(l))
       | Id(id) -> let (t, cname) = find_var id in (t, SId(id, cname))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 

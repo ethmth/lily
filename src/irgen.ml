@@ -105,7 +105,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         match t with
         | Int -> "%lu"
         | Float -> "%f"
-        | Char -> "%d"
+        | Char -> "%c"
         | Bool -> "%B"
         | _ -> ""
       in
@@ -140,7 +140,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       match e with
         SLitInt i -> L.const_int (ltype_of_typ A.Int) i
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
-      | SLitChar c -> ignore(print_endline ("Char " ^ (String.make 1 c) ^ " has Ascii value " ^ string_of_int(Char.code c))); L.const_int (ltype_of_typ A.Char) (Char.code c)
+      | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
       | SBinop (e1, o, e2) (* TODO *) ->
