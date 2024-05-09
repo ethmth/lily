@@ -1,0 +1,5 @@
+def print_bool(a : bool) -> bool:
+    if (a == true):
+        print('t', 'r', 'u', 'e')
+    else:
+        print('f', 'a', 'l', 's', 'e')
