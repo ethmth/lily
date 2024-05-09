@@ -32,13 +32,15 @@ type expr =
   | Call of string * expr list
   (* | ListExpr of expr list *)
   | UnaryOp of unary_op * expr
+  | ListIndex of string * int
   (*| ListDecl of string * typ * expr list *)  (*Chima New: Represents list initialization*)
   (* | DeclExpr of typ * string * expr  (* New type to treat declarations as expressions CHIMA *)*)
   (*| ListBinop of expr * list_op * expr*)   (* Adding this line *)
-  (*| MethodCall of expr * string * expr list*)  (* Chima New: Represents method calls on expressions *) (*TODO Ethan note: maybe change this to list call?*)
+  (* | MethodCall of expr * string * expr list *)  (* Chima New: Represents method calls on expressions *) (*TODO Ethan note: maybe change this to list call?*)
   (*| Map of expr * expr *)  
   (*| Filter of expr * expr  *)
   (*| Reduce of expr * expr * expr  *)
+  | Assign of string * expr
 
 and block = Block of stmt list
 
@@ -47,7 +49,7 @@ and stmt =
   (* | Elif of expr * block *)
   (* | Else of block *)
   | While of expr * block
-  | For of expr * stmt * block
+  | For of expr * expr * block
   | ExprStmt of expr
   | Return of expr
   | Decl of typ * string
@@ -57,7 +59,6 @@ and stmt =
   (* | IDecl of string *)
   (* | IDeclAssign of string * expr *)
   | Fdecl of typ * string * bind list * block
-  | Assign of string * expr
   (* | Try of stmt list * exn_clause list * stmt list option *)
 
 
@@ -136,7 +137,9 @@ and string_of_expr = function
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   (* | ListExpr(el) -> "[" ^ String.concat ", " (List.map string_of_expr el) ^ "]" *)
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
-  (* | MethodCall(e,s,el) -> string_of_expr e ^ "." ^ s ^ string_of_expr (ListExpr(el)) *)
+  | ListIndex(id, ind) -> id ^ "[" ^ string_of_int ind ^ "]"
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
+  (* | MethodCall(e,s,el) -> string_of_expr e ^ "." ^ s ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")" *)
   (* | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func *)
   (* | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate *)
   (* | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init *)
@@ -157,7 +160,7 @@ and string_of_stmt (stmt) (curr_indent) =
   (* | Elif(e, s) -> "elif (" ^ string_of_expr e ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   (* | Else(s) -> "else:\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   | While(e, b) -> "while (" ^ string_of_expr e ^ "):\n" ^ string_of_block b (curr_indent + 1)
-  | For(e,s,b) -> "for (" ^ string_of_expr e ^ ", " ^ (match s with Assign(v, e) -> v ^ " = " ^ string_of_expr e | _ -> "STATEMENT") ^ "):\n" ^ string_of_block b (curr_indent + 1)
+  | For(e,a,b) -> "for (" ^ string_of_expr e ^ ", " ^ (match a with Assign(v, e) -> v ^ " = " ^ string_of_expr e | _ -> "STATEMENT") ^ "):\n" ^ string_of_block b (curr_indent + 1)
   | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | DeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e ^ "\n"
   (* | IDecl(s) -> "let " ^ s ^ "\n" *)
@@ -165,7 +168,6 @@ and string_of_stmt (stmt) (curr_indent) =
   (* | Fdecl(f) -> string_of_fdecl f (curr_indent) *)
   | ListDecl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | ListDeclAssign(t, s, el) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_list el ^ "\n"
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
   (* | Try(try_block, exn_clauses, finally_block) ->
     "try:\n" ^
     string_of_stmt_list try_block (curr_indent + 1) ^

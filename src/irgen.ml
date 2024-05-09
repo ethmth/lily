@@ -127,6 +127,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       let ltyp_list = List.map ltype_of_typ typ_list in
       let format_str = get_format_str typ_list in
       let fmt_str = L.build_global_stringptr format_str "fmt" builder in
+      (* TODO: Make print function return type whatever the first argument is, and return the first argument *)
       let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list (ltyp_list)) in
       let printf_t : L.lltype =
         L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
