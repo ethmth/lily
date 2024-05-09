@@ -137,11 +137,11 @@ and string_of_stmt (stmt) (curr_indent) =
   (* | Elif(e, s) -> "elif (" ^ string_of_expr e ^ "):\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   (* | Else(s) -> "else:\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   | While(e, b) -> "while (" ^ string_of_expr e ^ "):\n" ^ string_of_block b (curr_indent + 1)
-  | For(e,a,b) -> "for (" ^ string_of_expr e ^ ", " ^ (match a with Assign(v, e) -> v ^ " = " ^ string_of_expr e | _ -> "STATEMENT") ^ "):\n" ^ string_of_block b (curr_indent + 1)
+  | For(e,a,b) -> "for (" ^ string_of_expr e ^ ", " ^ string_of_expr a ^ "):\n" ^ string_of_block b (curr_indent + 1)
   | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | DeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e ^ "\n"
   | ListDecl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
-  | ListDeclAssign(t, s, ll) ->  (match ll with LitList(el) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_list el | _ -> "{SOMETHING WRONG EXPRESSION}") ^ "\n"
+  | ListDeclAssign(t, s, ll) ->  (match ll with LitList(el) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_list el | _ -> "{SOMETHING WRONG ast.ml LIST DECL ASSIGNMENT}") ^ "\n"
   (* | Try(try_block, exn_clauses, finally_block) ->
     "try:\n" ^
     string_of_stmt_list try_block (curr_indent + 1) ^

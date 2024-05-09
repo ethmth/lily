@@ -139,10 +139,12 @@ let check (program_block) =
     in
     let rec check_expr (e: expr): sexpr =
       match e with
-      LitInt(l) ->  (Int, SLitInt(l))
+      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name))
+      | LitInt(l) ->  (Int, SLitInt(l))
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
       | LitChar(l) -> (Char, SLitChar(l))
+      | LitList(_) (* TODO *)-> (Int, SLitInt(1))
       | Id(id) -> let (t, cname) = find_var id in (t, SId(id, cname))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 
@@ -160,9 +162,10 @@ let check (program_block) =
         let args = List.map sexpr_to_typ sel in
         let (t, cname) = find_func name args in
         (t, SCall(name, sel, cname))
-      | UnaryOp(op, e) -> let (t, se) = check_expr e in 
-      match op with
-      Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)) 
+      | UnaryOp(op, e) -> let (t, se) = check_expr e in (
+        match op with
+        Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
+      | ListIndex(_, _) (*TODO*) -> (Int, SLitInt(1))
     in
 
     let check_binds (binds : (typ * string) list) =
@@ -183,9 +186,9 @@ let check (program_block) =
       ignore(functions := sfdecl::!functions);
       sfdecl
     in
-    let rec check_stmt (s: stmt): sstmt =
+    let check_stmt (s: stmt): sstmt =
       match s with 
-      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name))
+      (* Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name)) *)
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): If statement expression not boolean in Block " ^ block_name)));
         let (_, sb1) = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let (_, sb2) = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
@@ -193,15 +196,17 @@ let check (program_block) =
       | While(e, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): While statement expression not boolean in Block " ^ block_name)));
         let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         SWhile((t, se), sb)
-      | For(e, s, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): For loop statement expression not boolean in Block " ^ block_name)));
+      | For(e, a, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): For loop statement expression not boolean in Block " ^ block_name)));
         let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let sl = match sb with SBlock(sl) -> sl in
-        let sl_new = (check_stmt s)::sl in
+        let sl_new = (SExprStmt(check_expr a))::sl in
         SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
       | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
+      | ListDecl(typ, id) (* TODO*) -> let cname = add_var id typ true in SDecl(typ, id, cname)
+      | ListDeclAssign(et, id, e) (*TODO*) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
     in
 
