@@ -224,7 +224,7 @@ let check (program_block) =
       | For(e, a, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): For loop statement expression not boolean in Block " ^ block_name)));
         let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let sl = match sb with SBlock(sl) -> sl in
-        let sl_new = (SExprStmt(check_expr a))::sl in
+        let sl_new = sl @ [(SExprStmt(check_expr a))] in
         SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)
