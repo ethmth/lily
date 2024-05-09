@@ -34,6 +34,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
+  and ptr_t      = L.pointer_type context
   in
 
   (* Return the LLVM type for a LILY type *)
@@ -43,6 +44,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     | A.Char  -> i8_t
     | A.Float -> float_t
     | A.Void  -> i1_t
+    | A.List(_) -> ptr_t
+    | A.Any -> raise (Failure("IR Error (ltype_of_typ): attempting to allocate memory for Any type"))
   in
    let ltypes_of_typs (l:A.typ list): L.lltype list =
    List.map ltype_of_typ l
@@ -124,26 +127,32 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         | h::t -> [(build_expr builder h)] @ (build_expr_list t builder)
       in
       let typ_list = List.map get_typ arg_list in
+      let ret_typ = List.hd typ_list in
       let ltyp_list = List.map ltype_of_typ typ_list in
       let format_str = get_format_str typ_list in
       let fmt_str = L.build_global_stringptr format_str "fmt" builder in
-      let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list (ltyp_list)) in
+      (* TODO: Make print function return type whatever the first argument is, and return the first argument *)
+      let func_type = L.function_type (ltype_of_typ ret_typ) (Array.of_list (ltyp_list)) in
       let printf_t : L.lltype =
-        L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
+        L.var_arg_function_type (ltype_of_typ ret_typ) [| L.pointer_type context |] in
       let printf_func : L.llvalue =
         L.declare_function "printf" printf_t the_module in 
+      (* ignore(L.build_ret (build_expr builder e) builder); *)
       let built_expr_list = build_expr_list arg_list builder in
       L.build_call func_type printf_func (Array.of_list ([fmt_str] @ built_expr_list))
         "printf" builder 
 
     and build_expr (builder: L.llbuilder) ((t,e ): sexpr): L.llvalue = 
       match e with
-        SLitInt i -> L.const_int (ltype_of_typ A.Int) i
+        SAssign (_, e, cname) -> let e' = build_expr builder e in
+          ignore(L.build_store e' (lookup cname) builder); e'
+      |  SLitInt i -> L.const_int (ltype_of_typ A.Int) i
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
+      | SLitList (_) (* TODO *)->  L.const_int (ltype_of_typ A.Int) 0
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
-      | SBinop (e1, o, e2) (* TODO *) ->
+      | SBinop (e1, o, e2) ->
         let e1' = build_expr builder e1
         and e2' = build_expr builder e2 in
         let e1_t = (match e1 with (e1_typ, _) -> e1_typ) in
@@ -154,11 +163,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
          | A.Divide   -> if e1_t = A.Float then L.build_fdiv else L.build_sdiv
          | A.And     -> L.build_and
          | A.Or      -> L.build_or
-         (* TODO: Make these fcmp when its floats *)
          | A.Eq   -> if e1_t = A.Float then  L.build_fcmp L.Fcmp.Oeq else L.build_icmp L.Icmp.Eq
          | A.Neq   -> if e1_t = A.Float then L.build_fcmp L.Fcmp.One else L.build_icmp L.Icmp.Ne 
          | A.Lt    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Olt else L.build_icmp L.Icmp.Slt
-         (* TODO: All of these are Less Thans rn *)
          | A.Leq    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Ole else L.build_icmp L.Icmp.Sle
          | A.Gt     -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Ogt else L.build_icmp L.Icmp.Sgt
          | A.Geq    -> if e1_t = A.Float then L.build_fcmp L.Fcmp.Oge else L.build_icmp L.Icmp.Sge
@@ -166,8 +173,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SUnaryOp (o, e) ->
         let e' = build_expr builder e in 
         (match o with
-           A.Negate    ->  L.build_neg
-        ) e' "tmp" builder
+           A.Negate    ->  L.build_not
+        ) e' "tmpu" builder
       | SCall ("print", arg_list, _) ->
           build_print_call arg_list builder
       | SCall (_, args, cname) ->
@@ -177,6 +184,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
         let func_type = L.function_type (ltype_of_typ t) (Array.of_list arg_types) in 
         L.build_call func_type fdef (Array.of_list llargs) result builder
+      | SListIndex(_, _) (*TODO*) -> L.const_int (ltype_of_typ A.Int) 0
     in
 
     let add_terminal builder instr =
@@ -186,10 +194,11 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     
     let rec build_stmt builder = function
       | SExprStmt e -> ignore(build_expr builder e); builder
-      | SAssign (_, e, cname) -> let e' = build_expr builder e in
-        ignore(L.build_store e' (lookup cname) builder); builder
+      (* | SAssign (_, e, cname) -> let e' = build_expr builder e in
+        ignore(L.build_store e' (lookup cname) builder); builder *)
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
+      | SListDeclAssign (_, _, _, _) (*TODO*) -> builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
       | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
@@ -219,12 +228,13 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let bool_val = build_expr while_builder predicate in
 
         let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (List.fold_left build_stmt builder body_stmt_list) build_br_while;
+        add_terminal (List.fold_left build_stmt (L.builder_at_end context body_bb) body_stmt_list) build_br_while;
 
         let end_bb = L.append_block context "while_end" the_function in
 
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
         L.builder_at_end context end_bb
+      | SListDecl (_, _, _) (*TODO: Probably do nothing here, but check *)-> builder
       | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)
       | SDecl(_, _, _) -> builder (* Ignore declarations, which are already covered in 'globals' *)
       | SFdecl(_, _, _, _, _) -> builder (* Ignore function declarations, which are already covered in 'functions'*)

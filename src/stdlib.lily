@@ -1,0 +1,11 @@
+def print_bool(a : bool) -> bool:
+    if (a == true):
+        print('t', 'r', 'u', 'e')
+    else:
+        print('f', 'a', 'l', 's', 'e')
+    return a
+
+def mergesort(l::int) -> int list:
+    let new_list::int = copy(l)
+    # Sort it
+    return new_list

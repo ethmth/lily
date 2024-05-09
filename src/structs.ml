@@ -3,9 +3,9 @@ open Ast
 
 module FuncId = struct
 
-  let compare_typ t1 t2 =
+  let rec compare_typ t1 t2 =
     match t1, t2 with
-    | Int, Int | Bool, Bool | Char, Char | Float, Float | Void, Void -> 0
+    | Int, Int | Bool, Bool | Char, Char | Float, Float | Void, Void | Any, Any -> 0
     | Int, _ -> -1
     | _, Int -> 1
     | Bool, _ -> -1
@@ -14,6 +14,11 @@ module FuncId = struct
     | _, Char -> 1
     | Float, _ -> -1
     | _, Float -> 1
+    | Any, _ -> -1
+    | _, Any -> 1
+    | List(lt1), List(lt2) -> compare_typ lt1 lt2
+    | List(_), _ -> -1
+    | _, List(_) -> 1
 
   type t = {id: string; args: typ list}
 

@@ -73,10 +73,12 @@ rule token = parse
 | "and"     { AND }
 | "or"     { OR }
 | "||"      { OR}
-| '!'      { NOT }
+| "!"      { NOT }
+| "not"   { NOT }
 
 (*List*)
-| "[]"      { EMPTY_LIST }  (* This matches '[]' and returns the EMPTY_LIST token *)
+(*| "[]"      { EMPTY_LIST } *)  (* This matches '[]' and returns the EMPTY_LIST token *)
+| "list"  { LIST }
 | "::"    { COLON_COLON }  (* This represents '::' *)
 
 (* Additional functional operator for REDUCE *)
