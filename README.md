@@ -26,6 +26,7 @@ where blocks are parsed using special `{}` characters.
 - [ ] **List Operations**
 - [ ] **List Standard Library**
 - [ ] **`elif`s**
+- [ ] **Standard Input**
 - [ ] **Type inference/implicit types** - Probably not gonna happen.
 - [ ] **Providing System Arguments** - Probably not gonna happen.
 - [ ] **Tuples and Dictionaries** - Almost definitely not gonna happen.

@@ -11,7 +11,7 @@ type unary_op = Negate
 
 (* Types definition *)
 (* TODO: Add back string *)
-type typ = Int | Bool | Char | Float | Void | List of typ | Any (* | String *) 
+type typ = Int | Bool | Char | Float | Void | List of typ | Any (* Any is only for internal use, DON'T SCAN THIS *) (* | String *) 
 
 type bind = typ * string
 

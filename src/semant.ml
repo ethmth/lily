@@ -140,7 +140,7 @@ let check (program_block) =
     in
     let rec check_expr (e: expr): sexpr =
       match e with
-      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name))
+      Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = Any || t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ "(type " ^ string_of_typ et ^ ", expression " ^ string_of_typ t ^ ") that wasn't declared in block " ^ block_name))
       | LitInt(l) ->  (Int, SLitInt(l))
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
