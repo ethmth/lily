@@ -5,6 +5,7 @@
 open Libparser
 open Libsemant
 open Libirgen
+open Readers
 type action = Ast | Sast | LLVM_IR
 
 let () =
@@ -16,10 +17,17 @@ let () =
     ("-l", Arg.Unit (set_action LLVM_IR), "Print the generated LLVM IR");
   ] in
   let usage_msg = "usage: ./lily.native [-a|-s|-l] [file.mc]" in
-  let channel = ref stdin in
-  Arg.parse speclist (fun filename -> channel := open_in filename) usage_msg;
+  (* let channel = ref stdin in *)
+  (* Arg.parse speclist (fun filename -> channel := open_in filename) usage_msg; *)
+  let program_string = ref "" in
+  (* let program_string = ref (get_program_string None) in *)
+  Arg.parse speclist (fun filename -> program_string := (get_program_string (Some(filename)))) usage_msg;
+  if !program_string = "" then program_string := (get_program_string (None)) else
 
-  let lexbuf = Lexing.from_channel !channel in
+  (* let lexbuf = Lexing.from_channel !channel in *)
+  ignore(!program_string);
+  (* ignore(print_endline ("PROGRAM STRING IS\n" ^ !program_string)); *)
+  let lexbuf = Lexing.from_string !program_string in
 
   let ast = Parser.program Tokenize.tokenize lexbuf in
   match !action with
