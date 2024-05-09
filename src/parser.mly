@@ -23,6 +23,7 @@ open Ast
 
 /* Assignment Operators */
 %token ASSIGN
+%token INCREMENT DECREMENT
 
 /* Relational Operators */
 %token EQ NEQ GT LT GEQ LEQ 
@@ -218,6 +219,8 @@ list_elements_opt:
 
 assignment:
   | ID ASSIGN expression {Assign($1, $3)}
+  | ID INCREMENT {Assign($1, Binop(Id($1), Plus, LitInt(1)))}
+  | ID DECREMENT {Assign($1, Binop(Id($1), Minus, LitInt(1)))}
 
 expression:
   | assignment { $1 }

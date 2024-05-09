@@ -11,12 +11,13 @@ module FuncMap = Map.Make(FuncId)
 let check (program_block) =
   let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
     (* rtyp, name, args (None for any), min_args*)
-  (Any,"print", None, 1)
+  (Any,"printi", None, 1)
   ] in
   let reserved_func_names: string list = [
-    "print"
+    "printi"
   ] in
- 
+
+  (* let print_count = ref 0 in *)
   let functions = ref [] in 
   let globals = ref [] in
   let vnames: int StringMap.t ref = ref StringMap.empty in
@@ -158,6 +159,32 @@ let check (program_block) =
         | _ -> op)
         in (let op_typ = if is_boolean_op op then Bool else t1 in
           op_typ, SBinop((t1, se1), op, (t2, se2))))))
+      | Call("print", el) ->
+        let sel = List.map check_expr el in
+        let args = List.map sexpr_to_typ sel in
+        if is_func "print" args then
+        (
+          let (t, cname) = find_func "print" args in
+          (t, SCall("print", sel, cname))
+        ) else (
+          let ret_typ = List.hd args in
+          let bind_count = ref 0 in
+          let typ_to_bind (t : typ) : bind = 
+            ignore(bind_count := !bind_count + 1);
+            let var_name = "arg" ^ (string_of_int !bind_count) in
+            (t, var_name)
+          in
+          let print_binds = match args with _::t -> [(ret_typ,"arg_return")] @ (List.map typ_to_bind t) | [] -> [] in
+          let bind_to_arg (b: bind): expr = 
+            match b with (_, aname) -> Id(aname)
+          in
+          let call_names = List.map bind_to_arg print_binds in
+          let print_body = Block([DeclAssign(ret_typ, "print_return", (Call("printi", call_names))); (Return((  Id("arg_return"))))])  in
+          let print_decl = Fdecl(ret_typ, "print", print_binds , print_body) in
+          ignore(check_stmt print_decl);
+          let (t, cname) = find_func "print" args in
+          (t, SCall("print", sel, cname))
+        )
       | Call(name, el) -> 
         let sel = List.map check_expr el in
         let args = List.map sexpr_to_typ sel in
@@ -167,18 +194,16 @@ let check (program_block) =
         match op with
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
       | ListIndex(_, _) (*TODO*) -> (Int, SLitInt(1))
-    in
 
-    let check_binds (binds : (typ * string) list) =
+    and check_binds (binds : (typ * string) list) =
       let rec dups = function
           [] -> ()
         |	((_,n1) :: (_,n2) :: _) when n1 = n2 ->
           raise (Failure ("Semantics Error (check_binds): Duplicate Bind " ^ n1))
         | _ :: t -> dups t
       in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
-    in
     (* TODO CHECK THAT FUNCTION HAS A RETURN STATEMENT IF IT RETURNS NON-VOID *)
-    let check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
+    and check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
       let cname = add_func name args t in
@@ -186,8 +211,7 @@ let check (program_block) =
       let sfdecl = SFdecl(t, name, sbinds, sb, cname) in
       ignore(functions := sfdecl::!functions);
       sfdecl
-    in
-    let check_stmt (s: stmt): sstmt =
+    and check_stmt (s: stmt): sstmt =
       match s with 
       (* Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name)) *)
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): If statement expression not boolean in Block " ^ block_name)));
@@ -200,7 +224,7 @@ let check (program_block) =
       | For(e, a, b) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): For loop statement expression not boolean in Block " ^ block_name)));
         let (_, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let sl = match sb with SBlock(sl) -> sl in
-        let sl_new = (SExprStmt(check_expr a))::sl in
+        let sl_new = sl @ [(SExprStmt(check_expr a))] in
         SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)

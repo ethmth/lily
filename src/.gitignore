@@ -14,3 +14,4 @@ parserscanner.ml
 parserscanner.mli
 *.cmi
 *.cmo
+readers

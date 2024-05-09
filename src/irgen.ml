@@ -175,7 +175,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         (match o with
            A.Negate    ->  L.build_not
         ) e' "tmpu" builder
-      | SCall ("print", arg_list, _) ->
+      | SCall ("printi", arg_list, _) ->
           build_print_call arg_list builder
       | SCall (_, args, cname) ->
         let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ " not found.")) in

@@ -54,6 +54,8 @@ rule token = parse
 
 (* Assignment Operators *)
 | '='      { ASSIGN }
+| "++"     { INCREMENT }
+| "--"     { DECREMENT }
 
 (* Relational Operators *)
 | "=="     { EQ }
