@@ -19,14 +19,16 @@ Currently, the programming language implementation can be found in the `src/` di
 where blocks are parsed using special `{}` characters.
 - [x] **Python-style printing** - The built in print function can take an arbitrary number of arguments to print in Python-style.
 - [x] **Nested Functions** - Lily allows for nested functions.
+- [x] **Function Overloading** - Lily allows for overloading functions.
 - [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM.
+- [ ] **Standard Library** - `stdlib.lily` file created. Needs functions added!
 - [ ] **Strings** 
-- [ ] **Standard Library**
 - [ ] **Lists**
 - [ ] **List Operations**
 - [ ] **List Standard Library**
 - [ ] **`elif`s**
 - [ ] **Standard Input**
+- [ ] **"Randomness"** - Probably not necessary.
 - [ ] **Type inference/implicit types** - Probably not gonna happen.
 - [ ] **Providing System Arguments** - Probably not gonna happen.
 - [ ] **Tuples and Dictionaries** - Almost definitely not gonna happen.
@@ -49,11 +51,15 @@ where blocks are parsed using special `{}` characters.
 
 - [x] `semant.ml` - Semantic checker.
 - [x] `sast.ml`
+- [x] `structs.ml` - Includes the definition of the `FuncId` struct which is needed for the `FuncMap` in `semant.ml`, used for storing a map of functions.
 
 **`test2` - tests semantic checking (everything above this)** - to run `test2`, run `make test2` and follow the "How to run tests" instructions below.
 
 - [x] `irgen.ml` - IR Generation
- 
+- [x] `stdlib.lily` - Standard library functions, written in LILY
+- [x] `readers.ml` - Provides useful function definitions for reading from files and reading from stdin, needed to include `stdlib.lily` functions in user programs.
+
+
 **`lily.ml` - tests everything** - to use, run `make lily` and `./lily.native ...`
 
 ## Environment Setup
