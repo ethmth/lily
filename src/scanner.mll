@@ -78,6 +78,7 @@ rule token = parse
 
 (*List*)
 (*| "[]"      { EMPTY_LIST } *)  (* This matches '[]' and returns the EMPTY_LIST token *)
+| "list"  { LIST }
 | "::"    { COLON_COLON }  (* This represents '::' *)
 
 (* Additional functional operator for REDUCE *)

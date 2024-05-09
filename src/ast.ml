@@ -46,8 +46,6 @@ and stmt =
   | Return of expr
   | Decl of typ * string
   | DeclAssign of typ * string * expr
-  | ListDecl of typ * string
-  | ListDeclAssign of typ * string * expr
   | Fdecl of typ * string * bind list * block (* (rtyp, fname, parameters, stmts) *)
   (* TODO: Add back try/except statements (we don't have a way of throwing errors, so this is useless rn AND VERY HARD TO IMPLEMENT well) *)
   (* | Try of stmt list * exn_clause list * stmt list option *)
@@ -141,8 +139,6 @@ and string_of_stmt (stmt) (curr_indent) =
   | For(e,a,b) -> "for (" ^ string_of_expr e ^ ", " ^ string_of_expr a ^ "):\n" ^ string_of_block b (curr_indent + 1)
   | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | DeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e ^ "\n"
-  | ListDecl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
-  | ListDeclAssign(t, s, ll) ->  (match ll with LitList(el) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_list el | _ -> "{SOMETHING WRONG ast.ml LIST DECL ASSIGNMENT}") ^ "\n"
   (* | Try(try_block, exn_clauses, finally_block) ->
     "try:\n" ^
     string_of_stmt_list try_block (curr_indent + 1) ^

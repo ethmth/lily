@@ -124,8 +124,8 @@ declaration:
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
   /* list declarations */
-  | LET ID COLON_COLON typ ASSIGN list_literal { ListDeclAssign($4, $2, LitList($6)) }
-  | LET ID COLON_COLON typ { ListDecl($4, $2) }
+  | LET ID COLON_COLON typ ASSIGN expression { DeclAssign(List($4), $2, $6) }
+  | LET ID COLON_COLON typ { Decl(List($4), $2) }
 
 expression_statement:
   expression { ExprStmt($1) }
@@ -147,6 +147,7 @@ parameters:
 
 binding:
   ID COLON typ { ($3, $1) }
+  | ID COLON_COLON typ { (List($3), $1) }
 
 for_loop:
   FOR LPAREN expression COMMA assignment RPAREN COLON NEWLINE INDENT block DEDENT { For($3, $5, Block($10)) }
@@ -197,7 +198,7 @@ typ:
   | CHAR  { Char }
   // | STRING { String }
   | VOID   { Void }
-  // | LIST typ { List($2) }
+  | typ LIST { List($1) }
 
 /* Lists */
 
