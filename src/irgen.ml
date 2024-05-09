@@ -45,6 +45,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     | A.Float -> float_t
     | A.Void  -> i1_t
     | A.List(_) -> ptr_t
+    | A.Any -> raise (Failure("IR Error (ltype_of_typ): attempting to allocate memory for Any type"))
   in
    let ltypes_of_typs (l:A.typ list): L.lltype list =
    List.map ltype_of_typ l
@@ -126,15 +127,17 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         | h::t -> [(build_expr builder h)] @ (build_expr_list t builder)
       in
       let typ_list = List.map get_typ arg_list in
+      let ret_typ = List.hd typ_list in
       let ltyp_list = List.map ltype_of_typ typ_list in
       let format_str = get_format_str typ_list in
       let fmt_str = L.build_global_stringptr format_str "fmt" builder in
       (* TODO: Make print function return type whatever the first argument is, and return the first argument *)
-      let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list (ltyp_list)) in
+      let func_type = L.function_type (ltype_of_typ ret_typ) (Array.of_list (ltyp_list)) in
       let printf_t : L.lltype =
-        L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
+        L.var_arg_function_type (ltype_of_typ ret_typ) [| L.pointer_type context |] in
       let printf_func : L.llvalue =
         L.declare_function "printf" printf_t the_module in 
+      (* ignore(L.build_ret (build_expr builder e) builder); *)
       let built_expr_list = build_expr_list arg_list builder in
       L.build_call func_type printf_func (Array.of_list ([fmt_str] @ built_expr_list))
         "printf" builder 

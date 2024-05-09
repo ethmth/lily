@@ -1,3 +1,5 @@
 let a: int = 5
 
 a.print()
+
+print(a)

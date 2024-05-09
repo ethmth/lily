@@ -11,7 +11,7 @@ type unary_op = Negate
 
 (* Types definition *)
 (* TODO: Add back string *)
-type typ = Int | Bool | Char | Float | Void | List of typ (* | String *) 
+type typ = Int | Bool | Char | Float | Void | List of typ | Any (* | String *) 
 
 type bind = typ * string
 
@@ -91,6 +91,7 @@ let rec string_of_typ = function
   | Float -> "float"
   (*| String -> "string"*) (*CHIMA NEW: Added this line*)
   | Void -> "void"
+  | Any -> "any"
   | List(t) -> ((string_of_typ t) ^ " list")
 
 (* Pretty-printing functions *)

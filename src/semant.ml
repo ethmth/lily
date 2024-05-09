@@ -9,8 +9,9 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
-  let reserved_funcs: (typ * string * ((typ list) option)) list =[
-  (Int,"print", None)
+  let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
+    (* rtyp, name, args (None for any), min_args*)
+  (Any,"print", None, 1)
   ] in
   let reserved_func_names: string list = [
     "print"
@@ -87,17 +88,17 @@ let check (program_block) =
     in
 
     let is_func_reserved (name: string) (args: typ list): bind option =
-      let reserved_has_name (name:string): (typ * string * ((typ list) option)) option = 
-        let rec res_check (l) (name: string): (typ * string * ((typ list) option)) option =
+      let reserved_has_name (name:string): (typ * string * ((typ list) option) * int) option = 
+        let rec res_check (l) (name: string): (typ * string * ((typ list) option) * int) option =
           match l with
           [] -> None
           | h::t -> 
-            match h with (_, hname, _) -> if hname = name then Some(h) else res_check t name
+            match h with (_, hname, _, _) -> if hname = name then Some(h) else res_check t name
         in
         res_check reserved_funcs name
       in
       match reserved_has_name name with None ->  None
-      | Some(t, n, xargs) -> match xargs with None -> Some(t, n)
+      | Some(t, n, xargs, nargs) -> match xargs with None -> (if List.length args >= nargs then Some(t, n) else None)
       | Some(rargs) -> if rargs = args then Some(t, n) else None
     in
     let is_func_local (name: string) (args: typ list):bool =
@@ -204,9 +205,9 @@ let check (program_block) =
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
-      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
+      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
       | ListDecl(typ, id) (* TODO*) -> let cname = add_var id typ true in SDecl(typ, id, cname)
-      | ListDeclAssign(et, id, e) (*TODO*) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
+      | ListDeclAssign(et, id, e) (*TODO*) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): ListDeclAssigning variable that wasn't declared." ^ block_name ^ ": DeclAssigning variable " ^ id ^ " to var of wrong type in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
     in
 
