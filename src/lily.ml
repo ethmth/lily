@@ -22,7 +22,7 @@ let () =
   let program_string = ref "" in
   (* let program_string = ref (get_program_string None) in *)
   Arg.parse speclist (fun filename -> program_string := (get_program_string (Some(filename)))) usage_msg;
-  if !program_string = "" then program_string := (get_program_string (None)) else
+  if !program_string = "" then (program_string := (get_program_string (None))) else
 
   (* let lexbuf = Lexing.from_channel !channel in *)
   ignore(!program_string);

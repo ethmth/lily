@@ -29,12 +29,30 @@ let get_file_path:string =
   
 
 let get_program_string (program_file: string option):string =
+  (* let read_stdin:string =
+    ignore(print_endline ("In read_stdin"));
+  let rec loop acc =
+    try
+      let line = input_line stdin in
+      loop (acc ^ line ^ "\n")  (* Append each line with a newline *)
+    with
+      End_of_file -> acc
+  in
+  loop "" in *)
   (* Read a string from standard input *)
-  print_endline "Enter some text:";
-  let file_contents =
+  let file_contents: string =
     match program_file with
       None ->
-      input_line stdin 
+        (* ignore(print_endline "Reading from stdin"); *)
+        let rec loop acc =
+          try
+            let line = input_line stdin in
+            loop (acc ^ line ^ "\n")  (* Append each line with a newline *)
+          with
+            End_of_file -> acc
+        in
+        loop ""
+      (* "" *)
       | Some(filename) ->
       read_file filename
     in
