@@ -1,0 +1,11 @@
+let a: int = 5
+
+def main() -> int:
+    def change_it() -> int:
+        a = 6
+    
+    print(a)
+    change_it()
+    print(a)
+
+main()
