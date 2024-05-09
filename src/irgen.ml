@@ -142,7 +142,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       L.build_call func_type printf_func (Array.of_list ([fmt_str] @ built_expr_list))
         "printf" builder 
 
-      and build_print_call (arg_list: sexpr list) (_: L.llbuilder): L.llvalue =
+      and build_print_call (arg_list: sexpr list) (builder: L.llbuilder): L.llvalue =
         (* let builder = L.builder_at_end context (L.entry_block the_function) in *)
 
         (* let bind_from_args (arg: A.typ * string * string) =
@@ -175,7 +175,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           L.define_function "printf" printf_t the_module in  *)
         (* ignore(L.build_ret (build_expr builder e) builder); *)
         let f_builder = L.builder_at_end context (L.entry_block fdef) in
-        let printf_fdef = build_printf_call arg_list f_builder in 
+        (* let printf_fdef = build_printf_call arg_list f_builder in  *)
+        let printf_fdef = build_expr builder (A.Int,SCall("printf", arg_list, "")) in
         let built_expr_list = build_expr_list arg_list f_builder in
         ignore(L.build_call call_type printf_fdef (Array.of_list built_expr_list) "printfresult" f_builder);
         ignore(L.build_ret (List.hd built_expr_list) f_builder);
@@ -214,6 +215,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         (match o with
            A.Negate    ->  L.build_not
         ) e' "tmpu" builder
+      | SCall ("printf", arg_list, _) ->
+          build_printf_call arg_list builder
       | SCall ("print", arg_list, _) ->
           build_print_call arg_list builder
       | SCall (_, args, cname) ->
