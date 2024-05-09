@@ -11,12 +11,10 @@ module FuncMap = Map.Make(FuncId)
 let check (program_block) =
   let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
     (* rtyp, name, args (None for any), min_args*)
-  (Any,"print", None, 1);
-  (Any,"printf", None, 1)
+  (Any,"print", None, 1)
   ] in
   let reserved_func_names: string list = [
-    "print";
-    "printf"
+    "print"
   ] in
  
   let functions = ref [] in 
