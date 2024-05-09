@@ -228,7 +228,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let bool_val = build_expr while_builder predicate in
 
         let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (List.fold_left build_stmt builder body_stmt_list) build_br_while;
+        add_terminal (List.fold_left build_stmt (L.builder_at_end context body_bb) body_stmt_list) build_br_while;
 
         let end_bb = L.append_block context "while_end" the_function in
 
