@@ -5,6 +5,32 @@ def print_bool(a : bool) -> bool:
         print('f', 'a', 'l', 's', 'e')
     return a
 
+def len(l::void) -> int:
+    count = 0
+    for _ in l:
+        count = count + 1
+    return count
+
+def sum(l::int) -> int:
+    sum = 0
+    for num in l:
+        sum = sum + num
+    return sum
+
+def min(l::int) -> int:
+    min = l[0]
+    for num in l:
+        if num < min:
+            min = num
+    return min
+
+def max(l::int) -> int:
+    max = l[0]
+    for num in l:
+        if num > max:
+            max = num
+    return max
+
 #def mergesort(l::int) -> int list:
 #    let new_list::int = copy(l)
 #    # Sort it
