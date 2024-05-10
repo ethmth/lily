@@ -33,11 +33,10 @@ def max(l::int) -> int:
             max = num
     return max
 
-# the following random function requires global variables, bitwise and, and modulo
+# the following random function requires bitwise and and modulo
 
-#seed:int = 123456789
+#let seed:int = 123456789
 #def random(a:int, b:int) -> int:
-#    global seed
 #   seed = (seed * 1103515245 + 12345) & 0x7fffffff
 #   return a + (seed % (b - a + 1))
 
