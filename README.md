@@ -21,9 +21,9 @@ where blocks are parsed using special `{}` characters.
 - [x] **Nested Functions** - Lily allows for nested functions.
 - [x] **Function Overloading** - Lily allows for overloading functions.
 - [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM.
+- [x] **Lists** - Lily supports the declaration and referencing of 'lists' in the style specified in the LRM.
 - [x] **Standard Library** - `stdlib.lily` consists of len, sum, min, max, range, copy, append, remove, and reverse, returning new lists.
 - [ ] **Strings** 
-- [ ] **Lists**
 - [ ] **List Operations**
 - [ ] **List Standard Library**
 - [ ] **`elif`s**
