@@ -26,8 +26,8 @@ where blocks are parsed using special `{}` characters.
 - [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
 - [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort. They will work when LILY supports `elif` and `//`.
 - [x] **Search Functions** - `stdlib.lily` contains binarysearch. It will work when LILY supports `//`.
-- [ ] **"Randomness"** - Neccesary if we want to implement shuffle. Requires global var and bitwise and (&) OR modulo (%).
-- [ ] **Multi-List Operations** - shuffle(list1, list2) may be written once a random(a, b) function exists.
+- [ ] **"Randomness"** - Neccesary if we want to implement shuffle. Requires global var, bitwise and (&) and modulo (%).
+- [ ] **Multi-List Operations** - shuffle(list1, list2) will work once a random(a, b) function exists.
 - [ ] **Strings** 
 - [ ] **`elif`s**
 - [ ] **Standard Input**
