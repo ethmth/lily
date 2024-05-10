@@ -5,31 +5,77 @@ def print_bool(a : bool) -> bool:
         print('f', 'a', 'l', 's', 'e')
     return a
 
-def len(l::void) -> int:
-    count = 0
+def range(start:int, end:int) -> int list:
+    let result::int = []
+    let i:int = start
+    while (i < end):
+        append(result, i)
+        i = i + 1
+    return result
+
+def copy(l::int) -> int list:
+    let length:int = len(l)
+    let new_list::int = []
+    let i:int = 0
+    while (i < length):
+        append(new_list, l[i])
+        i = i + 1
+    return new_list
+
+def len(l::int) -> int:
+    count: int = 0
     for _ in l:
         count = count + 1
     return count
 
 def sum(l::int) -> int:
-    sum = 0
+    let sum:int = 0
     for num in l:
         sum = sum + num
     return sum
 
 def min(l::int) -> int:
-    min = l[0]
+    let min:int = l[0]
     for num in l:
         if num < min:
             min = num
     return min
 
 def max(l::int) -> int:
-    max = l[0]
+    let max:int = l[0]
     for num in l:
         if num > max:
             max = num
     return max
+
+def append(l::int, item:int) -> int list:
+    let new_length:int = len(l) + 1
+    let new_list::int = []
+    let i:int = 0
+    while (i < len(l)):
+        new_list[i] = l[i]
+        i = i + 1
+    new_list[new_length - 1] = item
+    return new_list
+
+def remove(l::int, item:int) -> int list:
+    let length:int = len(l)
+    let new_list::int = []
+    for num in l:
+        if (num == item):
+            continue
+        else: 
+            append(new_list, num)
+    return new_list
+
+def reverse(l::int) -> int list:
+    let length:int = len(l)
+    let new_list::int = []
+    let i:int = 0
+    while (i < length):
+        append(new_list, l[length - i - 1])
+        i = i + 1
+    return new_list
 
 #def mergesort(l::int) -> int list:
 #    let new_list::int = copy(l)
