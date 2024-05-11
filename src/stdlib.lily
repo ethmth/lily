@@ -112,12 +112,12 @@ def pop(l::int, index:int) -> int:
 
 # sorting functions
 
-# the following functions cannot be implemented until LILY supports elif, //, and accesing lists in the following manner l[:mid]
+# the following functions cannot be implemented until LILY supports elif, and accesing lists in the following manner l[:mid]
 
 #def mergesort(l::int) -> int list:
 #    if (len(l) <= 1):
 #        return l
-#    let mid:int = len(l) // 2
+#    let mid:int = len(l) / 2
 #    let left::int = mergesort(l[:mid])
 #    let right::int = mergesort(l[mid:])
 #    return merge(left, right)
@@ -138,7 +138,7 @@ def pop(l::int, index:int) -> int:
 #def quicksort(l::int) -> int list:
 #    if (len(l) <= 1):
 #        return l
-#    let pivot:int = l[len(l) // 2]
+#    let pivot:int = l[len(l) / 2]
 #    let less::int = []
 #    let equal::int = []
 #    let greater::int = []
@@ -171,7 +171,7 @@ def selectionsort(l::int) -> int list:
 #    let low:int = 0
 #    let high:int = len(l) - 1
 #    while (low <= high):
-#        let mid:int = (low + high) // 2
+#        let mid:int = (low + high) / 2
 #        if (l[mid] < item):
 #            low = mid + 1
 #        elif (l[mid] > item):
