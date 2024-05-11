@@ -110,6 +110,14 @@ def pop(l::int, index:int) -> int:
         i = i + 1
     return popped_element
 
+def sublist(l::int, start:int, end:int) -> int list:
+    let new_list::int = []
+    let i:int = start
+    while (i < end):
+        append(new_list, l[i])
+        i = i + 1
+    return new_list
+
 # sorting functions
 
 # the following functions cannot be implemented until LILY supports elif, and accesing lists in the following manner l[:mid]
