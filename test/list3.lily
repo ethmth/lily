@@ -1,0 +1,16 @@
+def mergesort(l::int) -> int list:
+    let new_list:: int = new int[len(l)]
+    return new_list
+
+#let d:: int = new int list[4]
+
+
+let e::int = [2,1]
+#let e_len:int = 2
+#let e_ptr:ptr = &
+
+# JUST STORE SIZE IN FIRST 8 BYTEs
+
+e.mergesort()
+
+print(e)

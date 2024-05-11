@@ -11,13 +11,22 @@ module FuncMap = Map.Make(FuncId)
 let check (program_block) =
   let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
     (* rtyp, name, args (None for any), min_args*)
-  (Any,"printi", None, 1)
+  (Any,"printi", None, 1);
+  (* TODO: Implement len() - get "user" size *)
+  (Int,"len", Some([List(Any)]), 1);
+  (* TODO: Implement truelen() - get true size *)
+  (Int,"len", Some([List(Any)]), 1);
+  (* TODO: Implement setsize() - set "user" size *)
+  (List(Any),"setsize", Some([List(Any); Int]), 2)
   ] in
   let reserved_func_names: string list = [
-    "printi"
+    "printi";
+    "len"
   ] in
 
-  (* let print_count = ref 0 in *)
+  (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
+  (* TODO: Add support for "for _ in list" syntax for loops *)
+
   let functions = ref [] in 
   let globals = ref [] in
   let vnames: int StringMap.t ref = ref StringMap.empty in
@@ -51,8 +60,6 @@ let check (program_block) =
   let rec check_block (block: block) (b_fmap: bind FuncMap.t) (b_vmap: bind StringMap.t) (starting_vars: bind list) (block_return: typ) (block_name: string): sbind list * sblock =
     let l_fmap: bind FuncMap.t ref = ref FuncMap.empty in
     let l_vmap: bind StringMap.t ref = ref StringMap.empty in
-
-    (* TODO: Check everything in list is same type *)
 
     let is_var_local (id: string): bool =
       StringMap.mem id !l_vmap
@@ -139,14 +146,30 @@ let check (program_block) =
       | Or -> true
       | _ -> false
     in
-    let rec check_expr (e: expr): sexpr =
+    let rec check_list (el: expr list): sexpr =
+      let rec check_list_helper (el: expr list) (etyp: typ): sexpr list =
+        match el with 
+        [] -> ([])
+        | h::tail -> 
+          (let (t, e) = check_expr h in
+            if (etyp != Any && t != etyp) then (raise (Failure "Semantics Error (check_list): Not all list members are of the same type.")) else
+            ([(t, e)] @ (check_list_helper tail t))) in
+      match el with 
+      (* TODO: Allow for empty lists to have any type? (they're List(Int)) *)
+      [] -> (List(Int), SLitList([]))
+      | h::t -> 
+        (
+          let (ht, he) = check_expr h in
+          (List(ht), SLitList( [(ht, he)] @ check_list_helper t ht))
+        )
+    and check_expr (e: expr): sexpr =
       match e with
       Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = Any || t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ "(type " ^ string_of_typ et ^ ", expression " ^ string_of_typ t ^ ") that wasn't declared in block " ^ block_name))
       | LitInt(l) ->  (Int, SLitInt(l))
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
       | LitChar(l) -> (Char, SLitChar(l))
-      | LitList(_) (* TODO *)-> (Int, SLitInt(1))
+      | LitList(l) -> check_list l
       | Id(id) -> let (t, cname) = find_var id in (t, SId(id, cname))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 
@@ -193,7 +216,7 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (
         match op with
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
-      | ListIndex(_, _) (*TODO*) -> (Int, SLitInt(1))
+      | ListIndex(name, i) -> if i < 0 then raise(Failure("Semantics Error (check_expr): Cannot negative index list")) else let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) 
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function
@@ -213,7 +236,6 @@ let check (program_block) =
       sfdecl
     and check_stmt (s: stmt): sstmt =
       match s with 
-      (* Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name)) *)
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): If statement expression not boolean in Block " ^ block_name)));
         let (_, sb1) = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let (_, sb2) = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 

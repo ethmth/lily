@@ -16,7 +16,7 @@ and expr_detail =
   | SBinop of sexpr * op * sexpr
   | SCall of string * sexpr list * string
   | SUnaryOp of unary_op * sexpr
-  | SListIndex of string * int
+  | SListIndex of string * int * string
   | SAssign of string * sexpr * string
 
 and sblock = SBlock of sstmt list
@@ -51,7 +51,7 @@ and string_of_sexpr (t, e) =
   | SBinop(e1, o, e2) -> string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SCall(f, el, cname) -> "<" ^ f ^ " as " ^ cname ^ ">" ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
   | SUnaryOp(op, e) -> string_of_unary_op op ^ string_of_sexpr e
-  | SListIndex(id, ind) -> id ^ "[" ^ string_of_int ind ^ "]"
+  | SListIndex(id, ind, cname) -> "<" ^ id ^ " as " ^ cname ^ ">" ^ "[" ^ string_of_int ind ^ "]"
   | SAssign(v, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">" ^ " = " ^ string_of_sexpr e ^ "\n"
   ) ^ " is " ^ string_of_typ t ^ "}"
   
