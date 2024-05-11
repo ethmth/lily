@@ -52,8 +52,6 @@ let check (program_block) =
     let l_fmap: bind FuncMap.t ref = ref FuncMap.empty in
     let l_vmap: bind StringMap.t ref = ref StringMap.empty in
 
-    (* TODO: Check everything in list is same type *)
-
     let is_var_local (id: string): bool =
       StringMap.mem id !l_vmap
     in
@@ -145,16 +143,16 @@ let check (program_block) =
         [] -> ([])
         | h::tail -> 
           (let (t, e) = check_expr h in
-            if (etyp != Any && t != etyp) then (raise (Failure "")) else
+            if (etyp != Any && t != etyp) then (raise (Failure "Semantics Error (check_list): Not all list members are of the same type.")) else
             ([(t, e)] @ (check_list_helper tail t))) in
       match el with 
+      (* TODO: Allow for empty lists to have any type? (they're List(Int)) *)
       [] -> (List(Int), SLitList([]))
       | h::t -> 
         (
           let (ht, he) = check_expr h in
           (List(ht), SLitList( [(ht, he)] @ check_list_helper t ht))
         )
-      (* in (Int, SLitList( check_list_helper el Any)) *)
     and check_expr (e: expr): sexpr =
       match e with
       Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = Any || t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ "(type " ^ string_of_typ et ^ ", expression " ^ string_of_typ t ^ ") that wasn't declared in block " ^ block_name))
@@ -162,7 +160,7 @@ let check (program_block) =
       | LitBool(l) -> (Bool, SLitBool(l))
       | LitFloat(l) -> (Float, SLitFloat(l))
       | LitChar(l) -> (Char, SLitChar(l))
-      | LitList(l) (* TODO *)-> check_list l
+      | LitList(l) -> check_list l
       | Id(id) -> let (t, cname) = find_var id in (t, SId(id, cname))
       (* TODO: Add some Binop support between different types? *)
       | Binop(e1, op, e2) -> (let (t1, se1) = check_expr e1 in let (t2, se2) = check_expr e2 in 
@@ -209,7 +207,7 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (
         match op with
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
-      | ListIndex(_, _) (*TODO*) -> (Int, SLitInt(1))
+      | ListIndex(name, i) -> let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) 
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function
