@@ -42,6 +42,7 @@ and block = Block of stmt list
 and stmt =
   (* TODO: Add support for elifs? (Probably should be one of last features we add) *)
   | If of expr * block * block
+  (* | If of expr * block * (expr * block) list * block *)
   | While of expr * block
   | For of expr * expr * block
   | ExprStmt of expr
