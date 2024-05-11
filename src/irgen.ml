@@ -60,8 +60,15 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
     let global_var m ((t: A.typ), (_: string), (cname: string)) =
-      let init = if t != A.Float then L.const_int (ltype_of_typ t) 0 else L.const_float (ltype_of_typ t) 0.0
-      in StringMap.add cname (L.define_global cname init the_module) m in
+      match t with
+      A.Float -> let init = L.const_float (ltype_of_typ t) 0.0 in StringMap.add cname (L.define_global cname init the_module) m
+      | A.List(_) -> 
+        let init_size = L.const_int (ltype_of_typ A.Int) 0 in 
+        ignore(StringMap.add cname (L.define_global (cname ^ "_size") init_size the_module) m);
+        let init = L.const_int (ptr_t) 0 in
+        StringMap.add cname (L.define_global (cname ^ "_ptr") init the_module) m
+      | _ -> let init= L.const_int (ltype_of_typ t) 0 in StringMap.add cname (L.define_global cname init the_module) m
+    in
     List.fold_left global_var StringMap.empty globals in
   ignore(global_vars);
 
@@ -184,7 +191,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
         let func_type = L.function_type (ltype_of_typ t) (Array.of_list arg_types) in 
         L.build_call func_type fdef (Array.of_list llargs) result builder
-      | SListIndex(_, _) (*TODO*) -> L.const_int (ltype_of_typ A.Int) 0
+      | SListIndex(_, _, _) (*TODO*) -> L.const_int (ltype_of_typ A.Int) 0
     in
 
     let add_terminal builder instr =

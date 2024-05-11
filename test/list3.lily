@@ -1,0 +1,3 @@
+let d:: int = new int list[4]
+
+print(d[0])
