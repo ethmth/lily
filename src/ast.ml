@@ -33,8 +33,6 @@ type expr =
   | Call of string * expr list
   | UnaryOp of unary_op * expr
   | ListIndex of string * expr
-  (* TODO: Implement ListNew function *)
-  (* | ListNew of typ * int *)
   | Assign of string * expr
   | AssignIndex of string * expr * expr
   | NewList of typ * expr

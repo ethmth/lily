@@ -108,9 +108,6 @@ let check (program_block) =
         if List.length rargs != List.length args then false else
         if List.length rargs = 0 then true else
         let any_types_equal (reserved_t: typ) (check_t: typ): bool =
-          (* if reserved_t = Any then true else
-            if result = check_t then true
-            else (match reserved_t w) *)
             match reserved_t with 
             | Any -> true
             | List(Any) -> (match check_t with List(_) -> true | _ -> false)
@@ -176,7 +173,6 @@ let check (program_block) =
             if (etyp != Any && t != etyp) then (raise (Failure "Semantics Error (check_list): Not all list members are of the same type.")) else
             ([(t, e)] @ (check_list_helper tail t))) in
       match el with 
-      (* TODO: Allow for empty lists to have any type? (they're List(Int)) *)
       [] -> (List(Int), SLitList([]))
       | h::t -> 
         (
@@ -237,7 +233,6 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (
         match op with
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
-      (* | ListIndex(name, i) -> if i < 0 then raise(Failure("Semantics Error (check_expr): Cannot negative index list")) else let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name)))  *)
       | ListIndex(name, e) -> (let (t, se) = check_expr e in let (et, cname) = find_var name in if t = Int then (match et with List(list_t) -> (list_t, SListIndex(name, (t, se) , cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) else raise(Failure ("Semantics Error (check_expr): List index must be integer")))
       | AssignIndex(list_name, ind, e) -> 
         let (t, se) = check_expr e in 
@@ -249,7 +244,6 @@ let check (program_block) =
             (list_typ ,SAssignIndex(list_name ,(ind_t, ind_se) , (t, se) , cname))
           else raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type"))
           | _ -> raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type")))
-        (* if t = Any || t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ "(type " ^ string_of_typ et ^ ", expression " ^ string_of_typ t ^ ") that wasn't declared in block " ^ block_name)) *)
       | NewList(t, ind) ->
         let (et, se) = check_expr ind in if et = Int then (List(t), SNewList(t, (et, se))) else  raise (Failure ("Semantics Error (check_expr): NewList size of non-int"))
 
@@ -285,8 +279,8 @@ let check (program_block) =
         SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
-      | Decl(typ, id) (*TODO handle list declaration*) -> let cname = add_var id typ true in SDecl(typ, id, cname)
-      | DeclAssign(et, id, e) (*TODO handle list declaration*) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
+      | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
+      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
     in
 
