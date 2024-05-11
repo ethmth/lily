@@ -219,6 +219,7 @@ list_elements_opt:
 
 assignment:
   | ID ASSIGN expression {Assign($1, $3)}
+  | ID LBRACKET expression RBRACKET ASSIGN expression {AssignIndex($1, $3, $6)}
   | ID INCREMENT {Assign($1, Binop(Id($1), Plus, LitInt(1)))}
   | ID DECREMENT {Assign($1, Binop(Id($1), Minus, LitInt(1)))}
 

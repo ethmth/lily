@@ -18,6 +18,7 @@ and expr_detail =
   | SUnaryOp of unary_op * sexpr
   | SListIndex of string * sexpr * string
   | SAssign of string * sexpr * string
+  | SAssignIndex of string * sexpr * sexpr * string
 
 and sblock = SBlock of sstmt list
 
@@ -53,6 +54,7 @@ and string_of_sexpr (t, e) =
   | SUnaryOp(op, e) -> string_of_unary_op op ^ string_of_sexpr e
   | SListIndex(id, se, cname) -> "<" ^ id ^ " as " ^ cname ^ ">" ^ "[" ^ string_of_sexpr se ^ "]"
   | SAssign(v, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">" ^ " = " ^ string_of_sexpr e ^ "\n"
+  | SAssignIndex(v, ind, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">"  ^ "[" ^ string_of_sexpr ind ^ "]" ^ " = " ^ string_of_sexpr e ^ "\n"
   ) ^ " is " ^ string_of_typ t ^ "}"
   
 let rec string_of_sstmt_list (stmts: sstmt list) (curr_indent) = 

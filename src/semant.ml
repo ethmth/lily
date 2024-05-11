@@ -218,6 +218,17 @@ let check (program_block) =
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
       (* | ListIndex(name, i) -> if i < 0 then raise(Failure("Semantics Error (check_expr): Cannot negative index list")) else let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name)))  *)
       | ListIndex(name, e) -> (let (t, se) = check_expr e in let (et, cname) = find_var name in if t = Int then (match et with List(list_t) -> (list_t, SListIndex(name, (t, se) , cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) else raise(Failure ("Semantics Error (check_expr): List index must be integer")))
+      | AssignIndex(list_name, ind, e) -> 
+        let (t, se) = check_expr e in 
+        let (ind_t, ind_se) = check_expr ind in 
+        if ind_t != Int then raise (Failure ("Semantics Error (check_expr): ListIndex indexing on non-int")) else
+        let (et, cname) = find_var list_name in 
+        (match et with List(list_typ) -> 
+          if list_typ = t then 
+            (list_typ ,SAssignIndex(list_name ,(ind_t, ind_se) , (t, se) , cname))
+          else raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type"))
+          | _ -> raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type")))
+        (* if t = Any || t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ "(type " ^ string_of_typ et ^ ", expression " ^ string_of_typ t ^ ") that wasn't declared in block " ^ block_name)) *)
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function

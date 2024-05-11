@@ -36,6 +36,7 @@ type expr =
   (* TODO: Implement ListNew function *)
   (* | ListNew of typ * int *)
   | Assign of string * expr
+  | AssignIndex of string * expr * expr
 
 and block = Block of stmt list
 
@@ -123,6 +124,7 @@ and string_of_expr = function
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
   | ListIndex(id, e) -> id ^ "[" ^ string_of_expr e ^ "]"
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
+  | AssignIndex(v, ind, e) -> v ^ "[" ^ string_of_expr ind ^ "]" ^ " = " ^ string_of_expr e ^ "\n"
   (* | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func *)
   (* | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate *)
   (* | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init *)
