@@ -15,13 +15,15 @@ let check (program_block) =
   (* TODO: Implement len() - get "user" size *)
   (Int,"len", Some([List(Any)]), 1);
   (* TODO: Implement truelen() - get true size *)
-  (Int,"len", Some([List(Any)]), 1);
+  (Int,"truelen", Some([List(Any)]), 1);
   (* TODO: Implement setsize() - set "user" size *)
   (List(Any),"setsize", Some([List(Any); Int]), 2)
   ] in
   let reserved_func_names: string list = [
     "printi";
-    "len"
+    "len";
+    "truelen";
+    "setsize"
   ] in
 
   (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
@@ -105,9 +107,28 @@ let check (program_block) =
         in
         res_check reserved_funcs name
       in
+      let rec check_arg_list_equal (rargs: typ list) (args: typ list) =
+        if List.length rargs != List.length args then false else
+        if List.length rargs = 0 then true else
+        let any_types_equal (reserved_t: typ) (check_t: typ): bool =
+          (* if reserved_t = Any then true else
+            if result = check_t then true
+            else (match reserved_t w) *)
+            match reserved_t with 
+            | Any -> true
+            | List(Any) -> (match check_t with List(_) -> true | _ -> false)
+            | _ -> if check_t = reserved_t then true else false
+        in
+        let rarg_head = List.hd rargs in
+        let rarg_tail = List.tl rargs in
+        let args_head = List.hd args in
+        let args_tail = List.tl args in
+        if not (any_types_equal rarg_head args_head) then false else check_arg_list_equal rarg_tail args_tail
+      in
       match reserved_has_name name with None ->  None
       | Some(t, n, xargs, nargs) -> match xargs with None -> (if List.length args >= nargs then Some(t, n) else None)
-      | Some(rargs) -> if rargs = args then Some(t, n) else None
+      | Some(rargs) -> 
+        if check_arg_list_equal rargs args then Some(t, n) else None
     in
     let is_func_local (name: string) (args: typ list):bool =
       FuncMap.mem {id=name; args=args} !l_fmap
