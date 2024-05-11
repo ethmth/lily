@@ -28,7 +28,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
      we will generate code *)
   let the_module = L.create_module context "LILY" in
 
-  let list_start_offset = 24 in
+  let list_start_offset = 32 in
 
   (* Get types from the context *)
   let i64_t      = L.i64_type    context
@@ -202,14 +202,19 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       let global_assign = (L.build_store ptr global_malloc_var builder) in
       ignore(global_assign);
       ignore(ptr);
-      let size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in
+      let user_size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in
+      ignore(user_size_store);
+      (* let size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in *)
+      (* ignore(size_store); *)
+      let size_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 8)]) "listlittyp" builder in
+      let size_store = L.build_store (L.const_int (ltype_of_typ A.Int) len) size_offset builder in
       ignore(size_store);
       (* TODO: Add a "user" size field that can be set to anything lower than the array's true size *)
       (* This way, user can initialize a list to say 512 bytes (or twice current size), but only use say 496 of those bytes *)
-      let typ_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 8)]) "listlittyp" builder in
+      let typ_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 16)]) "listlittyp" builder in
       let typ_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) typ_offset builder in
       ignore(typ_store);
-      let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 16)]) "listlitbyte" builder in
+      let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 24)]) "listlitbyte" builder in
       let byte_store = L.build_store (L.const_int (ltype_of_typ A.Int) (size_of_typ list_typ)) byte_offset builder in
       ignore(byte_store);
       ptr
@@ -303,8 +308,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) list_start_offset) "listindexadd" builder in
         ignore(add_offset);
         let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
-        (* let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in *)
-        (* let ptr_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t curr_offset)]) "listlitgep" builder in *)
         let val_store = (L.build_store built_expr ptr_gep builder) in
         ignore(val_store);
         built_expr
