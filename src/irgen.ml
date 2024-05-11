@@ -127,21 +127,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   let malloc_count = ref 0 in
   let malloc_list: (L.llvalue StringMap.t) ref = ref StringMap.empty in
 
-  (* Create a map of global variables after creating each *)
-  (* let malloc_list : L.llvalue StringMap.t =
-    let global_var m ((t: A.typ), (_: string), (cname: string)) =
-      match t with
-      A.Float -> let init = L.const_float (ltype_of_typ t) 0.0 in StringMap.add cname (L.define_global cname init the_module) m
-      | A.List(_) -> 
-        (* let init_size = L.const_int (ltype_of_typ A.Int) 0 in  *)
-        (* ignore(StringMap.add cname (L.define_global (cname ^ "_size") init_size the_module) m); *)
-        let init = L.const_pointer_null ptr_t in
-        StringMap.add cname (L.define_global (cname) init the_module) m
-      | _ -> let init= L.const_int (ltype_of_typ t) 0 in StringMap.add cname (L.define_global cname init the_module) m
-    in
-    List.fold_left global_var StringMap.empty globals in
-  ignore(malloc_list); *)
-
   let function_decls : (L.llvalue * sstmt) StringMap.t =
     let function_decl m fdecl =
       match fdecl with 
@@ -214,7 +199,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         L.var_arg_function_type (ltype_of_typ ret_typ) [| L.pointer_type context |] in
       let printf_func : L.llvalue =
         L.declare_function "printf" printf_t the_module in 
-      (* ignore(L.build_ret (build_expr builder e) builder); *)
       let built_expr_list = build_expr_list arg_list builder in
       L.build_call func_type printf_func (Array.of_list ([fmt_str] @ built_expr_list))
         "printf" builder 
@@ -222,8 +206,12 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
     and build_list_malloc (len: int) (list_typ: A.typ): L.llvalue =
       let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (list_start_offset)))) "listlitmalloc" builder) in
-      ignore(malloc_list := (StringMap.add ("malvar!!!" ^ (string_of_int !malloc_count)) ptr !malloc_list));
+      let global_name = ("malvar!!!" ^ (string_of_int !malloc_count)) in 
       ignore(malloc_count := !malloc_count + 1);
+      let global_malloc_var = (L.define_global (global_name) (L.const_pointer_null ptr_t) the_module) in
+      ignore(malloc_list := (StringMap.add ("malvar!!!" ^ (string_of_int !malloc_count)) global_malloc_var !malloc_list));
+      let global_assign = (L.build_store ptr global_malloc_var builder) in
+      ignore(global_assign);
       ignore(ptr);
       let size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in
       ignore(size_store);
@@ -233,15 +221,12 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 16)]) "listlitbyte" builder in
       let byte_store = L.build_store (L.const_int (ltype_of_typ A.Int) (size_of_typ list_typ)) byte_offset builder in
       ignore(byte_store);
-   
       ptr
-  
 
     and build_expr (builder: L.llbuilder) ((t,e ): sexpr): L.llvalue = 
       match e with
         SAssign (_, e, cname) -> (
           match t with
-          (* List(ltyp) -> () *)
           | _ -> (
           let e' = build_expr builder e in
           ignore(L.build_store e' (lookup cname) builder); e')
@@ -252,11 +237,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
         let len = List.length l in
-        (* let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (size_of_typ A.Int)))) "listlitmalloc" builder) in
-        ignore(malloc_list := (StringMap.add ("malvar!!!" ^ (string_of_int !malloc_count)) ptr !malloc_list));
-        ignore(malloc_count := !malloc_count + 1);
-        ignore(ptr);
-        ignore(L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder); *)
         let ptr = build_list_malloc len list_typ in
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
           match el with
@@ -315,7 +295,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
         let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in
         val_load
-        (* list_size *)
     in
 
     let add_terminal builder instr =
@@ -325,8 +304,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     
     let rec build_stmt builder = function
       | SExprStmt e -> ignore(build_expr builder e); builder
-      (* | SAssign (_, e, cname) -> let e' = build_expr builder e in
-        ignore(L.build_store e' (lookup cname) builder); builder *)
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
       | SListDeclAssign (_, _, _, _) (*TODO*) -> builder
@@ -371,7 +348,18 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SFdecl(_, _, _, _, _) -> builder (* Ignore function declarations, which are already covered in 'functions'*)
     in
     let sl = match sblock with SBlock(sl) -> sl in
-    let func_builder = List.fold_left build_stmt builder sl in
+    let func_builder = List.fold_left build_stmt builder sl in 
+
+    ignore(if cname = "main" then 
+      let build_malloc_frees = 
+        let build_malloc_free (lval: L.llvalue) =
+          let free_var = L.build_load ptr_t lval "freevar" func_builder in 
+          L.build_free free_var func_builder
+        in
+        StringMap.map build_malloc_free !malloc_list
+      in
+      ignore(build_malloc_frees));
+  
     add_terminal func_builder (L.build_ret ((if rtyp = A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
 
     | _ -> raise (Failure("IR Error (build_function_body): Unexpected non-function statement."))
