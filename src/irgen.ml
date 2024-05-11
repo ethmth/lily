@@ -30,14 +30,25 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
   (* Get types from the context *)
   let i64_t      = L.i64_type    context
-  and _          = L.i32_type    context
+  and _       = L.i32_type    context
   and i8_t       = L.i8_type     context
-  and i1_t       = L.i1_type     context
+  and _           = L.i1_type     context
   and float_t    = L.double_type context
   and ptr_t      = L.i64_type context
   in
 
-  let add_of_typ (t:A.typ): int =
+  let size_of_typ(t:A.typ): int =
+    match t with
+      A.Int   -> 8
+    | A.Bool  -> 1
+    | A.Char  -> 1
+    | A.Float -> 8
+    | A.Void  -> raise (Failure("IR Error (size_of_typ): attempting to allocate memory for Void type"))
+    | A.List(_) -> raise (Failure("IR Error (size_of_typ): attempting to allocate memory for List type"))
+    | A.Any -> raise (Failure("IR Error (size_of_typ): attempting to allocate memory for Any type"))
+  in
+
+  (* let add_of_typ (t:A.typ): int =
     match t with
       A.Int   -> 1
     | A.Bool  -> 64
@@ -46,15 +57,15 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     | A.Void  -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for Void type"))
     | A.List(_) -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for List type"))
     | A.Any -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for Any type"))
-  in
+  in *)
 
   (* Return the LLVM type for a LILY type *)
   let ltype_of_typ = function
       A.Int   -> i64_t
-    | A.Bool  -> i1_t
+    | A.Bool  -> i8_t
     | A.Char  -> i8_t
     | A.Float -> float_t
-    | A.Void  -> i1_t
+    | A.Void  -> i8_t
     | A.List(_) -> ptr_t
     | A.Any -> raise (Failure("IR Error (ltype_of_typ): attempting to allocate memory for Any type"))
   in
@@ -175,10 +186,26 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
         let len = List.length l in
-        let ptr = (L.build_array_malloc (ltype_of_typ list_typ) (L.const_int (ltype_of_typ A.Int) (len + (add_of_typ list_typ))) "listlitmalloc" builder) in
-        ignore(L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder);
+        let ptr = (L.build_array_malloc (i8_t) (L.const_int (i64_t) ((len * (size_of_typ list_typ)) + 8)) "listlitmalloc" builder) in
+        ignore(ptr);
+        (* let ptr_alloc = (L.build_alloca (i64_t) "listlitmallocint" builder)  in *)
+        (* ignore(ptr_alloc); *)
+        (* let ptr_int = (L.build_ptrtoint ptr (i64_t) "listlitmallocint" builder) in *)
+        (* ignore(ptr); *)
+        (* ignore(ptr_alloc); *)
+        (* ignore(ptr_int); *)
+        ignore(L.build_store (L.const_int (i64_t) len) ptr builder);
         (* L.const_int (ltype_of_typ A.Int) len *)
-        ptr
+        let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
+          match el with
+          [] -> []
+          | h::t ->  
+            let built_expr = build_expr builder h in
+            let ptr_offset = L.build_add (L.const_int i64_t curr_offset) (ptr) "ptradd" builder in
+            ignore(L.build_store built_expr ptr_offset builder); build_list_stores t (curr_offset + (size_of_typ list_typ))
+        in
+        ignore(build_list_stores l 8);
+        ptr;
         | _ -> raise (Failure ("IR Error (build_expr): SLitList is not list.")))
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
       | SBinop (e1, o, e2) ->
