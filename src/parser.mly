@@ -44,7 +44,7 @@ open Ast
 %token BOOL INT FLOAT CHAR STRING VOID
 
 /* List */
-%token LIST
+%token LIST NEW
 %token EMPTY_LIST
 %token COLON_COLON
 
@@ -125,6 +125,7 @@ declaration:
   LET ID COLON typ ASSIGN expression { DeclAssign($4, $2, $6)}
   | LET ID COLON typ { Decl($4, $2) }
   /* list declarations */
+  | LET ID COLON_COLON typ ASSIGN LBRACKET RBRACKET { DeclAssign(List($4), $2, NewList($4, LitInt(0)))}
   | LET ID COLON_COLON typ ASSIGN expression { DeclAssign(List($4), $2, $6) }
   | LET ID COLON_COLON typ { Decl(List($4), $2) }
 
@@ -204,11 +205,11 @@ typ:
 /* Lists */
 
 list_literal:
-  LBRACKET list_elements_opt RBRACKET { ($2) }
+  LBRACKET list_elements RBRACKET { ($2) }
 
-list_elements_opt:
-   /* nothing */ { [] }
-   | list_elements { $1 }
+// list_elements_opt:
+//    /* nothing */ { [] }
+//    | list_elements { $1 }
 
  list_elements:
    expression { [$1] }
@@ -234,6 +235,7 @@ expression:
   // | STRING_LIT { LitString($1) }
   | ID          { Id($1) }
   | list_literal { LitList($1) }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
+  | NEW typ LBRACKET expression RBRACKET  { NewList($2, $4) }
   | expression PLUS expression { Binop($1, Plus,   $3) }
   | expression MINUS expression { Binop($1, Minus,   $3) }
   | expression TIMES expression { Binop($1, Times,   $3) }

@@ -193,8 +193,26 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         "printf" builder 
 
 
-    and build_list_malloc (len: int) (list_typ: A.typ): L.llvalue =
-      let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (list_start_offset)))) "listlitmalloc" builder) in
+    and build_list_malloc (len: L.llvalue) (list_typ: A.typ): L.llvalue =
+      (* let len_ptr = (L.build_load (ltype_of_typ A.Int) len "listmalloclenptr" builder) in *)
+      (* ignore(len_ptr); *)
+      (* let size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
+      let list_size = (L.build_load (ltype_of_typ list_typ) size_gep "listindexsizeload" builder) in
+      ignore(list_size);
+      let built_ind_expr = build_expr builder ind in
+      ignore(built_ind_expr);
+      let built_expr = build_expr builder exp in 
+      ignore(built_expr); *)
+      let len_calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ list_typ) ) (len) "listindexmul" builder in
+      ignore(len_calc_offset);
+      let len_add_offset = L.build_add (len_calc_offset) (L.const_int (ltype_of_typ A.Int) list_start_offset) "listindexadd" builder in
+      ignore(len_add_offset);
+      (* let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in *)
+      (* let val_store = (L.build_store built_expr ptr_gep builder) in *)
+      (* ignore(val_store); *)
+      (* built_expr *)
+
+      let ptr = (L.build_array_malloc (byte_t) (len_add_offset) "listlitmalloc" builder) in
       let global_name = ("malvar!!!" ^ (string_of_int !malloc_count)) in 
       ignore(malloc_count := !malloc_count + 1);
       let global_malloc_var = (L.define_global (global_name) (L.const_pointer_null ptr_t) the_module) in
@@ -202,12 +220,12 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       let global_assign = (L.build_store ptr global_malloc_var builder) in
       ignore(global_assign);
       ignore(ptr);
-      let user_size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in
+      let user_size_store = (L.build_store (len) ptr builder) in
       ignore(user_size_store);
       (* let size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in *)
       (* ignore(size_store); *)
       let size_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 8)]) "listlittyp" builder in
-      let size_store = L.build_store (L.const_int (ltype_of_typ A.Int) len) size_offset builder in
+      let size_store = L.build_store (len) size_offset builder in
       ignore(size_store);
       (* TODO: Add a "user" size field that can be set to anything lower than the array's true size *)
       (* This way, user can initialize a list to say 512 bytes (or twice current size), but only use say 496 of those bytes *)
@@ -233,7 +251,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
         let len = List.length l in
-        let ptr = build_list_malloc len list_typ in
+        let ptr = build_list_malloc (L.const_int (ltype_of_typ A.Int) len) list_typ in
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
           match el with
           [] -> []
@@ -338,6 +356,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let val_store = (L.build_store built_expr ptr_gep builder) in
         ignore(val_store);
         built_expr
+      | SNewList (list_typ, list_size) (* TODO: Zero-initialize everything *)-> 
+        let ptr = build_list_malloc (build_expr builder list_size) list_typ in
+        ptr
     in
 
     let add_terminal builder instr =

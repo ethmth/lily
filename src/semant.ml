@@ -12,12 +12,9 @@ let check (program_block) =
   let reserved_funcs: (typ * bool * string * ((typ list) option) * int) list =[
     (* rtyp, rtype is same as first arg (bool), name, args (None for any), min_args*)
   (Any, true, "printi", None, 1);
-  (* TODO: Implement len() - get "user" size *)
   (Int, false, "len", Some([List(Any)]), 1);
-  (* TODO: Implement truelen() - get true size *)
   (Int,false, "truelen", Some([List(Any)]), 1);
-  (* TODO: Implement setsize() - set "user" size *)
-  (Any,true, "setsizei", Some([List(Any); Int]), 2)
+  (List(Any),true, "setsizei", Some([List(Any); Int]), 2)
   ] in
   let reserved_func_names: string list = [
     "printi";
@@ -253,6 +250,8 @@ let check (program_block) =
           else raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type"))
           | _ -> raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type")))
         (* if t = Any || t = et then (t, SAssign(var, (t, se), cname)) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ "(type " ^ string_of_typ et ^ ", expression " ^ string_of_typ t ^ ") that wasn't declared in block " ^ block_name)) *)
+      | NewList(t, ind) ->
+        let (et, se) = check_expr ind in if et = Int then (List(t), SNewList(t, (et, se))) else  raise (Failure ("Semantics Error (check_expr): NewList size of non-int"))
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function
