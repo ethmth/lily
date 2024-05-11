@@ -32,10 +32,10 @@ type expr =
   | Binop of expr * op * expr
   | Call of string * expr list
   | UnaryOp of unary_op * expr
-  | ListIndex of string * int
-  (* TODO: Implement ListNew function *)
-  (* | ListNew of typ * int *)
+  | ListIndex of string * expr
   | Assign of string * expr
+  | AssignIndex of string * expr * expr
+  | NewList of typ * expr
 
 and block = Block of stmt list
 
@@ -121,11 +121,13 @@ and string_of_expr = function
   | Binop(e1, o, e2) -> string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
-  | ListIndex(id, ind) -> id ^ "[" ^ string_of_int ind ^ "]"
+  | ListIndex(id, e) -> id ^ "[" ^ string_of_expr e ^ "]"
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
+  | AssignIndex(v, ind, e) -> v ^ "[" ^ string_of_expr ind ^ "]" ^ " = " ^ string_of_expr e ^ "\n"
   (* | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func *)
   (* | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate *)
   (* | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init *)
+  | NewList( t, size) -> "new " ^ (string_of_typ t) ^ "[" ^ (string_of_expr size) ^ "]"
   
 let rec string_of_stmt_list (stmts: stmt list) (curr_indent) = 
   String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) stmts)

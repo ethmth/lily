@@ -7,6 +7,15 @@ def print_bool(a : bool) -> bool:
         print('f', 'a', 'l', 's', 'e')
     return a
 
+def setsize(l::bool, new_size:int) -> bool list:
+    let true_size: int = truelen(l)
+    if (new_size > true_size):
+        print('e', 'r', 'r', 'r')
+        return l
+
+    l.setsizei(new_size)
+    return l
+
 # This file is needed to compile and run programs.
 # Please only add functions here if you're 100% sure they work 
 # with our current implementation.

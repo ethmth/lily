@@ -1,0 +1,9 @@
+let d:: bool = [true,false]
+
+print(d[1 + 0])
+
+print(d[0])
+d [ 0 ] = false
+print(d[0])
+
+#print(d)

@@ -1,0 +1,8 @@
+let d:: bool = [true,false]
+
+print(len(d))
+print(truelen(d))
+
+d.setsize(1)
+print(len(d))
+print(truelen(d))

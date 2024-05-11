@@ -1,0 +1,9 @@
+
+
+let a::int = new int[5]
+
+print(len(a))
+
+#print(a[1])
+a[1] = 3
+print(a[1])

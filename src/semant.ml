@@ -9,19 +9,18 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
-  let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
-    (* rtyp, name, args (None for any), min_args*)
-  (Any,"printi", None, 1);
-  (* TODO: Implement len() - get "user" size *)
-  (Int,"len", Some([List(Any)]), 1);
-  (* TODO: Implement truelen() - get true size *)
-  (Int,"len", Some([List(Any)]), 1);
-  (* TODO: Implement setsize() - set "user" size *)
-  (List(Any),"setsize", Some([List(Any); Int]), 2)
+  let reserved_funcs: (typ * bool * string * ((typ list) option) * int) list =[
+    (* rtyp, rtype is same as first arg (bool), name, args (None for any), min_args*)
+  (Any, true, "printi", None, 1);
+  (Int, false, "len", Some([List(Any)]), 1);
+  (Int,false, "truelen", Some([List(Any)]), 1);
+  (List(Any),true, "setsizei", Some([List(Any); Int]), 2)
   ] in
   let reserved_func_names: string list = [
     "printi";
-    "len"
+    "len";
+    "truelen";
+    "setsizei"
   ] in
 
   (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
@@ -96,18 +95,37 @@ let check (program_block) =
     in
 
     let is_func_reserved (name: string) (args: typ list): bind option =
-      let reserved_has_name (name:string): (typ * string * ((typ list) option) * int) option = 
-        let rec res_check (l) (name: string): (typ * string * ((typ list) option) * int) option =
+      let reserved_has_name (name:string): (typ * bool * string * ((typ list) option) * int) option = 
+        let rec res_check (l) (name: string): (typ *bool  * string * ((typ list) option) * int) option =
           match l with
           [] -> None
           | h::t -> 
-            match h with (_, hname, _, _) -> if hname = name then Some(h) else res_check t name
+            match h with (_, _, hname, _, _) -> if hname = name then Some(h) else res_check t name
         in
         res_check reserved_funcs name
       in
+      let rec check_arg_list_equal (rargs: typ list) (args: typ list) =
+        if List.length rargs != List.length args then false else
+        if List.length rargs = 0 then true else
+        let any_types_equal (reserved_t: typ) (check_t: typ): bool =
+            match reserved_t with 
+            | Any -> true
+            | List(Any) -> (match check_t with List(_) -> true | _ -> false)
+            | _ -> if check_t = reserved_t then true else false
+        in
+        let rarg_head = List.hd rargs in
+        let rarg_tail = List.tl rargs in
+        let args_head = List.hd args in
+        let args_tail = List.tl args in
+        if not (any_types_equal rarg_head args_head) then false else check_arg_list_equal rarg_tail args_tail
+      in
       match reserved_has_name name with None ->  None
-      | Some(t, n, xargs, nargs) -> match xargs with None -> (if List.length args >= nargs then Some(t, n) else None)
-      | Some(rargs) -> if rargs = args then Some(t, n) else None
+      | Some(t, is_first_argt, n, xargs, nargs) -> match xargs with None -> (if List.length args >= nargs then Some(t, n) else None)
+      | Some(rargs) -> 
+        if check_arg_list_equal rargs args then 
+          if is_first_argt then Some(List.hd args, n)
+          else Some(t, n) 
+        else None
     in
     let is_func_local (name: string) (args: typ list):bool =
       FuncMap.mem {id=name; args=args} !l_fmap
@@ -155,7 +173,6 @@ let check (program_block) =
             if (etyp != Any && t != etyp) then (raise (Failure "Semantics Error (check_list): Not all list members are of the same type.")) else
             ([(t, e)] @ (check_list_helper tail t))) in
       match el with 
-      (* TODO: Allow for empty lists to have any type? (they're List(Int)) *)
       [] -> (List(Int), SLitList([]))
       | h::t -> 
         (
@@ -216,7 +233,19 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (
         match op with
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
-      | ListIndex(name, i) -> if i < 0 then raise(Failure("Semantics Error (check_expr): Cannot negative index list")) else let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) 
+      | ListIndex(name, e) -> (let (t, se) = check_expr e in let (et, cname) = find_var name in if t = Int then (match et with List(list_t) -> (list_t, SListIndex(name, (t, se) , cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) else raise(Failure ("Semantics Error (check_expr): List index must be integer")))
+      | AssignIndex(list_name, ind, e) -> 
+        let (t, se) = check_expr e in 
+        let (ind_t, ind_se) = check_expr ind in 
+        if ind_t != Int then raise (Failure ("Semantics Error (check_expr): ListIndex indexing on non-int")) else
+        let (et, cname) = find_var list_name in 
+        (match et with List(list_typ) -> 
+          if list_typ = t then 
+            (list_typ ,SAssignIndex(list_name ,(ind_t, ind_se) , (t, se) , cname))
+          else raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type"))
+          | _ -> raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type")))
+      | NewList(t, ind) ->
+        let (et, se) = check_expr ind in if et = Int then (List(t), SNewList(t, (et, se))) else  raise (Failure ("Semantics Error (check_expr): NewList size of non-int"))
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function
@@ -249,9 +278,9 @@ let check (program_block) =
         let sl_new = sl @ [(SExprStmt(check_expr a))] in
         SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
-      | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)
-      | Decl(typ, id) (*TODO handle list declaration*) -> let cname = add_var id typ true in SDecl(typ, id, cname)
-      | DeclAssign(et, id, e) (*TODO handle list declaration*) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
+      | Return(e) -> let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
+      | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
+      | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
     in
 

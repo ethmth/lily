@@ -1,0 +1,9 @@
+let d:: int = [5,3]
+
+#print(d[1 + 0])
+
+print(d[0])
+
+d [ 0 ] = 7
+
+print(d[0])

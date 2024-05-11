@@ -16,8 +16,10 @@ and expr_detail =
   | SBinop of sexpr * op * sexpr
   | SCall of string * sexpr list * string
   | SUnaryOp of unary_op * sexpr
-  | SListIndex of string * int * string
+  | SListIndex of string * sexpr * string
   | SAssign of string * sexpr * string
+  | SAssignIndex of string * sexpr * sexpr * string
+  | SNewList of typ * sexpr
 
 and sblock = SBlock of sstmt list
 
@@ -51,8 +53,10 @@ and string_of_sexpr (t, e) =
   | SBinop(e1, o, e2) -> string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SCall(f, el, cname) -> "<" ^ f ^ " as " ^ cname ^ ">" ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
   | SUnaryOp(op, e) -> string_of_unary_op op ^ string_of_sexpr e
-  | SListIndex(id, ind, cname) -> "<" ^ id ^ " as " ^ cname ^ ">" ^ "[" ^ string_of_int ind ^ "]"
+  | SListIndex(id, se, cname) -> "<" ^ id ^ " as " ^ cname ^ ">" ^ "[" ^ string_of_sexpr se ^ "]"
   | SAssign(v, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">" ^ " = " ^ string_of_sexpr e ^ "\n"
+  | SAssignIndex(v, ind, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">"  ^ "[" ^ string_of_sexpr ind ^ "]" ^ " = " ^ string_of_sexpr e ^ "\n"
+  | SNewList(t, ind) -> "new" ^ (string_of_typ t) ^ "[" ^ string_of_sexpr ind ^ "]" ^"\n"
   ) ^ " is " ^ string_of_typ t ^ "}"
   
 let rec string_of_sstmt_list (stmts: sstmt list) (curr_indent) = 
