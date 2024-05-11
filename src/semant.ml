@@ -11,13 +11,22 @@ module FuncMap = Map.Make(FuncId)
 let check (program_block) =
   let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
     (* rtyp, name, args (None for any), min_args*)
-  (Any,"printi", None, 1)
+  (Any,"printi", None, 1);
+  (* TODO: Implement len() - get "user" size *)
+  (Int,"len", Some([List(Any)]), 1);
+  (* TODO: Implement truelen() - get true size *)
+  (Int,"len", Some([List(Any)]), 1);
+  (* TODO: Implement setsize() - set "user" size *)
+  (List(Any),"setsize", Some([List(Any); Int]), 2)
   ] in
   let reserved_func_names: string list = [
-    "printi"
+    "printi";
+    "len"
   ] in
 
-  (* let print_count = ref 0 in *)
+  (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
+  (* TODO: Add support for "for _ in list" syntax for loops *)
+
   let functions = ref [] in 
   let globals = ref [] in
   let vnames: int StringMap.t ref = ref StringMap.empty in
@@ -227,7 +236,6 @@ let check (program_block) =
       sfdecl
     and check_stmt (s: stmt): sstmt =
       match s with 
-      (* Assign(var, e) -> let (t, se) = check_expr e in let (et, cname) = find_var var in if t = et then SAssign(var, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): Assigning variable " ^ var ^ " that wasn't declared in block " ^ block_name)) *)
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): If statement expression not boolean in Block " ^ block_name)));
         let (_, sb1) = check_block b1 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
         let (_, sb2) = check_block b2 (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 

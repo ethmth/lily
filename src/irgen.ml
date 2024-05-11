@@ -204,6 +204,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       ignore(ptr);
       let size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in
       ignore(size_store);
+      (* TODO: Add a "user" size field that can be set to anything lower than the array's true size *)
+      (* This way, user can initialize a list to say 512 bytes (or twice current size), but only use say 496 of those bytes *)
       let typ_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 8)]) "listlittyp" builder in
       let typ_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) typ_offset builder in
       ignore(typ_store);
@@ -271,7 +273,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
         let func_type = L.function_type (ltype_of_typ t) (Array.of_list arg_types) in 
         L.build_call func_type fdef (Array.of_list llargs) result builder
-      | SListIndex(_, ind, cname) (*TODO*) -> 
+      | SListIndex(_, ind, cname) (*TODO: Check if index requested is outside of "size" *) -> 
         let ptr = (L.build_load (ptr_t) (lookup cname) "listindexptr" builder) in
         ignore(ptr);
         let size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
