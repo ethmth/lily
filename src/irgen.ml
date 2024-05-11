@@ -288,6 +288,26 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
         let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in
         val_load
+      | SAssignIndex(_, ind, exp, cname) (*TODO: Check if index requested is outside of "size" *) -> 
+        let ptr = (L.build_load (ptr_t) (lookup cname) "listindexptr" builder) in
+        ignore(ptr);
+        let size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
+        let list_size = (L.build_load (ltype_of_typ t) size_gep "listindexsizeload" builder) in
+        ignore(list_size);
+        let built_ind_expr = build_expr builder ind in
+        ignore(built_ind_expr);
+        let built_expr = build_expr builder exp in 
+        ignore(built_expr);
+        let calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ t) ) (built_ind_expr) "listindexmul" builder in
+        ignore(calc_offset);
+        let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) list_start_offset) "listindexadd" builder in
+        ignore(add_offset);
+        let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
+        (* let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in *)
+        (* let ptr_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t curr_offset)]) "listlitgep" builder in *)
+        let val_store = (L.build_store built_expr ptr_gep builder) in
+        ignore(val_store);
+        built_expr
     in
 
     let add_terminal builder instr =
