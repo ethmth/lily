@@ -34,7 +34,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   let i64_t      = L.i64_type    context
   and _       = L.i32_type    context
   and i8_t       = L.i8_type     context
-  and _           = L.i1_type     context
+  and i1_t           = L.i1_type     context
   and float_t    = L.double_type context
   and ptr_t      = L.pointer_type context
   and byte_t       = L.i8_type     context
@@ -65,7 +65,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   (* Return the LLVM type for a LILY type *)
   let ltype_of_typ = function
       A.Int   -> i64_t
-    | A.Bool  -> i8_t
+    | A.Bool  -> i1_t
     | A.Char  -> i8_t
     | A.Float -> float_t
     | A.Void  -> i8_t
@@ -391,6 +391,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         L.builder_at_end context end_bb
       | SListDecl (_, _, _) (*TODO: Probably do nothing here, but check *)-> builder
       | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)
+      | SForIn (_, _, _, _) -> builder (* For in loops are converted into While loops in the semantics stage *)
       | SDecl(_, _, _) -> builder (* Ignore declarations, which are already covered in 'globals' *)
       | SFdecl(_, _, _, _, _) -> builder (* Ignore function declarations, which are already covered in 'functions'*)
     in

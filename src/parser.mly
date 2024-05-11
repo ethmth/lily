@@ -153,6 +153,7 @@ binding:
 
 for_loop:
   FOR LPAREN expression COMMA assignment RPAREN COLON NEWLINE INDENT block DEDENT { For($3, $5, Block($10)) }
+  | FOR ID IN expression COLON NEWLINE INDENT block DEDENT { ForIn($2, $4, Block($8)) }
 
 while_loop:
   WHILE LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { While($3, Block($8)) }

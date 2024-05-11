@@ -45,6 +45,7 @@ and stmt =
   (* | If of expr * block * (expr * block) list * block *)
   | While of expr * block
   | For of expr * expr * block
+  | ForIn of string * expr * block
   | ExprStmt of expr
   | Return of expr
   | Decl of typ * string
@@ -142,6 +143,7 @@ and string_of_stmt (stmt) (curr_indent) =
   (* | Else(s) -> "else:\n" ^ string_of_stmt_list s (curr_indent + 1) *)
   | While(e, b) -> "while (" ^ string_of_expr e ^ "):\n" ^ string_of_block b (curr_indent + 1)
   | For(e,a,b) -> "for (" ^ string_of_expr e ^ ", " ^ string_of_expr a ^ "):\n" ^ string_of_block b (curr_indent + 1)
+  | ForIn(id,e,b) -> "for " ^ id ^ " in " ^ string_of_expr e ^ ":\n" ^ string_of_block b (curr_indent + 1)
   | Decl(t, s) -> "let " ^ s ^ " : " ^ string_of_typ t ^ "\n"
   | DeclAssign(t, s, e) -> "let " ^ s ^ " : " ^ string_of_typ t ^ " = " ^ string_of_expr e ^ "\n"
   (* | Try(try_block, exn_clauses, finally_block) ->

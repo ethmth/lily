@@ -28,6 +28,7 @@ and sstmt =
   (* | SIf of sexpr * sblock * (sexpr * sblock) list * sblock *)
   | SWhile of sexpr * sblock
   | SFor of sexpr * sexpr * sblock
+  | SForIn of string * sexpr * sblock * string
   | SExprStmt of sexpr
   | SReturn of sexpr
   | SDecl of typ * string * string
@@ -70,6 +71,7 @@ and string_of_sstmt (sstmt) (curr_indent) =
   | SIf(e, b1, b2) -> "if (" ^ string_of_sexpr e ^ "):\n" ^ string_of_sblock b1 (curr_indent + 1) ^ (match b2 with SBlock(sl) -> if sl == [] then "" else string_of_indent curr_indent ^ "else:\n" ^ string_of_sblock b2 (curr_indent + 1))
   | SWhile(e, b) -> "while (" ^ string_of_sexpr e ^ "):\n" ^ string_of_sblock b (curr_indent + 1)
   | SFor(e,a,b) -> "for (" ^ string_of_sexpr e ^ ", " ^ string_of_sexpr a ^ "):\n" ^ string_of_sblock b (curr_indent + 1)
+  | SForIn(id,e,b, cname) -> "for " ^ "<" ^ id ^ " as " ^ cname ^ ">" ^ " in " ^ string_of_sexpr e ^ ":\n" ^ (string_of_sblock b (curr_indent + 1))
   | SDecl(t, s, cname) -> "let " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t ^ "\n"
   | SDeclAssign(t, s, e, cname) -> "let " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t ^ " = " ^ string_of_sexpr e ^ "\n"
   | SListDecl(t, s, cname) -> "let " ^ "<" ^ s ^ " as " ^ cname ^ ">" ^ " : " ^ string_of_typ t ^ "\n"

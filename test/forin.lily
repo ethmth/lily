@@ -1,0 +1,6 @@
+
+
+let a::bool = [true, false, true]
+
+for n in a:
+    print(n)
