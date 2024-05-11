@@ -207,7 +207,7 @@ let check (program_block) =
       | UnaryOp(op, e) -> let (t, se) = check_expr e in (
         match op with
         Negate -> if t = Bool then (t, SUnaryOp(op, (t, se))) else raise (Failure ("Semantics Error (check_expr): Non-Boolean Unary Operator Call in Block " ^ block_name)))
-      | ListIndex(name, i) -> let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) 
+      | ListIndex(name, i) -> if i < 0 then raise(Failure("Semantics Error (check_expr): Cannot negative index list")) else let (et, cname) = find_var name in (match et with List(list_t) -> (list_t, SListIndex(name, i, cname)) | _ -> raise( Failure ("Semantics Error (check_expr): Trying to index a non-List in Block " ^ block_name))) 
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function

@@ -28,6 +28,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
      we will generate code *)
   let the_module = L.create_module context "LILY" in
 
+  let list_start_offset = 24 in
+
   (* Get types from the context *)
   let i64_t      = L.i64_type    context
   and _       = L.i32_type    context
@@ -36,6 +38,17 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   and float_t    = L.double_type context
   and ptr_t      = L.pointer_type context
   and byte_t       = L.i8_type     context
+  in
+
+  let typ_to_id(t: A.typ): int =
+    match t with
+      A.Int   -> 1
+    | A.Bool  -> 2
+    | A.Char  -> 3
+    | A.Float -> 4
+    | A.Void  -> 5
+    | A.List(_) -> 6
+    | A.Any -> raise (Failure("IR Error (typ_to_id): attempting to allocate memory for Any type"))
   in
 
   let size_of_typ(t:A.typ): int =
@@ -80,15 +93,13 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     List.map type_of_sexpr l
   in
 
-  let error_handler =
+  (* let error_handler =
     let builder = L.builder context in
     let fatal_error_handler( f: string):unit =
       let printf_t : L.lltype =
         L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
       let printf_func : L.llvalue =
         L.declare_function "printf" printf_t the_module in 
-      (* ignore(L.build_ret (build_expr builder e) builder); *)
-      (* let built_expr_list = build_expr_list arg_list builder in *)
       let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list []) in
       let fmt_str = L.build_global_stringptr f "fmt" builder in
       ignore(L.build_call func_type printf_func (Array.of_list ([fmt_str]))
@@ -96,7 +107,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     in
     L.install_fatal_error_handler fatal_error_handler
   in
-  ignore(error_handler);
+  ignore(error_handler); *)
 
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
@@ -112,6 +123,24 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     in
     List.fold_left global_var StringMap.empty globals in
   ignore(global_vars);
+
+  let malloc_count = ref 0 in
+  let malloc_list: (L.llvalue StringMap.t) ref = ref StringMap.empty in
+
+  (* Create a map of global variables after creating each *)
+  (* let malloc_list : L.llvalue StringMap.t =
+    let global_var m ((t: A.typ), (_: string), (cname: string)) =
+      match t with
+      A.Float -> let init = L.const_float (ltype_of_typ t) 0.0 in StringMap.add cname (L.define_global cname init the_module) m
+      | A.List(_) -> 
+        (* let init_size = L.const_int (ltype_of_typ A.Int) 0 in  *)
+        (* ignore(StringMap.add cname (L.define_global (cname ^ "_size") init_size the_module) m); *)
+        let init = L.const_pointer_null ptr_t in
+        StringMap.add cname (L.define_global (cname) init the_module) m
+      | _ -> let init= L.const_int (ltype_of_typ t) 0 in StringMap.add cname (L.define_global cname init the_module) m
+    in
+    List.fold_left global_var StringMap.empty globals in
+  ignore(malloc_list); *)
 
   let function_decls : (L.llvalue * sstmt) StringMap.t =
     let function_decl m fdecl =
@@ -190,6 +219,24 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       L.build_call func_type printf_func (Array.of_list ([fmt_str] @ built_expr_list))
         "printf" builder 
 
+
+    and build_list_malloc (len: int) (list_typ: A.typ): L.llvalue =
+      let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (size_of_typ A.Int)))) "listlitmalloc" builder) in
+      ignore(malloc_list := (StringMap.add ("malvar!!!" ^ (string_of_int !malloc_count)) ptr !malloc_list));
+      ignore(malloc_count := !malloc_count + 1);
+      ignore(ptr);
+      let size_store = (L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder) in
+      ignore(size_store);
+      let typ_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 8)]) "listlittyp" builder in
+      let typ_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) typ_offset builder in
+      ignore(typ_store);
+      let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 16)]) "listlitbyte" builder in
+      let byte_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) byte_offset builder in
+      ignore(byte_store);
+   
+      ptr
+  
+
     and build_expr (builder: L.llbuilder) ((t,e ): sexpr): L.llvalue = 
       match e with
         SAssign (_, e, cname) -> (
@@ -205,9 +252,12 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
         let len = List.length l in
-        let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (size_of_typ A.Int)))) "listlitmalloc" builder) in
+        (* let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (size_of_typ A.Int)))) "listlitmalloc" builder) in
+        ignore(malloc_list := (StringMap.add ("malvar!!!" ^ (string_of_int !malloc_count)) ptr !malloc_list));
+        ignore(malloc_count := !malloc_count + 1);
         ignore(ptr);
-        ignore(L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder);
+        ignore(L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder); *)
+        let ptr = build_list_malloc len list_typ in
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
           match el with
           [] -> []
@@ -216,7 +266,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
             let ptr_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t curr_offset)]) "listlitgep" builder in
             ignore(L.build_store built_expr ptr_offset builder); build_list_stores t (curr_offset + (size_of_typ list_typ))
         in
-        ignore(build_list_stores l 8);
+        ignore(build_list_stores l list_start_offset);
         ptr;
         | _ -> raise (Failure ("IR Error (build_expr): SLitList is not list.")))
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
@@ -260,7 +310,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         ignore(list_size);
         let calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ t) ) (L.const_int (ltype_of_typ A.Int) ind) "listindexmul" builder in
         ignore(calc_offset);
-        let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) 8) "listindexadd" builder in
+        let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) list_start_offset) "listindexadd" builder in
         ignore(add_offset);
         let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
         let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in
