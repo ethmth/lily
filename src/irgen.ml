@@ -93,7 +93,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     List.map type_of_sexpr l
   in
 
-  (* let error_handler =
+  let error_handler =
     let builder = L.builder context in
     let fatal_error_handler( f: string):unit =
       let printf_t : L.lltype =
@@ -107,7 +107,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     in
     L.install_fatal_error_handler fatal_error_handler
   in
-  ignore(error_handler); *)
+  ignore(error_handler);
 
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
@@ -221,7 +221,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
 
     and build_list_malloc (len: int) (list_typ: A.typ): L.llvalue =
-      let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (size_of_typ A.Int)))) "listlitmalloc" builder) in
+      let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (list_start_offset)))) "listlitmalloc" builder) in
       ignore(malloc_list := (StringMap.add ("malvar!!!" ^ (string_of_int !malloc_count)) ptr !malloc_list));
       ignore(malloc_count := !malloc_count + 1);
       ignore(ptr);
@@ -231,7 +231,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       let typ_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) typ_offset builder in
       ignore(typ_store);
       let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 16)]) "listlitbyte" builder in
-      let byte_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) byte_offset builder in
+      let byte_store = L.build_store (L.const_int (ltype_of_typ A.Int) (size_of_typ list_typ)) byte_offset builder in
       ignore(byte_store);
    
       ptr
