@@ -9,21 +9,21 @@ module StringMap = Map.Make(String)
 module FuncMap = Map.Make(FuncId)
 
 let check (program_block) =
-  let reserved_funcs: (typ * string * ((typ list) option) * int) list =[
-    (* rtyp, name, args (None for any), min_args*)
-  (Any,"printi", None, 1);
+  let reserved_funcs: (typ * bool * string * ((typ list) option) * int) list =[
+    (* rtyp, rtype is same as first arg (bool), name, args (None for any), min_args*)
+  (Any, true, "printi", None, 1);
   (* TODO: Implement len() - get "user" size *)
-  (Int,"len", Some([List(Any)]), 1);
+  (Int, false, "len", Some([List(Any)]), 1);
   (* TODO: Implement truelen() - get true size *)
-  (Int,"truelen", Some([List(Any)]), 1);
+  (Int,false, "truelen", Some([List(Any)]), 1);
   (* TODO: Implement setsize() - set "user" size *)
-  (List(Any),"setsize", Some([List(Any); Int]), 2)
+  (Any,true, "setsizei", Some([List(Any); Int]), 2)
   ] in
   let reserved_func_names: string list = [
     "printi";
     "len";
     "truelen";
-    "setsize"
+    "setsizei"
   ] in
 
   (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
@@ -98,12 +98,12 @@ let check (program_block) =
     in
 
     let is_func_reserved (name: string) (args: typ list): bind option =
-      let reserved_has_name (name:string): (typ * string * ((typ list) option) * int) option = 
-        let rec res_check (l) (name: string): (typ * string * ((typ list) option) * int) option =
+      let reserved_has_name (name:string): (typ * bool * string * ((typ list) option) * int) option = 
+        let rec res_check (l) (name: string): (typ *bool  * string * ((typ list) option) * int) option =
           match l with
           [] -> None
           | h::t -> 
-            match h with (_, hname, _, _) -> if hname = name then Some(h) else res_check t name
+            match h with (_, _, hname, _, _) -> if hname = name then Some(h) else res_check t name
         in
         res_check reserved_funcs name
       in
@@ -126,9 +126,12 @@ let check (program_block) =
         if not (any_types_equal rarg_head args_head) then false else check_arg_list_equal rarg_tail args_tail
       in
       match reserved_has_name name with None ->  None
-      | Some(t, n, xargs, nargs) -> match xargs with None -> (if List.length args >= nargs then Some(t, n) else None)
+      | Some(t, is_first_argt, n, xargs, nargs) -> match xargs with None -> (if List.length args >= nargs then Some(t, n) else None)
       | Some(rargs) -> 
-        if check_arg_list_equal rargs args then Some(t, n) else None
+        if check_arg_list_equal rargs args then 
+          if is_first_argt then Some(List.hd args, n)
+          else Some(t, n) 
+        else None
     in
     let is_func_local (name: string) (args: typ list):bool =
       FuncMap.mem {id=name; args=args} !l_fmap

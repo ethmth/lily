@@ -278,6 +278,26 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           let user_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
           let list_size = (L.build_load (ltype_of_typ t) user_size_gep "listindexsizeload" builder) in
           list_size;
+      | SCall ("truelen", arg_list, _) ->
+          let expr = List.hd arg_list in
+          let ptr = build_expr builder expr in
+          ignore(ptr);
+          let user_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 8]) "listlitsizegep" builder in
+          let list_size = (L.build_load (ltype_of_typ t) user_size_gep "listindexsizeload" builder) in
+          list_size;
+      | SCall ("setsizei", arg_list, _) ->
+        let expr = List.hd arg_list in
+        let ptr = build_expr builder expr in
+        let ptr_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
+        ignore(ptr);
+        let new_size = build_expr builder (List.hd (List.tl arg_list)) in
+        (* let user_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in *)
+        (* let curr_size = (L.build_load (ltype_of_typ t) user_size_gep "listindexsizeload" builder) in *)
+        (* let malloc_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 8]) "listlitsizegep" builder in *)
+        (* let malloc_size = (L.build_load (ltype_of_typ t) malloc_size_gep "listindexsizeload" builder) in *)
+        let size_store =  (L.build_store new_size ptr_gep builder) in
+        ignore(size_store);
+        ptr
       | SCall (_, args, cname) ->
         let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ " not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
