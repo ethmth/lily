@@ -30,7 +30,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
   (* Get types from the context *)
   let i64_t      = L.i64_type    context
-  and _       = L.i32_type    context
+  and i32_t       = L.i32_type    context
   and i8_t       = L.i8_type     context
   and _           = L.i1_type     context
   and float_t    = L.double_type context
@@ -188,12 +188,16 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let len = List.length l in
         let ptr = (L.build_array_malloc (i8_t) (L.const_int (i64_t) ((len * (size_of_typ list_typ)) + 8)) "listlitmalloc" builder) in
         ignore(ptr);
+        let ptr_gep = (L.build_gep i8_t ptr (Array.of_list [(L.const_int i32_t 0)]) "listlitgep" builder) in
+        ignore(ptr_gep);
         (* let ptr_alloc = (L.build_alloca (i64_t) "listlitmallocint" builder)  in *)
         (* ignore(ptr_alloc); *)
-        (* let ptr_int = (L.build_ptrtoint ptr (i64_t) "listlitmallocint" builder) in *)
-        (* ignore(ptr); *)
+        let ptr_int = (L.build_ptrtoint ptr_gep (i64_t) "listlitint" builder) in
+        ignore(ptr_int);
         (* ignore(ptr_alloc); *)
         (* ignore(ptr_int); *)
+        (* let str_ptr = L.build_inttoptr ptr_int i64_t "ptrptr" builder in *)
+        (* ignore(str_ptr); *)
         ignore(L.build_store (L.const_int (i64_t) len) ptr builder);
         (* L.const_int (ltype_of_typ A.Int) len *)
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
@@ -201,11 +205,13 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           [] -> []
           | h::t ->  
             let built_expr = build_expr builder h in
-            let ptr_offset = L.build_add (L.const_int i64_t curr_offset) (ptr) "ptradd" builder in
+            (* let ptr_offset = L.build_inttoptr (L.build_add (L.const_int i64_t curr_offset) (ptr_int) "ptradd" builder) i64_t "ptradd" builder in *)
+            let ptr_offset = L.build_inttoptr (L.const_int i64_t curr_offset) i64_t "ptradd" builder in
+            (* let ptr_ptr = L.build_inttoptr ptr_offset i64_t "ptrptr" builder in *)
             ignore(L.build_store built_expr ptr_offset builder); build_list_stores t (curr_offset + (size_of_typ list_typ))
         in
         ignore(build_list_stores l 8);
-        ptr;
+        ptr_int;
         | _ -> raise (Failure ("IR Error (build_expr): SLitList is not list.")))
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
       | SBinop (e1, o, e2) ->
