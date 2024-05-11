@@ -3,6 +3,6 @@ let d:: bool = [true,false]
 print(len(d))
 print(truelen(d))
 
-d.setsizei(1)
+d.setsize(3)
 print(len(d))
 print(truelen(d))

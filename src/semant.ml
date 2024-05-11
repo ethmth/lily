@@ -285,7 +285,7 @@ let check (program_block) =
         let sl_new = sl @ [(SExprStmt(check_expr a))] in
         SWhile((t, se), SBlock(sl_new))
       | ExprStmt(e) -> SExprStmt(check_expr e)
-      | Return(e) -> let (t, se) = check_expr e in if t != block_return then raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ "in Block " ^ block_name)) else SReturn(t, se)
+      | Return(e) -> let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
       | Decl(typ, id) (*TODO handle list declaration*) -> let cname = add_var id typ true in SDecl(typ, id, cname)
       | DeclAssign(et, id, e) (*TODO handle list declaration*) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
