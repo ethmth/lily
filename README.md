@@ -15,26 +15,31 @@ Currently, the programming language implementation can be found in the `src/` di
 ## Current Progress
 
 ### Language Features (in Order of Priority)
-- [x] **Python-style indentation** - Lily parser using indentation-style instead of C-style
-where blocks are parsed using special `{}` characters.
+
+#### Goal for Submission:
+- [x] **Python-style indentation** - Lily parser using indentation-style instead of bracket or C-style.
 - [x] **Python-style printing** - The built in print function can take an arbitrary number of arguments to print in Python-style.
 - [x] **Nested Functions** - Lily allows for nested functions.
 - [x] **Function Overloading** - Lily allows for overloading functions.
-- [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM.
+- [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM. LILY also supports `for <element> in <list>` style loops for iterating over the elements of a list.
 - [x] **Lists** - Lily supports the declaration and referencing of 'lists' in the style specified in the LRM.
 - [x] **Standard Functions** - `stdlib.lily` contains print_bool, len, sum, min, and max
 - [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
 - [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort. They will work when LILY supports `elif`.
-- [x] **Search Functions** - `stdlib.lily` contains binarysearch. It will work when LILY supports `elif`.
+- [x] **Search Functions** - `stdlib.lily` contains binarysearch. ~~It will work when LILY supports `elif`~~. It can work if modified to not use `elif`s.
 - [ ] **"Randomness"** - Neccesary if we want to implement shuffle. Requires bitwise and (&) and modulo (%).
 - [ ] **Multi-List Operations** - shuffle(list1, list2) will work once a random(a, b) function exists.
-- [ ] **Strings** 
-- [ ] **`elif`s**
-- [ ] **Standard Input**
+- [ ] **!!!Strings!!! IMPORTANT** 
+- [ ] **List Operations** - `map`, `reduce`, etc.
+
+#### Extra if we have time:
+- [ ] **`elif`s** - Not exactly necessary.
+- [ ] **Standard Input** - Probably not gonna happen.
 - [ ] **Type inference/implicit types** - Probably not gonna happen.
 - [ ] **Providing System Arguments** - Probably not gonna happen.
 - [ ] **Tuples and Dictionaries** - Almost definitely not gonna happen.
 - [ ] **Structs/Classes** - Almost definitely not gonna happen.
+- [ ] **Memory Management** - No leaks?
 
 
 ### File Overview
