@@ -7,11 +7,11 @@ def print_bool(a : bool) -> bool:
         print('f', 'a', 'l', 's', 'e')
     return a
 
-def len(l::int) -> int:
-    count: int = 0
-    for _ in l:
-        count = count + 1
-    return count
+#def len(l::int) -> int:
+#    count: int = 0
+#    for _ in l:
+#        count = count + 1
+#    return count
 
 def sum(l::int) -> int:
     let sum:int = 0
@@ -75,7 +75,7 @@ def remove(l::int, item:int) -> int list:
     let new_list::int = []
     for num in l:
         if (num == item):
-            continue
+            continue # we don't have continues/breaks. Probably rewrite this.
         else: 
             append(new_list, num)
     return new_list

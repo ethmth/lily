@@ -14,17 +14,18 @@ let check (program_block) =
   (Any, true, "printi", None, 1);
   (Int, false, "len", Some([List(Any)]), 1);
   (Int,false, "truelen", Some([List(Any)]), 1);
-  (List(Any),true, "setsizei", Some([List(Any); Int]), 2)
+  (List(Any),true, "setsizei", Some([List(Any); Int]), 2);
+  (Int, false, "free", Some([List(Any)]), 1)
   ] in
   let reserved_func_names: string list = [
     "printi";
     "len";
     "truelen";
-    "setsizei"
+    "setsizei";
+    "free"
   ] in
 
   (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
-  (* TODO: Add support for "for _ in list" syntax for loops *)
 
   let functions = ref [] in 
   let globals = ref [] in
@@ -277,6 +278,32 @@ let check (program_block) =
         let sl = match sb with SBlock(sl) -> sl in
         let sl_new = sl @ [(SExprStmt(check_expr a))] in
         SWhile((t, se), SBlock(sl_new))
+      | ForIn(id, e, b) -> let (t, se) = check_expr e in
+        (match t with List(list_typ) -> 
+          let id_cname = add_var id list_typ true in
+          let varname = "forvar!!f" in
+          let varname_cname = add_var varname Int true in
+          let listname = "forlist!!l" in
+          let listname_cname = add_var listname (List(list_typ)) true in
+          let (_, index_var_stmt) = (Int, SDeclAssign(Int, varname, (Int, SLitInt(0)), varname_cname)) in
+          let list_sexpr = (List(list_typ), SAssign(listname, (t, se), listname_cname)) in
+          let (_, id_decl) = (list_typ, SDecl(list_typ, id, id_cname)) in
+
+          (* Loop *)
+          let while_condition = (Bool, SBinop((Int, SId(varname, varname_cname)), Lt, (Int, SCall("len", [(t, se)], "len")))) in
+          
+          (* In Loop *)
+          let id_assign = (list_typ, SAssign(id, (list_typ, SListIndex(listname, (Int, SId(varname, varname_cname)), listname_cname)), id_cname)) in
+          let index_incrememt = (Int, SAssign(varname, (Int, SBinop( (Int, SId(varname, varname_cname)), Plus, (Int, SLitInt(1)))), varname_cname)) in
+          
+          (* Combine it *)
+          let (_, checked_block) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
+          let while_block = (match checked_block with SBlock(sl) -> ([SExprStmt(id_assign)] @ sl @ [SExprStmt(index_incrememt)])) in
+          let while_loop = SWhile(while_condition, SBlock(while_block)) in
+          let blck = [index_var_stmt] @ [SExprStmt(list_sexpr)] @ [id_decl] @ [while_loop] in 
+          let combined = (SIf((Bool, SLitBool(true)) ,SBlock(blck) , SBlock([]))) in 
+          combined
+          | _ -> raise (Failure (""))) 
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)

@@ -34,7 +34,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   let i64_t      = L.i64_type    context
   and _       = L.i32_type    context
   and i8_t       = L.i8_type     context
-  and _           = L.i1_type     context
+  and i1_t           = L.i1_type     context
   and float_t    = L.double_type context
   and ptr_t      = L.pointer_type context
   and byte_t       = L.i8_type     context
@@ -65,7 +65,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   (* Return the LLVM type for a LILY type *)
   let ltype_of_typ = function
       A.Int   -> i64_t
-    | A.Bool  -> i8_t
+    | A.Bool  -> i1_t
     | A.Char  -> i8_t
     | A.Float -> float_t
     | A.Void  -> i8_t
@@ -149,6 +149,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     ignore(formals);
 
      (* Util/Built-in function definitions *)
+     (* TODO: More print functions (those without spaces, without newlines, etc) *)
     let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder): L.llvalue =
       (* TODO: Good bool printing function; printing strings, lists, etc. *)
       let typ_to_fmt (t: A.typ): string =
@@ -226,7 +227,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
-      | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
+      | SLitList (l) -> (match t with List(list_typ) -> 
         let len = List.length l in
         let ptr = build_list_malloc (L.const_int (ltype_of_typ A.Int) len) list_typ in
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
@@ -266,6 +267,11 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         ) e' "tmpu" builder
       | SCall ("printi", arg_list, _) ->
           build_print_call arg_list builder
+      | SCall ("free", arg_list, _) ->
+          let ptr = build_expr builder (List.hd arg_list) in
+          ignore(ptr);
+          let built_free = L.build_free ptr builder in
+          built_free
       | SCall ("len", arg_list, _) ->
           let expr = List.hd arg_list in
           let ptr = build_expr builder expr in
@@ -343,7 +349,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SExprStmt e -> ignore(build_expr builder e); builder
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
-      | SListDeclAssign (_, _, _, _) (*TODO*) -> builder
+      | SListDeclAssign (_, _, _, _) (*TODO: Should be same/similar as assign?*) -> builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
       | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
@@ -351,10 +357,12 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
         let bool_val = build_expr builder predicate in
 
-        let then_bb = L.append_block context "then" the_function in
-        ignore (List.fold_left build_stmt (L.builder_at_end context then_bb) then_stmt_list);
-        let else_bb = L.append_block context "else" the_function in
-        ignore (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list);
+        let then_bb = L.append_block context "then_block" the_function in
+        let then_endbuilder = (List.fold_left build_stmt (L.builder_at_end context then_bb) then_stmt_list) in 
+        ignore(then_endbuilder);
+        let else_bb = L.append_block context "else_block" the_function in
+        let else_endbuilder = (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list) in 
+        ignore(else_endbuilder);
 
         let end_bb = L.append_block context "if_end" the_function in
         let build_br_end = L.build_br end_bb in
@@ -362,6 +370,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         add_terminal (L.builder_at_end context else_bb) build_br_end;
 
         ignore(L.build_cond_br bool_val then_bb else_bb builder);
+        ignore(L.build_br end_bb then_endbuilder);
+        ignore(L.build_br end_bb else_endbuilder);
+
         L.builder_at_end context end_bb
 
       | SWhile (predicate, body) ->
@@ -373,21 +384,25 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let bool_val = build_expr while_builder predicate in
 
         let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (List.fold_left build_stmt (L.builder_at_end context body_bb) body_stmt_list) build_br_while;
+        let body_endbuilder = (List.fold_left build_stmt (L.builder_at_end context body_bb) body_stmt_list) in
+        add_terminal (body_endbuilder) build_br_while;
 
         let end_bb = L.append_block context "while_end" the_function in
-
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
+        
+        ignore(L.build_br end_bb body_endbuilder);
+
         L.builder_at_end context end_bb
       | SListDecl (_, _, _) (*TODO: Probably do nothing here, but check *)-> builder
       | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)
+      | SForIn (_, _, _, _) -> builder (* For in loops are converted into While loops in the semantics stage *)
       | SDecl(_, _, _) -> builder (* Ignore declarations, which are already covered in 'globals' *)
       | SFdecl(_, _, _, _, _) -> builder (* Ignore function declarations, which are already covered in 'functions'*)
     in
     let sl = match sblock with SBlock(sl) -> sl in
     let func_builder = List.fold_left build_stmt builder sl in 
 
-    ignore(if cname = "main" then 
+    (* ignore(if cname = "main" then 
       let build_malloc_frees = 
         let build_malloc_free (lval: L.llvalue) =
           let free_var = L.build_load ptr_t lval "freevar" func_builder in 
@@ -395,7 +410,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         in
         StringMap.map build_malloc_free !malloc_list
       in
-      ignore(build_malloc_frees));
+      ignore(build_malloc_frees)); *)
   
     add_terminal func_builder (L.build_ret ((if rtyp = A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
 

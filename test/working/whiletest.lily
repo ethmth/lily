@@ -1,0 +1,7 @@
+let a: int = 2
+
+if(a < 3):
+    let i: int = 0
+    while(i < 5):
+        print(i)
+        i ++ 
