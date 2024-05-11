@@ -279,7 +279,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
         let list_size = (L.build_load (ltype_of_typ t) size_gep "listindexsizeload" builder) in
         ignore(list_size);
-        let calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ t) ) (L.const_int (ltype_of_typ A.Int) ind) "listindexmul" builder in
+        let built_expr = build_expr builder ind in
+        ignore(build_expr);
+        let calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ t) ) (built_expr) "listindexmul" builder in
         ignore(calc_offset);
         let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) list_start_offset) "listindexadd" builder in
         ignore(add_offset);
