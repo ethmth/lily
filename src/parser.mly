@@ -224,7 +224,8 @@ assignment:
 
 expression:
   | assignment { $1 }
-  | ID LBRACKET INT_LIT RBRACKET { ListIndex($1, $3) }
+  // TODO: Make this work with non-Int literals
+  | ID LBRACKET expression RBRACKET { ListIndex($1, $3) }
   | INT_LIT { LitInt($1) }
   | BOOL_LIT { LitBool($1) }
   | CHAR_LIT { LitChar($1) }

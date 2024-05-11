@@ -32,7 +32,7 @@ type expr =
   | Binop of expr * op * expr
   | Call of string * expr list
   | UnaryOp of unary_op * expr
-  | ListIndex of string * int
+  | ListIndex of string * expr
   (* TODO: Implement ListNew function *)
   (* | ListNew of typ * int *)
   | Assign of string * expr
@@ -121,7 +121,7 @@ and string_of_expr = function
   | Binop(e1, o, e2) -> string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Call(f, el) -> f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | UnaryOp(op, e) -> string_of_unary_op op ^ string_of_expr e
-  | ListIndex(id, ind) -> id ^ "[" ^ string_of_int ind ^ "]"
+  | ListIndex(id, e) -> id ^ "[" ^ string_of_expr e ^ "]"
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e ^ "\n"
   (* | Map(list, func) -> string_of_expr list ^ " => " ^ string_of_expr func *)
   (* | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate *)
