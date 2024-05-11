@@ -120,28 +120,28 @@ def sublist(l::int, start:int, end:int) -> int list:
 
 # sorting functions
 
-# the following functions cannot be implemented until LILY supports elif, and accesing lists in the following manner l[:mid]
+def mergesort(l::int) -> int list:
+    if (len(l) <= 1):
+        return l
+    let mid:int = len(l) / 2
+    let left::int = mergesort(sublist(l, 0, mid))
+    let right::int = mergesort(sublist(l, mid, len(l)))
+    return merge(left, right)
 
-#def mergesort(l::int) -> int list:
-#    if (len(l) <= 1):
-#        return l
-#    let mid:int = len(l) / 2
-#    let left::int = mergesort(l[:mid])
-#    let right::int = mergesort(l[mid:])
-#    return merge(left, right)
+def merge(left::int, right::int) -> int list:
+    let result::int = []
+    while (len(left) > 0 and len(right) > 0):
+        if (left[0] < right[0]):
+            append(result, pop(left, 0))
+        else:
+            append(result, pop(right, 0))
+    while (len(left) > 0):
+        append(result, pop(left, 0))
+    while (len(right) > 0):
+        append(result, pop(right, 0))
+    return result
 
-#def merge(left::int, right::int) -> int list:
-#    let result::int = []
-#    while (len(left) > 0 and len(right) > 0):
-#        if (left[0] < right[0]):
-#            append(result, pop(left, 0))
-#        else:
-#            append(result, pop(right, 0))
-#    while (len(left) > 0):
-#        append(result, pop(left, 0))
-#    while (len(right) > 0):
-#        append(result, pop(right, 0))
-#    return result
+# the following function cannot be implemented until LILY supports elif
 
 #def quicksort(l::int) -> int list:
 #    if (len(l) <= 1):
@@ -175,6 +175,8 @@ def selectionsort(l::int) -> int list:
 
 # search functions
 
+# the following function cannot be implemented until LILY supports elif
+
 #def binarysearch(l::int, item:int) -> bool:
 #    let low:int = 0
 #    let high:int = len(l) - 1
@@ -190,7 +192,7 @@ def selectionsort(l::int) -> int list:
 
 # multi-list operations
 
-# the following function requires a random(a, b) function which requires the use of bitwise and or modulo
+# the following function requires a random(a, b) function which requires the use of bitwise and, and modulo
 
 # def shuffle(list1::int, list2::int) -> int[]:
 #    let combined_list::int = []
