@@ -21,14 +21,16 @@ where blocks are parsed using special `{}` characters.
 - [x] **Nested Functions** - Lily allows for nested functions.
 - [x] **Function Overloading** - Lily allows for overloading functions.
 - [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM.
-- [ ] **Standard Library** - `stdlib.lily` file created. Needs functions added!
+- [x] **Lists** - Lily supports the declaration and referencing of 'lists' in the style specified in the LRM.
+- [x] **Standard Functions** - `stdlib.lily` contains print_bool, len, sum, min, and max
+- [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
+- [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort. They will work when LILY supports `elif`.
+- [x] **Search Functions** - `stdlib.lily` contains binarysearch. It will work when LILY supports `elif`.
+- [ ] **"Randomness"** - Neccesary if we want to implement shuffle. Requires bitwise and (&) and modulo (%).
+- [ ] **Multi-List Operations** - shuffle(list1, list2) will work once a random(a, b) function exists.
 - [ ] **Strings** 
-- [ ] **Lists**
-- [ ] **List Operations**
-- [ ] **List Standard Library**
 - [ ] **`elif`s**
 - [ ] **Standard Input**
-- [ ] **"Randomness"** - Probably not necessary.
 - [ ] **Type inference/implicit types** - Probably not gonna happen.
 - [ ] **Providing System Arguments** - Probably not gonna happen.
 - [ ] **Tuples and Dictionaries** - Almost definitely not gonna happen.

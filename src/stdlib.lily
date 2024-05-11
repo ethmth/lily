@@ -1,3 +1,5 @@
+# general functions
+
 def print_bool(a : bool) -> bool:
     if (a == true):
         print('t', 'r', 'u', 'e')
@@ -5,7 +7,211 @@ def print_bool(a : bool) -> bool:
         print('f', 'a', 'l', 's', 'e')
     return a
 
-#def mergesort(l::int) -> int list:
-#    let new_list::int = copy(l)
-#    # Sort it
-#    return new_list
+def len(l::int) -> int:
+    count: int = 0
+    for _ in l:
+        count = count + 1
+    return count
+
+def sum(l::int) -> int:
+    let sum:int = 0
+    for num in l:
+        sum = sum + num
+    return sum
+
+def min(l::int) -> int:
+    let min:int = l[0]
+    for num in l:
+        if num < min:
+            min = num
+    return min
+
+def max(l::int) -> int:
+    let max:int = l[0]
+    for num in l:
+        if num > max:
+            max = num
+    return max
+
+# the following random function requires bitwise and and modulo
+
+#let seed:int = 123456789
+#def random(a:int, b:int) -> int:
+#   seed = (seed * 1103515245 + 12345) & 0x7fffffff
+#   return a + (seed % (b - a + 1))
+
+
+# list operations
+
+def range(start:int, end:int) -> int list:
+    let result::int = []
+    let i:int = start
+    while (i < end):
+        append(result, i)
+        i = i + 1
+    return result
+
+def copy(l::int) -> int list:
+    let length:int = len(l)
+    let new_list::int = []
+    let i:int = 0
+    while (i < length):
+        append(new_list, l[i])
+        i = i + 1
+    return new_list
+
+def append(l::int, item:int) -> int list:
+    let new_length:int = len(l) + 1
+    let new_list::int = []
+    let i:int = 0
+    while (i < len(l)):
+        new_list[i] = l[i]
+        i = i + 1
+    new_list[new_length - 1] = item
+    return new_list
+
+def remove(l::int, item:int) -> int list:
+    let length:int = len(l)
+    let new_list::int = []
+    for num in l:
+        if (num == item):
+            continue
+        else: 
+            append(new_list, num)
+    return new_list
+
+def reverse(l::int) -> int list:
+    let length:int = len(l)
+    let new_list::int = []
+    let i:int = 0
+    while (i < length):
+        append(new_list, l[length - i - 1])
+        i = i + 1
+    return new_list
+
+def concatenate(a::int, b::int, c::int) -> int list:
+    let result::int = []
+    for num in a:
+        append(result, num)
+    for num in b:
+        append(result, num)
+    for num in c:
+        append(result, num)
+    return result
+
+def pop(l::int, index:int) -> int:
+    let length:int = len(l)
+    let popped_element:int = l[index]
+    let new_list::int = []
+    let i:int = 0
+    while (i < length):
+        if (i != index):
+            append(new_list, l[i])
+        i = i + 1
+    return popped_element
+
+def sublist(l::int, start:int, end:int) -> int list:
+    let new_list::int = []
+    let i:int = start
+    while (i < end):
+        append(new_list, l[i])
+        i = i + 1
+    return new_list
+
+# sorting functions
+
+def mergesort(l::int) -> int list:
+    if (len(l) <= 1):
+        return l
+    let mid:int = len(l) / 2
+    let left::int = mergesort(sublist(l, 0, mid))
+    let right::int = mergesort(sublist(l, mid, len(l)))
+    return merge(left, right)
+
+def merge(left::int, right::int) -> int list:
+    let result::int = []
+    while (len(left) > 0 and len(right) > 0):
+        if (left[0] < right[0]):
+            append(result, pop(left, 0))
+        else:
+            append(result, pop(right, 0))
+    while (len(left) > 0):
+        append(result, pop(left, 0))
+    while (len(right) > 0):
+        append(result, pop(right, 0))
+    return result
+
+# the following function cannot be implemented until LILY supports elif
+
+#def quicksort(l::int) -> int list:
+#    if (len(l) <= 1):
+#        return l
+#    let pivot:int = l[len(l) / 2]
+#    let less::int = []
+#    let equal::int = []
+#    let greater::int = []
+#    for num in l:
+#        if num < pivot:
+#           append(less, num)
+#        elif num == pivot:
+#            append(equal, num)
+#        else:
+#            append(greater, num)    
+#   return concatenate(quicksort(less), equal, quicksort(greater))
+
+def selectionsort(l::int) -> int list:
+    let length:int = len(l)
+    let i:int = 0
+    for (i < length, i++):
+        let min_idx:int = i
+        let j: int = i + 1
+        for (j < length, j++):
+            if (l[j] < l[min_idx]):
+                min_idx = j
+        let temp:int = l[i]
+        l[i] = l[min_idx]
+        l[min_idx] = temp
+    return l
+
+# search functions
+
+# the following function cannot be implemented until LILY supports elif
+
+#def binarysearch(l::int, item:int) -> bool:
+#    let low:int = 0
+#    let high:int = len(l) - 1
+#    while (low <= high):
+#        let mid:int = (low + high) / 2
+#        if (l[mid] < item):
+#            low = mid + 1
+#        elif (l[mid] > item):
+#            high = mid - 1
+#        else:
+#            return true
+#    return false
+
+# multi-list operations
+
+# the following function requires a random(a, b) function which requires the use of bitwise and, and modulo
+
+# def shuffle(list1::int, list2::int) -> int[]:
+#    let combined_list::int = []
+#    let length1:int = len(list1)
+#    let length2:int = len(list2)
+#    let i:int = 0
+#    while (i < length1):
+#        append(combined_list, list1[i])
+#        i = i + 1
+#    i = 0
+#    while (i < n2):
+#       append(combined_list, list2[i])
+#        i = i + 1
+#    let length:int = len(combined_list)
+#    let j:int = 0
+#    let temp:int = 0   
+#    for(i < length, i++):
+#        j = random(0, n - 1)
+#        temp = combined_list[i]
+#        combined_list[i] = combined_list[j]
+#        combined_list[j] = temp
+#    return combined_list
