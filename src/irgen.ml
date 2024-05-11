@@ -361,10 +361,14 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
         let bool_val = build_expr builder predicate in
 
-        let then_bb = L.append_block context "then" the_function in
-        ignore (List.fold_left build_stmt (L.builder_at_end context then_bb) then_stmt_list);
-        let else_bb = L.append_block context "else" the_function in
-        ignore (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list);
+        let then_bb = L.append_block context "then_block" the_function in
+        let then_endbuilder = (List.fold_left build_stmt (L.builder_at_end context then_bb) then_stmt_list) in 
+        ignore(then_endbuilder);
+        (* ignore(L.build_br then_bb then_endbuilder); *)
+        let else_bb = L.append_block context "else_block" the_function in
+        let else_endbuilder = (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list) in 
+        ignore(else_endbuilder);
+        (* ignore (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list); *)
 
         let end_bb = L.append_block context "if_end" the_function in
         let build_br_end = L.build_br end_bb in
@@ -372,6 +376,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         add_terminal (L.builder_at_end context else_bb) build_br_end;
 
         ignore(L.build_cond_br bool_val then_bb else_bb builder);
+        ignore(L.build_br end_bb then_endbuilder);
+        ignore(L.build_br end_bb else_endbuilder);
+
         L.builder_at_end context end_bb
 
       | SWhile (predicate, body) ->
@@ -383,11 +390,14 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let bool_val = build_expr while_builder predicate in
 
         let body_bb = L.append_block context "while_body" the_function in
-        add_terminal (List.fold_left build_stmt (L.builder_at_end context body_bb) body_stmt_list) build_br_while;
+        let body_endbuilder = (List.fold_left build_stmt (L.builder_at_end context body_bb) body_stmt_list) in
+        add_terminal (body_endbuilder) build_br_while;
 
         let end_bb = L.append_block context "while_end" the_function in
-
         ignore(L.build_cond_br bool_val body_bb end_bb while_builder);
+        
+        ignore(L.build_br end_bb body_endbuilder);
+
         L.builder_at_end context end_bb
       | SListDecl (_, _, _) (*TODO: Probably do nothing here, but check *)-> builder
       | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)

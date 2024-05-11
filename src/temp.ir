@@ -87,7 +87,6 @@ while_body:                                       ; preds = %while
   br label %while
 
 while_end:                                        ; preds = %while
-  %nop = add i1 0, 0
 
 else:                                             ; preds = %entry
   br label %if_end
