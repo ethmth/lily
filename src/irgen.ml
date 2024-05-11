@@ -271,6 +271,13 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         ) e' "tmpu" builder
       | SCall ("printi", arg_list, _) ->
           build_print_call arg_list builder
+      | SCall ("len", arg_list, _) ->
+          let expr = List.hd arg_list in
+          let ptr = build_expr builder expr in
+          ignore(ptr);
+          let user_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
+          let list_size = (L.build_load (ltype_of_typ t) user_size_gep "listindexsizeload" builder) in
+          list_size;
       | SCall (_, args, cname) ->
         let (fdef, _) = try StringMap.find cname function_decls with Not_found -> raise (Failure ("IR Error (build_expr): SCall function " ^ cname ^ " not found.")) in
         let llargs = List.rev (List.map (build_expr builder) (List.rev args)) in
