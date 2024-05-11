@@ -14,13 +14,15 @@ let check (program_block) =
   (Any, true, "printi", None, 1);
   (Int, false, "len", Some([List(Any)]), 1);
   (Int,false, "truelen", Some([List(Any)]), 1);
-  (List(Any),true, "setsizei", Some([List(Any); Int]), 2)
+  (List(Any),true, "setsizei", Some([List(Any); Int]), 2);
+  (Int, false, "free", Some([List(Any)]), 1)
   ] in
   let reserved_func_names: string list = [
     "printi";
     "len";
     "truelen";
-    "setsizei"
+    "setsizei";
+    "free"
   ] in
 
   (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)

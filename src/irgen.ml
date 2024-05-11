@@ -266,6 +266,16 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         ) e' "tmpu" builder
       | SCall ("printi", arg_list, _) ->
           build_print_call arg_list builder
+      | SCall ("free", arg_list, _) ->
+          let ptr = build_expr builder (List.hd arg_list) in
+          ignore(ptr);
+          (* let free_var = L.build_load ptr_t ptr "freevar" builder in  *)
+          let built_free = L.build_free ptr builder in
+          built_free
+          (* ignore(built_free); *)
+          (* let user_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in *)
+          (* let list_size = (L.build_load (ltype_of_typ t) user_size_gep "listindexsizeload" builder) in *)
+          (* list_size; *)
       | SCall ("len", arg_list, _) ->
           let expr = List.hd arg_list in
           let ptr = build_expr builder expr in
@@ -387,7 +397,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     let sl = match sblock with SBlock(sl) -> sl in
     let func_builder = List.fold_left build_stmt builder sl in 
 
-    ignore(if cname = "main" then 
+    (* ignore(if cname = "main" then 
       let build_malloc_frees = 
         let build_malloc_free (lval: L.llvalue) =
           let free_var = L.build_load ptr_t lval "freevar" func_builder in 
@@ -395,7 +405,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         in
         StringMap.map build_malloc_free !malloc_list
       in
-      ignore(build_malloc_frees));
+      ignore(build_malloc_frees)); *)
   
     add_terminal func_builder (L.build_ret ((if rtyp = A.Float then (L.const_float (ltype_of_typ rtyp) 0.0) else L.const_int (ltype_of_typ rtyp) 0)))
 

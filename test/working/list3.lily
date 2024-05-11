@@ -3,10 +3,14 @@ def mergesort(l::int) -> int list:
     let i:int = 0
     for(i < len(l), i++):
         new_list[i] = l[i]
+
+    free(l)
     return new_list
 
 
 let e::int = [2,1]
+
+#free(e)
 
 e.mergesort()
 
