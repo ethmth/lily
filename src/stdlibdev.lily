@@ -75,7 +75,7 @@ def remove(l::int, item:int) -> int list:
     let new_list::int = []
     for num in l:
         if (num == item):
-            continue
+            continue # we don't have continues/breaks. Probably rewrite this.
         else: 
             append(new_list, num)
     return new_list

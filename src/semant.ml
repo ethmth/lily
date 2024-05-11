@@ -26,11 +26,9 @@ let check (program_block) =
   ] in
 
   (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
-  (* TODO: Add support for "for _ in list" syntax for loops *)
 
   let functions = ref [] in 
   let globals = ref [] in
-  (* let curr_for_number = ref 0 in *)
   let vnames: int StringMap.t ref = ref StringMap.empty in
   let fnames: int StringMap.t ref = ref StringMap.empty in 
   let update_vnames (id: string):int = 
@@ -287,8 +285,6 @@ let check (program_block) =
           let varname_cname = add_var varname Int true in
           let listname = "forlist!!l" in
           let listname_cname = add_var listname (List(list_typ)) true in
-          (* ignore(curr_for_number := !curr_for_number + 1); *)
-          (* Before Loop *)
           let (_, index_var_stmt) = (Int, SDeclAssign(Int, varname, (Int, SLitInt(0)), varname_cname)) in
           let list_sexpr = (List(list_typ), SAssign(listname, (t, se), listname_cname)) in
           let (_, id_decl) = (list_typ, SDecl(list_typ, id, id_cname)) in

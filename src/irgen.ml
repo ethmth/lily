@@ -149,6 +149,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     ignore(formals);
 
      (* Util/Built-in function definitions *)
+     (* TODO: More print functions (those without spaces, without newlines, etc) *)
     let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder): L.llvalue =
       (* TODO: Good bool printing function; printing strings, lists, etc. *)
       let typ_to_fmt (t: A.typ): string =
@@ -226,7 +227,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
-      | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
+      | SLitList (l) -> (match t with List(list_typ) -> 
         let len = List.length l in
         let ptr = build_list_malloc (L.const_int (ltype_of_typ A.Int) len) list_typ in
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
@@ -269,13 +270,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SCall ("free", arg_list, _) ->
           let ptr = build_expr builder (List.hd arg_list) in
           ignore(ptr);
-          (* let free_var = L.build_load ptr_t ptr "freevar" builder in  *)
           let built_free = L.build_free ptr builder in
           built_free
-          (* ignore(built_free); *)
-          (* let user_size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in *)
-          (* let list_size = (L.build_load (ltype_of_typ t) user_size_gep "listindexsizeload" builder) in *)
-          (* list_size; *)
       | SCall ("len", arg_list, _) ->
           let expr = List.hd arg_list in
           let ptr = build_expr builder expr in
@@ -353,7 +349,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SExprStmt e -> ignore(build_expr builder e); builder
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
-      | SListDeclAssign (_, _, _, _) (*TODO*) -> builder
+      | SListDeclAssign (_, _, _, _) (*TODO: Should be same/similar as assign?*) -> builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
       | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
@@ -364,11 +360,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let then_bb = L.append_block context "then_block" the_function in
         let then_endbuilder = (List.fold_left build_stmt (L.builder_at_end context then_bb) then_stmt_list) in 
         ignore(then_endbuilder);
-        (* ignore(L.build_br then_bb then_endbuilder); *)
         let else_bb = L.append_block context "else_block" the_function in
         let else_endbuilder = (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list) in 
         ignore(else_endbuilder);
-        (* ignore (List.fold_left build_stmt (L.builder_at_end context else_bb) else_stmt_list); *)
 
         let end_bb = L.append_block context "if_end" the_function in
         let build_br_end = L.build_br end_bb in
