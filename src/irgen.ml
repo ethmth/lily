@@ -175,7 +175,10 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
         let len = List.length l in
-        L.build_array_malloc (ltype_of_typ list_typ) (L.const_int (ltype_of_typ A.Int) (len + (add_of_typ list_typ))) "listlitmalloc" builder 
+        let ptr = (L.build_array_malloc (ltype_of_typ list_typ) (L.const_int (ltype_of_typ A.Int) (len + (add_of_typ list_typ))) "listlitmalloc" builder) in
+        ignore(L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder);
+        (* L.const_int (ltype_of_typ A.Int) len *)
+        ptr
         | _ -> raise (Failure ("IR Error (build_expr): SLitList is not list.")))
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
       | SBinop (e1, o, e2) ->

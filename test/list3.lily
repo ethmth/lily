@@ -6,8 +6,8 @@ def mergesort(l::int) -> int list:
 
 
 let e::int = [2,1]
-let e_len:int = 2
-let e_ptr:ptr = &
+#let e_len:int = 2
+#let e_ptr:ptr = &
 
 # JUST STORE SIZE IN FIRST 8 BYTEs
 
