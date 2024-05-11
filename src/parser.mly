@@ -18,7 +18,7 @@ open Ast
 %token DOT
 
 /* Binary Operators */
-%token PLUS MINUS TIMES DIVIDE
+%token PLUS MINUS TIMES DIVIDE MOD
 %token ELWISE_ADD  // Adding the new operator as a token (CHIMA)
 
 /* Assignment Operators */
@@ -78,7 +78,7 @@ open Ast
 %left EQ NEQ
 %left GT LT GEQ LEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 %right NOT
 %nonassoc MAP FILTER 
 %nonassoc WITH
@@ -236,6 +236,7 @@ expression:
   | expression MINUS expression { Binop($1, Minus,   $3) }
   | expression TIMES expression { Binop($1, Times,   $3) }
   | expression DIVIDE expression { Binop($1, Divide,   $3) }
+  | expression MOD expression { Binop( $1, Minus,   Binop(Binop($1, Divide, $3), Times, $3)) }
   | expression EQ expression { Binop($1, Eq,   $3) }
   | expression NEQ expression { Binop($1, Neq,   $3) }
   | expression LT expression { Binop($1, Lt,   $3) }

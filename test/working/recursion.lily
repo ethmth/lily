@@ -1,0 +1,8 @@
+
+def gcd(x: int, y: int) -> int:
+    if (y == 0):
+        return x
+    else:
+        return gcd(y, x % y)
+
+print(gcd(12, 15))
