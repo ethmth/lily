@@ -34,7 +34,18 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
   and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
-  and ptr_t      = L.pointer_type context
+  and ptr_t      = L.i64_type context
+  in
+
+  let add_of_typ (t:A.typ): int =
+    match t with
+      A.Int   -> 1
+    | A.Bool  -> 64
+    | A.Char  -> 8
+    | A.Float -> 1
+    | A.Void  -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for Void type"))
+    | A.List(_) -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for List type"))
+    | A.Any -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for Any type"))
   in
 
   (* Return the LLVM type for a LILY type *)
@@ -63,10 +74,10 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       match t with
       A.Float -> let init = L.const_float (ltype_of_typ t) 0.0 in StringMap.add cname (L.define_global cname init the_module) m
       | A.List(_) -> 
-        let init_size = L.const_int (ltype_of_typ A.Int) 0 in 
-        ignore(StringMap.add cname (L.define_global (cname ^ "_size") init_size the_module) m);
+        (* let init_size = L.const_int (ltype_of_typ A.Int) 0 in  *)
+        (* ignore(StringMap.add cname (L.define_global (cname ^ "_size") init_size the_module) m); *)
         let init = L.const_int (ptr_t) 0 in
-        StringMap.add cname (L.define_global (cname ^ "_ptr") init the_module) m
+        StringMap.add cname (L.define_global (cname) init the_module) m
       | _ -> let init= L.const_int (ltype_of_typ t) 0 in StringMap.add cname (L.define_global cname init the_module) m
     in
     List.fold_left global_var StringMap.empty globals in
@@ -151,13 +162,21 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
     and build_expr (builder: L.llbuilder) ((t,e ): sexpr): L.llvalue = 
       match e with
-        SAssign (_, e, cname) -> let e' = build_expr builder e in
-          ignore(L.build_store e' (lookup cname) builder); e'
+        SAssign (_, e, cname) -> (
+          match t with
+          (* List(ltyp) -> () *)
+          | _ -> (
+          let e' = build_expr builder e in
+          ignore(L.build_store e' (lookup cname) builder); e')
+        )
       |  SLitInt i -> L.const_int (ltype_of_typ A.Int) i
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
-      | SLitList (_) (* TODO *)->  L.const_int (ltype_of_typ A.Int) 0
+      | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
+        let len = List.length l in
+        L.build_array_malloc (ltype_of_typ list_typ) (L.const_int (ltype_of_typ A.Int) (len + (add_of_typ list_typ))) "listlitmalloc" builder 
+        | _ -> raise (Failure ("IR Error (build_expr): SLitList is not list.")))
       | SId (_, cname) -> L.build_load (ltype_of_typ t) (lookup cname) cname builder
       | SBinop (e1, o, e2) ->
         let e1' = build_expr builder e1

@@ -33,6 +33,7 @@ type expr =
   | Call of string * expr list
   | UnaryOp of unary_op * expr
   | ListIndex of string * int
+  (* | ListNew of typ * int *)
   | Assign of string * expr
 
 and block = Block of stmt list
