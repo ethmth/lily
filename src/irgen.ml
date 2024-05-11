@@ -80,6 +80,24 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     List.map type_of_sexpr l
   in
 
+  let error_handler =
+    let builder = L.builder context in
+    let fatal_error_handler( f: string):unit =
+      let printf_t : L.lltype =
+        L.var_arg_function_type (ltype_of_typ A.Int) [| L.pointer_type context |] in
+      let printf_func : L.llvalue =
+        L.declare_function "printf" printf_t the_module in 
+      (* ignore(L.build_ret (build_expr builder e) builder); *)
+      (* let built_expr_list = build_expr_list arg_list builder in *)
+      let func_type = L.function_type (ltype_of_typ A.Int) (Array.of_list []) in
+      let fmt_str = L.build_global_stringptr f "fmt" builder in
+      ignore(L.build_call func_type printf_func (Array.of_list ([fmt_str]))
+        "printf" builder);
+    in
+    L.install_fatal_error_handler fatal_error_handler
+  in
+  ignore(error_handler);
+
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
     let global_var m ((t: A.typ), (_: string), (cname: string)) =
@@ -187,7 +205,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
       | SLitList (l) (* TODO *)-> (match t with List(list_typ) -> 
         let len = List.length l in
-        let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) ((len * (size_of_typ list_typ)) + (size_of_typ A.Int))) "listlitmalloc" builder) in
+        let ptr = (L.build_array_malloc (byte_t) (L.const_int (ltype_of_typ A.Int) (((len * (size_of_typ list_typ)) + (size_of_typ A.Int)))) "listlitmalloc" builder) in
         ignore(ptr);
         ignore(L.build_store (L.const_int (ltype_of_typ A.Int) len) ptr builder);
         let rec build_list_stores (el: sexpr list) (curr_offset: int) = 
@@ -237,15 +255,17 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SListIndex(_, ind, cname) (*TODO*) -> 
         let ptr = (L.build_load (ptr_t) (lookup cname) "listindexptr" builder) in
         ignore(ptr);
+        let size_gep = L.build_gep byte_t ptr (Array.of_list [L.const_int (ltype_of_typ A.Int) 0]) "listlitsizegep" builder in
+        let list_size = (L.build_load (ltype_of_typ t) size_gep "listindexsizeload" builder) in
+        ignore(list_size);
         let calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ t) ) (L.const_int (ltype_of_typ A.Int) ind) "listindexmul" builder in
         ignore(calc_offset);
         let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) 8) "listindexadd" builder in
         ignore(add_offset);
         let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
-        (* ignore(L.build_store built_expr ptr_offset builder); build_list_stores t (curr_offset + (size_of_typ list_typ)) *)
         let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in
-        (* ignore(build_list_stores l (8 + (size_of_typ t))); *)
-        val_load;
+        val_load
+        (* list_size *)
     in
 
     let add_terminal builder instr =
