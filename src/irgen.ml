@@ -234,7 +234,18 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         let arg_types = ltypes_of_typs (types_of_sexprs args) in
         let func_type = L.function_type (ltype_of_typ t) (Array.of_list arg_types) in 
         L.build_call func_type fdef (Array.of_list llargs) result builder
-      | SListIndex(_, _, _) (*TODO*) -> L.const_int (ltype_of_typ A.Int) 0
+      | SListIndex(_, ind, cname) (*TODO*) -> 
+        let ptr = (L.build_load (ptr_t) (lookup cname) "listindexptr" builder) in
+        ignore(ptr);
+        let calc_offset = L.build_mul (L.const_int (ltype_of_typ A.Int) (size_of_typ t) ) (L.const_int (ltype_of_typ A.Int) ind) "listindexmul" builder in
+        ignore(calc_offset);
+        let add_offset = L.build_add (calc_offset) (L.const_int (ltype_of_typ A.Int) 8) "listindexadd" builder in
+        ignore(add_offset);
+        let ptr_gep = L.build_gep byte_t ptr (Array.of_list [add_offset]) "listlitgep" builder in
+        (* ignore(L.build_store built_expr ptr_offset builder); build_list_stores t (curr_offset + (size_of_typ list_typ)) *)
+        let val_load = (L.build_load (ltype_of_typ t) ptr_gep "listindexload" builder) in
+        (* ignore(build_list_stores l (8 + (size_of_typ t))); *)
+        val_load;
     in
 
     let add_terminal builder instr =
