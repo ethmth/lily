@@ -62,17 +62,6 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
     | A.Any -> raise (Failure("IR Error (size_of_typ): attempting to allocate memory for Any type"))
   in
 
-  (* let add_of_typ (t:A.typ): int =
-    match t with
-      A.Int   -> 1
-    | A.Bool  -> 64
-    | A.Char  -> 8
-    | A.Float -> 1
-    | A.Void  -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for Void type"))
-    | A.List(_) -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for List type"))
-    | A.Any -> raise (Failure("IR Error (add_of_typ): attempting to allocate memory for Any type"))
-  in *)
-
   (* Return the LLVM type for a LILY type *)
   let ltype_of_typ = function
       A.Int   -> i64_t
