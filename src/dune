@@ -7,7 +7,7 @@
 
 (library
  (name libsemant)
- (modules sast semant structs)
+ (modules sast semant structs presemant)
 (libraries libparser))
 
 (library
