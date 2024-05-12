@@ -22,7 +22,7 @@ Currently, the programming language implementation can be found in the `src/` di
 - [x] **Nested Functions** - Lily allows for nested functions.
 - [x] **Function Overloading** - Lily allows for overloading functions.
 - [x] **For loops and while loops** - Lily supports `for` loops and `while` loops in the style specified in the LRM. LILY also supports `for <element> in <list>` style loops for iterating over the elements of a list.
-- [x] **Lists** - Lily supports the declaration and referencing of 'lists' in the style specified in the LRM.
+- [x] **Lists** - Lily supports the declaration and referencing of `lists` in the style specified in the LRM.
 - [x] **Standard Functions** - `stdlib.lily` contains print_bool, len, sum, min, and max
 - [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
 - [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort.
