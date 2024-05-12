@@ -5,7 +5,6 @@ open Ast
 
 let preprocess (program_block: program) :program =
 
-
   let get_default_return (t:typ): expr =
     match t with
     Int -> LitInt(0)
@@ -15,7 +14,6 @@ let preprocess (program_block: program) :program =
     | List(_) -> Null
     | _ -> LitInt(0)
   in
-
 
   let rec check_block (block: block): block =
 
@@ -73,7 +71,7 @@ let preprocess (program_block: program) :program =
       If (e, b1, b2) -> [If(e, (check_block b1), check_block b2)]
       | While(e, b) -> [While(e, (check_block b))]
       | For(e, a, b) -> [For(e, a, (check_block b))]
-      | ForIn(id, e, b) -> [ForIn(id, e, (check_block b))]
+      | ForIn(id, e, b) -> [ForIn(id, e, b)]
       | ExprStmt(e) -> [ExprStmt(e)]
       | Return(e) -> [Return(e)]
       | Decl(typ, id) -> [Decl(typ, id)]

@@ -1,0 +1,11 @@
+
+let a::int = [7, 2, 4, 7,8 , 1, 1,1]
+a.selectionsort()
+
+let found:bool = binarysearch(a, 3)
+
+
+let found_seq:bool = search(a, 2)
+print(found)
+
+print(found_seq)

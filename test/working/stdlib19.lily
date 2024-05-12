@@ -1,0 +1,6 @@
+
+let a::char = ['a', 't', 'e']
+a.selectionsort()
+
+let found:bool = binarysearch(a, 'f')
+print(found)

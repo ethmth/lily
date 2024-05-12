@@ -16,7 +16,8 @@ let check (program_block) =
   (Int, false, "len", Some([List(Any)]), 1);
   (Int,false, "truelen", Some([List(Any)]), 1);
   (List(Any),true, "setsizei", Some([List(Any); Int]), 2);
-  (Int, false, "free", Some([List(Any)]), 1)
+  (Int, false, "free", Some([List(Any)]), 1);
+  (Float, false, "flt", Some([Int]), 1)
   ] in
   let reserved_func_names: string list = [
     "printi";
@@ -277,32 +278,29 @@ let check (program_block) =
         let sl = match sb with SBlock(sl) -> sl in
         let sl_new = sl @ [(SExprStmt(check_expr a))] in
         SWhile((t, se), SBlock(sl_new))
-      | ForIn(id, e, b) -> let (t, se) = check_expr e in
+      | ForIn(id, e, b) -> let (t, _) = check_expr e in
         (match t with List(list_typ) -> 
-          let id_cname = add_var id list_typ true in
-          let varname = "forvar!!f" in
-          let varname_cname = add_var varname Int true in
+          let varname = "forvar!!f"  in
           let listname = "forlist!!l" in
-          let listname_cname = add_var listname (List(list_typ)) true in
-          let (_, index_var_stmt) = (Int, SDeclAssign(Int, varname, (Int, SLitInt(0)), varname_cname)) in
-          let list_sexpr = (List(list_typ), SAssign(listname, (t, se), listname_cname)) in
-          let (_, id_decl) = (list_typ, SDecl(list_typ, id, id_cname)) in
+          let index_var_stmt = DeclAssign(Int, varname, LitInt(0)) in
+          let list_sexpr = DeclAssign((List(list_typ)), listname, e) in
+          let id_decl = Decl(list_typ, id) in
 
           (* Loop *)
-          let while_condition = (Bool, SBinop((Int, SId(varname, varname_cname)), Lt, (Int, SCall("len", [(t, se)], "len")))) in
+          let while_condition = Binop(Id(varname), Lt, Call("len", [e])) in
           
           (* In Loop *)
-          let id_assign = (list_typ, SAssign(id, (list_typ, SListIndex(listname, (Int, SId(varname, varname_cname)), listname_cname)), id_cname)) in
-          let index_incrememt = (Int, SAssign(varname, (Int, SBinop( (Int, SId(varname, varname_cname)), Plus, (Int, SLitInt(1)))), varname_cname)) in
+          let id_assign = Assign(id, ListIndex(listname, Id(varname))) in
+          let index_increment = Assign(varname, Binop(Id(varname), Plus, LitInt(1))) in
           
           (* Combine it *)
-          let (_, checked_block) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
-          let while_block = (match checked_block with SBlock(sl) -> ([SExprStmt(id_assign)] @ sl @ [SExprStmt(index_incrememt)])) in
-          let while_loop = SWhile(while_condition, SBlock(while_block)) in
-          let blck = [index_var_stmt] @ [SExprStmt(list_sexpr)] @ [id_decl] @ [while_loop] in 
-          let combined = (SIf((Bool, SLitBool(true)) ,SBlock(blck) , SBlock([]))) in 
+          let while_block = match b with Block(sl) -> ([ExprStmt(id_assign)] @ sl @ [ExprStmt(index_increment)]) in
+          let while_loop = While(while_condition, Block(while_block)) in
+          let blck = Block([index_var_stmt] @ [list_sexpr] @ [id_decl] @ [while_loop]) in 
+          let (_, checked_block) = check_block blck (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in
+          let combined = (SIf((Bool, SLitBool(true)), checked_block, SBlock([]))) in
           combined
-          | _ -> raise (Failure (""))) 
+          | _ -> raise (Failure ("Semantics Error (check_stmt): For in expression not a loop in Block " ^ block_name))) 
       | ExprStmt(e) -> SExprStmt(check_expr e)
       | Return(e) -> 
         let ret_is_list = (match block_return with List(_) -> true | _ -> false) in

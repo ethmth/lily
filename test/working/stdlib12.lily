@@ -1,0 +1,12 @@
+
+let a::int = range(4, 9)
+
+let b::int = range(17, 24)
+
+a.remove(6)
+
+a.reverse()
+
+#a.print()
+
+print(concatenate(a, b))

@@ -3,8 +3,6 @@
 (* Ocamllex scanner for LILY *)
 
 { open Parser
-(* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner  *)
 
   let calc_ind_size (ident_str: string) =
     let cur_size = ref 0 in
@@ -125,6 +123,7 @@ rule token = parse
 | "False"  { BOOL_LIT(false) }
 | "true"   { BOOL_LIT(true)  }
 | "false"  { BOOL_LIT(false) }
+(* | '-' digit+ as lem  { INT_LIT(int_of_string lem) } *)
 | digit+ as lem  { INT_LIT(int_of_string lem) }
 | digit+ '.' digit+ as lem { FLOAT_LIT(float_of_string lem) }
 | '\'' (alpha | digit | schar) '\'' as lem { CHAR_LIT(lem.[1]) }
