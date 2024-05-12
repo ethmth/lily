@@ -12,6 +12,7 @@ let check (program_block) =
   let reserved_funcs: (typ * bool * string * ((typ list) option) * int) list =[
     (* rtyp, rtype is same as first arg (bool), name, args (None for any), min_args*)
   (Any, true, "printi", None, 1);
+  (Any, true, "printd", None, 1);
   (Int, false, "len", Some([List(Any)]), 1);
   (Int,false, "truelen", Some([List(Any)]), 1);
   (List(Any),true, "setsizei", Some([List(Any); Int]), 2);

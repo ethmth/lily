@@ -1,15 +1,15 @@
 # general functions
 
-#def printl(a:list) -> list:
-#    for n in a:
-#        print(n)
-#    return a
+def printl(a::int) -> int list:
+    for n in a:
+        printd(n)
+    return a
 
 def print_bool(a : bool) -> bool:
     if (a == true):
-        print('t', 'r', 'u', 'e')
+        printd('t', 'r', 'u', 'e')
     else:
-        print('f', 'a', 'l', 's', 'e')
+        printd('f', 'a', 'l', 's', 'e')
     return a
 
 def setsize(l::bool, new_size:int) -> bool list:

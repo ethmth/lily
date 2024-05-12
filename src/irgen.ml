@@ -150,7 +150,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
      (* Util/Built-in function definitions *)
      (* TODO: More print functions (those without spaces, without newlines, etc) *)
-    let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder): L.llvalue =
+    let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder) (spacing: bool): L.llvalue =
       (* TODO: Good bool printing function; printing strings, lists, etc. *)
       let typ_to_fmt (t: A.typ): string =
         match t with
@@ -158,13 +158,14 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         | Float -> "%f"
         | Char -> "%c"
         | Bool -> "%B"
+        (* | String -> "%s" *)
         | _ -> ""
       in
       let rec get_format_str (typ_list: A.typ list): string =
         match typ_list with
-        [] -> "\n"
-        | [last] -> typ_to_fmt last ^ "\n"
-        | h::t -> (typ_to_fmt h) ^ " " ^ (get_format_str t)
+        [] -> (if spacing then "\n" else "")
+        | [last] -> typ_to_fmt last ^ (if spacing then "\n" else "")
+        | h::t -> (typ_to_fmt h) ^ (if spacing then " " else "") ^ (get_format_str t)
       in 
       let get_typ (arg: sexpr) =
         match arg with (t, _) -> t
@@ -266,7 +267,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
            A.Negate    ->  L.build_not
         ) e' "tmpu" builder
       | SCall ("printi", arg_list, _) ->
-          build_print_call arg_list builder
+          build_print_call arg_list builder true
+      | SCall ("printd", arg_list, _) ->
+        build_print_call arg_list builder false
       | SCall ("free", arg_list, _) ->
           let ptr = build_expr builder (List.hd arg_list) in
           ignore(ptr);
