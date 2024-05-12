@@ -1,26 +1,5 @@
 # sorting functions
 
-def mergesort(l::int) -> int list:
-    if (len(l) <= 1):
-        return l
-    let mid:int = len(l) / 2
-    let left::int = mergesort(sublist(l, 0, mid))
-    let right::int = mergesort(sublist(l, mid, len(l)))
-    return merge(left, right)
-
-def merge(left::int, right::int) -> int list:
-    let result::int = []
-    while (len(left) > 0 and len(right) > 0):
-        if (left[0] < right[0]):
-            append(result, pop(left, 0))
-        else:
-            append(result, pop(right, 0))
-    while (len(left) > 0):
-        append(result, pop(left, 0))
-    while (len(right) > 0):
-        append(result, pop(right, 0))
-    return result
-
 def quicksort(l::int) -> int list:
     if (len(l) <= 1):
         return l
@@ -37,34 +16,6 @@ def quicksort(l::int) -> int list:
             append(greater, num)    
     return concatenate(quicksort(less), equal, quicksort(greater))
 
-def selectionsort(l::int) -> int list:
-    let length:int = len(l)
-    let i:int = 0
-    for (i < length, i++):
-        let min_idx:int = i
-        let j: int = i + 1
-        for (j < length, j++):
-            if (l[j] < l[min_idx]):
-                min_idx = j
-        let temp:int = l[i]
-        l[i] = l[min_idx]
-        l[min_idx] = temp
-    return l
-
-# search functions
-
-def binarysearch(l::int, item:int) -> bool:
-    let low:int = 0
-    let high:int = len(l) - 1
-    while (low <= high):
-        let mid:int = (low + high) / 2
-        if (l[mid] < item):
-            low = mid + 1
-        if (l[mid] > item):
-            high = mid - 1
-        else:
-            return true
-    return false
 
 # multi-list operations
 

@@ -1,0 +1,5 @@
+
+let a::float = [-6.43, 1.25, 2112.2]
+a.selectionsort()
+
+print(a)

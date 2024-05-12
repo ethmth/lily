@@ -1,0 +1,5 @@
+
+let a::char = ['a', 't', 'e']
+a.selectionsort()
+
+print(a)

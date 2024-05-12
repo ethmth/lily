@@ -254,6 +254,7 @@ expression:
   | expression AND expression { Binop($1, And,   $3) }
   | expression OR expression { Binop($1, Or,   $3) }
   | MINUS INT_LIT { LitInt($2 * -1)}
+  | MINUS FLOAT_LIT { LitFloat(($2 *. (-1.0)))}
   | NOT expression { UnaryOp(Negate, $2) }
   // | expression MAP expression { Map($1, $3) }      
   // | expression FILTER expression { Filter($1, $3) }   

@@ -29,6 +29,10 @@ def printb(a : bool) -> bool:
     print(' ')
     return a
 
+def print(a: bool) -> bool:
+    printb(a)
+    return a
+
 # =================== low-level manipulation functions (may never need called directly from userspace) ================
 
 def setsize(l:list, new_size:int) -> list:
@@ -489,9 +493,122 @@ def merge(a::int, l:int, m:int, r:int) -> int list:
         k++
     
     return a
- 
 
-def mergesort(a::int) -> int list:
+def merge(a::bool, l:int, m:int, r:int) -> bool list: 
+    let n1:int = m - l + 1
+    let n2:int = r - m 
+    let L::bool = new bool[n1]
+    let R::bool = new bool[n2]
+
+    let i:int = 0
+    for (i < n1, i++): 
+        L[i] = a[l + i] 
+    i = 0
+    for (i < n2, i++):  
+        R[i] = a[m + i + 1] 
+ 
+    i = 0
+    let j:int = 0
+    let k:int = l
+    #i, j, k = 0, 0, l 
+    while ( i < n1 and j < n2): 
+        if (L[i] <= R[j]): 
+            a[k] = L[i] 
+            i++
+        else: 
+            a[k] = R[j] 
+            j++
+        k++
+ 
+    while (i < n1): 
+        a[k] = L[i] 
+        i++
+        k++
+ 
+    while (j < n2): 
+        a[k] = R[j] 
+        j++
+        k++
+    
+    return a
+
+def merge(a::float, l:int, m:int, r:int) -> float list: 
+    let n1:int = m - l + 1
+    let n2:int = r - m 
+    let L::float = new float[n1]
+    let R::float = new float[n2]
+
+    let i:int = 0
+    for (i < n1, i++): 
+        L[i] = a[l + i] 
+    i = 0
+    for (i < n2, i++):  
+        R[i] = a[m + i + 1] 
+ 
+    i = 0
+    let j:int = 0
+    let k:int = l
+    #i, j, k = 0, 0, l 
+    while ( i < n1 and j < n2): 
+        if (L[i] <= R[j]): 
+            a[k] = L[i] 
+            i++
+        else: 
+            a[k] = R[j] 
+            j++
+        k++
+ 
+    while (i < n1): 
+        a[k] = L[i] 
+        i++
+        k++
+ 
+    while (j < n2): 
+        a[k] = R[j] 
+        j++
+        k++
+    
+    return a
+
+def merge(a::char, l:int, m:int, r:int) -> char list: 
+    let n1:int = m - l + 1
+    let n2:int = r - m 
+    let L::char = new char[n1]
+    let R::char = new char[n2]
+
+    let i:int = 0
+    for (i < n1, i++): 
+        L[i] = a[l + i] 
+    i = 0
+    for (i < n2, i++):  
+        R[i] = a[m + i + 1] 
+ 
+    i = 0
+    let j:int = 0
+    let k:int = l
+    #i, j, k = 0, 0, l 
+    while ( i < n1 and j < n2): 
+        if (L[i] <= R[j]): 
+            a[k] = L[i] 
+            i++
+        else: 
+            a[k] = R[j] 
+            j++
+        k++
+ 
+    while (i < n1): 
+        a[k] = L[i] 
+        i++
+        k++
+ 
+    while (j < n2): 
+        a[k] = R[j] 
+        j++
+        k++
+    
+    return a
+ 
+def mergesort(a:list) -> list:
     let width:int = 1   
     let n:int = len(a)                                          
 
@@ -505,4 +622,141 @@ def mergesort(a::int) -> int list:
             l = l + width*2
         width = width * 2
     return a
-   
+
+def selectionsort(l::int) -> int list:
+    let length:int = len(l)
+    let i:int = 0
+    for (i < length, i++):
+        let min_idx:int = i
+        let j: int = i + 1
+        for (j < length, j++):
+            if (l[j] < l[min_idx]):
+                min_idx = j
+        let temp:int = l[i]
+        l[i] = l[min_idx]
+        l[min_idx] = temp
+    return l
+
+def selectionsort(l::float) -> float list:
+    let length:int = len(l)
+    let i:int = 0
+    for (i < length, i++):
+        let min_idx:int = i
+        let j: int = i + 1
+        for (j < length, j++):
+            if (l[j] < l[min_idx]):
+                min_idx = j
+        let temp:float = l[i]
+        l[i] = l[min_idx]
+        l[min_idx] = temp
+    return l
+
+def selectionsort(l::char) -> char list:
+    let length:int = len(l)
+    let i:int = 0
+    for (i < length, i++):
+        let min_idx:int = i
+        let j: int = i + 1
+        for (j < length, j++):
+            if (l[j] < l[min_idx]):
+                min_idx = j
+        let temp:char = l[i]
+        l[i] = l[min_idx]
+        l[min_idx] = temp
+    return l
+
+def selectionsort(l::bool) -> bool list:
+    let length:int = len(l)
+    let i:int = 0
+    for (i < length, i++):
+        let min_idx:int = i
+        let j: int = i + 1
+        for (j < length, j++):
+            if (l[j] < l[min_idx]):
+                min_idx = j
+        let temp:bool = l[i]
+        l[i] = l[min_idx]
+        l[min_idx] = temp
+    return l
+
+# ==================== search functions ======================================
+
+def search(l::int, item:int) -> bool:
+    for v in l:
+        if(v == item):
+            return true
+    return false
+
+def search(l::bool, item:bool) -> bool:
+    for v in l:
+        if(v == item):
+            return true
+    return false
+
+def search(l::char, item:char) -> bool:
+    for v in l:
+        if(v == item):
+            return true
+    return false
+
+def search(l::float, item:float) -> bool:
+    for v in l:
+        if(v == item):
+            return true
+    return false
+
+def binarysearch(l::int, item:int) -> bool:
+    let low:int = 0
+    let high:int = len(l) - 1
+    while (low <= high):
+        let mid:int = (low + high) / 2
+        if (l[mid] < item):
+            low = mid + 1
+        else:
+            if (l[mid] > item):
+                high = mid - 1
+            else:
+                return true
+    return false
+
+def binarysearch(l::bool, item:bool) -> bool:
+    let low:int = 0
+    let high:int = len(l) - 1
+    while (low <= high):
+        let mid:int = (low + high) / 2
+        if (l[mid] < item):
+            low = mid + 1
+        else:
+            if (l[mid] > item):
+                high = mid - 1
+            else:
+                return true
+    return false
+
+def binarysearch(l::char, item:char) -> bool:
+    let low:int = 0
+    let high:int = len(l) - 1
+    while (low <= high):
+        let mid:int = (low + high) / 2
+        if (l[mid] < item):
+            low = mid + 1
+        else:
+            if (l[mid] > item):
+                high = mid - 1
+            else:
+                return true
+    return false
+
+def binarysearch(l::float, item:float) -> bool:
+    let low:int = 0
+    let high:int = len(l) - 1
+    while (low <= high):
+        let mid:int = (low + high) / 2
+        if (l[mid] < item):
+            low = mid + 1
+        else:
+            if (l[mid] > item):
+                high = mid - 1
+            else:
+                return true
+    return false
