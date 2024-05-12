@@ -3,10 +3,24 @@
 open Libparser
 open Ast
 
-let expand_fdecls (program_block: program) :program =
+let preprocess (program_block: program) :program =
 
 
   let rec check_block (block: block): block =
+
+    let bind_to_typ (bind: bind): typ =
+      match bind with (t, _) -> t
+    in
+    let bind_list_to_typ_list (bl: bind list): typ list =
+      List.map bind_to_typ bl
+    in
+    let has_any (args: typ list) =
+      List.mem (List(Any)) args
+    in
+    let check_func (t, name, binds, b): stmt list =
+      let args = bind_list_to_typ_list binds in
+
+    in
    
     let check_stmt (s: stmt): stmt list =
       match s with 
@@ -18,7 +32,7 @@ let expand_fdecls (program_block: program) :program =
       | Return(e) -> [Return(e)]
       | Decl(typ, id) -> [Decl(typ, id)]
       | DeclAssign(et, id, e) ->  [DeclAssign(et, id, e)]
-      | Fdecl(t, name, binds, b) -> [Fdecl(t, name, binds, check_block b)]
+      | Fdecl(t, name, binds, b) -> check_func t name binds b
     in
 
     (* let fbinds = add_var_binds starting_vars in
