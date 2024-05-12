@@ -28,7 +28,6 @@ rule token = parse
 | [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
 
-
 (* Separators *)
 | '('      { LPAREN }
 | ')'      { RPAREN }
@@ -39,6 +38,7 @@ rule token = parse
 
 (* Punctuation *)
 | ':'      { COLON }
+| "::"    { COLON_COLON }
 | ','      { COMMA }
 | '.'      { DOT }
 | "->"     { ARROW }
@@ -49,7 +49,6 @@ rule token = parse
 | '*'      { TIMES }
 | '/'      { DIVIDE }
 | '%'      { MOD }
-(* TODO: Add exponent? (**) *)
 
 (* Assignment Operators *)
 | '='      { ASSIGN }
@@ -64,11 +63,6 @@ rule token = parse
 | ">="     { GEQ }
 | "<="     { LEQ }
 
-(* Functional Operators *)
-| "=>"     { MAP }
-| "=>?"    { FILTER }
-| "=>/"    { REDUCE }
-
 (* Logical Operators *)
 | "&&"      { AND }
 | "and"     { AND }
@@ -77,34 +71,17 @@ rule token = parse
 | "!"      { NOT }
 | "not"   { NOT }
 
-(*List*)
-(*| "[]"      { EMPTY_LIST } *)  (* This matches '[]' and returns the EMPTY_LIST token *)
-| "::"    { COLON_COLON }  (* This represents '::' *)
-
-(* Additional functional operator for REDUCE *)
-| "with"   { WITH }
-
 (* Control Flow *)
 | "if"       { IF }
-| "is"       { IS }
 | "in"       { IN }
-| "none"     { NONE }
 | "else"     { ELSE }
-| "elif"     { ELIF }
 | "for"      { FOR }
-| "try"      { TRY }
-| "except"    { EXCEPT }
 | "while"    { WHILE }
-| "finally"  { FINALLY }
-| "break"    { BREAK }
 | "return"   { RETURN }
-| "continue" { CONTINUE }
 
 (* Declaration *)
-| "const"       { CONST }
 | "def"         { DEF }
 | "let"         { LET }
-
 | "new"       { NEW }
 
 (* Types *)
@@ -112,7 +89,6 @@ rule token = parse
 | "int"    { INT }
 | "float"  { FLOAT }
 | "char"   { CHAR }
-| "string" { STRING }
 | "list"  { LIST }
 | "void"   { VOID }
 
@@ -123,11 +99,9 @@ rule token = parse
 | "False"  { BOOL_LIT(false) }
 | "true"   { BOOL_LIT(true)  }
 | "false"  { BOOL_LIT(false) }
-(* | '-' digit+ as lem  { INT_LIT(int_of_string lem) } *)
 | digit+ as lem  { INT_LIT(int_of_string lem) }
 | digit+ '.' digit+ as lem { FLOAT_LIT(float_of_string lem) }
 | '\'' (alpha | digit | schar) '\'' as lem { CHAR_LIT(lem.[1]) }
-| '\"' ((alpha | digit | schar)* as lem) '\"' { STRING_LIT(lem) }
 | alpha (alpha | digit | '_')* as lem { ID(lem) }
 
 (* Miscellaneous *)

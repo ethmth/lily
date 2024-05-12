@@ -14,12 +14,11 @@ open Ast
 
 
 /* Punctuation */
-%token COLON COMMA ARROW
+%token COLON COLON_COLON COMMA ARROW
 %token DOT
 
 /* Binary Operators */
 %token PLUS MINUS TIMES DIVIDE MOD
-%token ELWISE_ADD  // Adding the new operator as a token (CHIMA)
 
 /* Assignment Operators */
 %token ASSIGN
@@ -28,39 +27,26 @@ open Ast
 /* Relational Operators */
 %token EQ NEQ GT LT GEQ LEQ 
 
-/* Functional Operators */
-%token MAP FILTER REDUCE 
-
 /* Logical Operators */
 %token AND OR NOT
 
 /* Control Flow */
-%token IF IS IN NONE ELSE ELIF FOR TRY EXCEPT WHILE FINALLY BREAK RETURN CONTINUE
+%token IF IN ELSE FOR WHILE RETURN
 
 /* Declaration */
-%token CONST DEF LET
+%token DEF LET
 
 /* Types */
-%token BOOL INT FLOAT CHAR STRING VOID
-%token NULL
-
-/* List */
-%token LIST NEW
-%token EMPTY_LIST
-%token COLON_COLON
+%token BOOL INT FLOAT CHAR VOID LIST
 
 /* Literals */
+%token NULL NEW
 %token <int> INT_LIT 
 %token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
 %token <char> CHAR_LIT
 %token <string> STRING_LIT
 %token <string> ID
-
-
-/* Additional functional operator for REDUCE */
-%token WITH
-
 
 /* Miscellaneous */
 %token EOF
@@ -81,15 +67,7 @@ open Ast
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
 %right NOT
-%nonassoc MAP FILTER 
-%nonassoc WITH
-%nonassoc REDUCE
-%nonassoc ELWISE_ADD
-
-
 %%
-
-/* The grammar rules below here are for LILY from the LRM Parser section. */
 
 program:
   NEWLINE block EOF { Block($2) }
@@ -104,6 +82,7 @@ statements:
 statement:
     stmt_simple NEWLINE { $1 }  // one-line statements
   | stmt_compound { $1 }        // multi-line "block" statements
+
 stmt_simple:
     declaration { $1 }
   | expression_statement { $1 }
@@ -168,9 +147,7 @@ typ:
   | typ LIST { List($1) }
   | LIST { List(Any) }
 
-
 /* Lists */
-
 list_literal:
   LBRACKET list_elements RBRACKET { ($2) }
 
@@ -178,9 +155,7 @@ list_literal:
    expression { [$1] }
    | expression COMMA list_elements { $1 :: $3 }
 
-
 /* Expressions */
-
 assignment:
   | ID ASSIGN expression {Assign($1, $3)}
   | ID LBRACKET expression RBRACKET ASSIGN expression {AssignIndex($1, $3, $6)}
@@ -196,7 +171,7 @@ expression:
   | CHAR_LIT { LitChar($1) }
   | FLOAT_LIT { LitFloat($1) }
   | ID          { Id($1) }
-  | list_literal { LitList($1) }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
+  | list_literal { LitList($1) }
   | NEW typ LBRACKET expression RBRACKET  { NewList($2, $4) }
   | expression PLUS expression { Binop($1, Plus,   $3) }
   | expression MINUS expression { Binop($1, Minus,   $3) }
@@ -216,7 +191,6 @@ expression:
   | NOT expression { UnaryOp(Negate, $2) }
   | function_call { $1 }
   | LPAREN expression RPAREN { $2 } (*// For grouping and precedence*)
-
 
 function_call:
   ID LPAREN arguments_opt RPAREN { Call($1, $3)}
