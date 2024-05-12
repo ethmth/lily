@@ -1,5 +1,6 @@
-# general functions
+# ====================== print functions =================================
 
+# printl (print a list)
 def printl(a:list) -> list:
     if (len(a) == 0):
         printd('[')
@@ -15,24 +16,229 @@ def printl(a:list) -> list:
         print(']')
         return a
 
-def print_bool(a : bool) -> bool:
+# printb (print a boolean)
+def printb(a : bool) -> bool:
     if (a == true):
         printd('t', 'r', 'u', 'e')
     else:
         printd('f', 'a', 'l', 's', 'e')
+    print(' ')
     return a
 
-def setsize(l::bool, new_size:int) -> bool list:
+# =================== low-level manipulation functions (may never need called directly from userspace) ================
+
+def setsize(l:list, new_size:int) -> list:
     let true_size: int = truelen(l)
     if (new_size > true_size):
-        print('e', 'r', 'r', 'r')
+        printd('e', 'r', 'r', 'o')
+        print('r')
         return l
 
     l.setsizei(new_size)
     return l
 
-# This file is needed to compile and run programs.
-# Please only add functions here if you're 100% sure they work 
-# with our current implementation.
-# Otherwise, add them to stdlibdev.lily and we will replace
-# this file with that one at the end.
+def resize_list_new(l::int, new_length: int) -> int list:
+    let old_length: int = len(l)
+    let newl::int =  new int[(old_length * 2) + 1]
+    let i: int = 0
+    for(i < old_length, i++):
+        newl[i] = l[i]
+    free(l)
+    newl.setsize(new_length)
+    return newl
+
+def resize_list_new(l::bool, new_length: int) -> bool list:
+    let old_length: int = len(l)
+    let newl::bool =  new bool[(old_length * 2) + 1]
+    let i: int = 0
+    for(i < old_length, i++):
+        newl[i] = l[i]
+    free(l)
+    newl.setsize(new_length)
+    return newl
+
+def resize_list_new(l::float, new_length: int) -> float list:
+    let old_length: int = len(l)
+    let newl::float =  new float[(old_length * 2) + 1]
+    let i: int = 0
+    for(i < old_length, i++):
+        newl[i] = l[i]
+    free(l)
+    newl.setsize(new_length)
+    return newl
+
+def resize_list_new(l::char, new_length: int ) -> char list:
+    let old_length: int = len(l)
+    let newl::char =  new char[(old_length * 2) + 1]
+    let i: int = 0
+    for(i < old_length, i++):
+        newl[i] = l[i]
+    free(l)
+    newl.setsize(new_length)
+    return newl
+
+def resize_list(l:list, new_length: int) -> list:
+    let true_length: int = truelen(l)
+
+    if (true_length > new_length):
+        l.setsize(new_length)
+        return l
+    
+    return resize_list_new(l, new_length)
+
+def append(l::int, item:int) -> int list:
+    let curr_length: int = len(l)
+    let new_list::int = resize_list(l, curr_length + 1)
+    new_list[curr_length] = item 
+    return new_list
+
+def append(l::float, item:float) -> float list:
+    let curr_length: int = len(l)
+    let new_list::float = resize_list(l, curr_length + 1)
+    new_list[curr_length] = item 
+    return new_list
+
+def append(l::bool, item:bool) -> bool list:
+    let curr_length: int = len(l)
+    let new_list::bool = resize_list(l, curr_length + 1)
+    new_list[curr_length] = item 
+    return new_list
+
+def append(l::char, item:char) -> char list:
+    let curr_length: int = len(l)
+    let new_list::char = resize_list(l, curr_length + 1)
+    new_list[curr_length] = item 
+    return new_list
+
+def pop(l::int) -> int:
+    let curr_length: int = len(l)
+    if (curr_length == 0):
+        return 0
+    let res: int = l[curr_length - 1]
+    resize_list(l, curr_length - 1)
+    return res
+
+def pop(l::bool) -> bool:
+    let curr_length: int = len(l)
+    if (curr_length == 0):
+        return false
+    let res: bool = l[curr_length - 1]
+    resize_list(l, curr_length - 1)
+    return res
+
+def pop(l::char) -> char:
+    let curr_length: int = len(l)
+    if (curr_length == 0):
+        return 'a'
+    let res: char = l[curr_length - 1]
+    resize_list(l, curr_length - 1)
+    return res
+
+def pop(l::float) -> float:
+    let curr_length: int = len(l)
+    if (curr_length == 0):
+        return 0.0
+    let res: float = l[curr_length - 1]
+    resize_list(l, curr_length - 1)
+    return res
+
+def copy(l::int) -> int list:
+    let length: int = len(l)
+    let newl::int =  new int[length]
+    let i: int = 0
+    for(i < length, i++):
+        newl[i] = l[i]
+    return newl
+
+def copy(l::float) -> float list:
+    let length: int = len(l)
+    let newl::float =  new float[length]
+    let i: int = 0
+    for(i < length, i++):
+        newl[i] = l[i]
+    return newl
+
+def copy(l::bool) -> bool list:
+    let length: int = len(l)
+    let newl::bool =  new bool[length]
+    let i: int = 0
+    for(i < length, i++):
+        newl[i] = l[i]
+    return newl
+
+def copy(l::char) -> char list:
+    let length: int = len(l)
+    let newl::char =  new char[length]
+    let i: int = 0
+    for(i < length, i++):
+        newl[i] = l[i]
+    return newl
+
+# ==================== list functions ======================================
+
+# len() is built in
+
+def sum(l::int) -> int:
+    let sum:int = 0
+    for num in l:
+        sum = sum + num
+    return sum
+
+def sum(l::float) -> float:
+    let sum:float = 0.0
+    for num in l:
+        sum = sum + num
+    return sum
+
+def min(l::int) -> int:
+    if (len(l) == 0):
+        return 0
+
+    let min:int = l[0]
+    for num in l:
+        if (num < min):
+            min = num
+    return min
+
+def min(l::float) -> float:
+    if (len(l) == 0):
+        return 0.0
+
+    let min:float = l[0]
+    for num in l:
+        if (num < min):
+            min = num
+    return min
+
+def max(l::int) -> int:
+    if (len(l) == 0):
+        return 0
+
+    let max:int = l[0]
+    for num in l:
+        if (num > max):
+            max = num
+    return max
+
+def max(l::float) -> float:
+    if (len(l) == 0):
+        return 0.0
+
+    let max:float = l[0]
+    for num in l:
+        if (num > max):
+            max = num
+    return max
+
+let seed:int = 123456789
+def random(a:int, b:int) -> int:
+    seed = (((seed * 1103515245) + 12345) % 2147483648)
+    return (a + (seed % ((b - a) + 1)))
+
+def range(start:int, end:int) -> int list:
+    let result::int = []
+    let i:int = start
+    while (i < end):
+        result.append(i)
+        i = i + 1
+    return result

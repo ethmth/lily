@@ -1,0 +1,6 @@
+
+let a::int = [3, 2, 1]
+
+print(min(a))
+
+print(max(a))

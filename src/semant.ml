@@ -26,8 +26,6 @@ let check (program_block) =
     "free"
   ] in
 
-  (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
-
   let functions = ref [] in 
   let globals = ref [] in
   let vnames: int StringMap.t ref = ref StringMap.empty in
@@ -257,7 +255,6 @@ let check (program_block) =
           raise (Failure ("Semantics Error (check_binds): Duplicate Bind " ^ n1))
         | _ :: t -> dups t
       in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
-    (* TODO CHECK THAT FUNCTION HAS A RETURN STATEMENT IF IT RETURNS NON-VOID *)
     and check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in

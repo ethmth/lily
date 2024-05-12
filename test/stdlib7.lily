@@ -1,0 +1,24 @@
+
+let a::int = [3, 2, 1]
+
+printl(a)
+let res:int = pop(a)
+
+printl(a)
+print(res)
+
+res = pop(a)
+
+printl(a)
+print(res)
+
+a.append(5)
+
+printl(a)
+
+res = pop(a)
+
+printl(a)
+print(res)
+
+

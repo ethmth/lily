@@ -1,0 +1,6 @@
+
+
+# random (not really) number between 3 and 9
+print(random(3, 9))
+print(random(3, 9))
+print(random(3, 9))

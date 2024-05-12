@@ -37,7 +37,6 @@ and sstmt =
   | SListDecl of typ * string * string
   | SListDeclAssign of typ * string * sexpr * string
   | SFdecl of typ * string * sbind list * sblock * string
-  (* | SAssign of string * sexpr * string *)
 
 type sprogram = sblock * sstmt list * bind list
 

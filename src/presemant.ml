@@ -13,7 +13,7 @@ let preprocess (program_block: program) :program =
     | Char -> LitChar('a')
     | Float -> LitFloat(0.0)
     | List(_) -> Null
-    | _ -> LitInt 0
+    | _ -> LitInt(0)
   in
 
 
@@ -46,12 +46,6 @@ let preprocess (program_block: program) :program =
     let replace_any_with_typ (arg_list: typ list) (new_t: typ): typ list =
       List.map (fun x -> (if x = List(Any) then (List(new_t)) else x)) arg_list
     in
-    (* let rec get_typ_list_helper (remaining_types: typ list): (typ * (typ list)) list  =
-      match remaining_types with
-      [] -> []
-      | hed::tal -> [(hed, replace_any_with_typ args hed)] @ (get_typ_list_helper tal)
-    in  *)
-
 
     let check_func (t, name, binds, b): stmt list =
       let ret_stmt = Return(get_default_return t )  in
@@ -87,10 +81,6 @@ let preprocess (program_block: program) :program =
       | Fdecl(t, name, binds, b) -> (check_func (t, name, binds, b))
     in
 
-    (* let fbinds = add_var_binds starting_vars in
-    match block with
-    Block(sl) -> (fbinds, SBlock(List.map check_stmt sl)) *)
-
     let reform_block (sll: stmt list list) : stmt list =
       let rec get_sl (sll: stmt list list) = 
         match sll with 
@@ -104,7 +94,4 @@ let preprocess (program_block: program) :program =
     Block(reform_block sll)
   in
 
-  (* let (_, sprogram_block) = check_block program_block FuncMap.empty StringMap.empty [] Void "main" in
-  let funcs = SFdecl(Void, "main", [], sprogram_block, "main")::!functions in
-  (sprogram_block, !globals, funcs) *)
   check_block program_block
