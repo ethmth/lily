@@ -1,0 +1,11 @@
+
+let a::int = [3, 2, 1]
+
+# printl prints a list
+printl(a)
+
+let b:: bool = [true, false]
+
+for value in b:
+    # printb prints a boolean
+    printb(value)

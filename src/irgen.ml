@@ -150,7 +150,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
 
      (* Util/Built-in function definitions *)
      (* TODO: More print functions (those without spaces, without newlines, etc) *)
-    let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder): L.llvalue =
+    let rec build_print_call (arg_list: sexpr list) (builder: L.llbuilder) (spacing: bool): L.llvalue =
       (* TODO: Good bool printing function; printing strings, lists, etc. *)
       let typ_to_fmt (t: A.typ): string =
         match t with
@@ -158,13 +158,14 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         | Float -> "%f"
         | Char -> "%c"
         | Bool -> "%B"
+        (* | String -> "%s" *)
         | _ -> ""
       in
       let rec get_format_str (typ_list: A.typ list): string =
         match typ_list with
-        [] -> "\n"
-        | [last] -> typ_to_fmt last ^ "\n"
-        | h::t -> (typ_to_fmt h) ^ " " ^ (get_format_str t)
+        [] -> (if spacing then "\n" else "")
+        | [last] -> typ_to_fmt last ^ (if spacing then "\n" else "")
+        | h::t -> (typ_to_fmt h) ^ (if spacing then " " else "") ^ (get_format_str t)
       in 
       let get_typ (arg: sexpr) =
         match arg with (t, _) -> t
@@ -266,7 +267,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
            A.Negate    ->  L.build_not
         ) e' "tmpu" builder
       | SCall ("printi", arg_list, _) ->
-          build_print_call arg_list builder
+          build_print_call arg_list builder true
+      | SCall ("printd", arg_list, _) ->
+        build_print_call arg_list builder false
       | SCall ("free", arg_list, _) ->
           let ptr = build_expr builder (List.hd arg_list) in
           ignore(ptr);
@@ -338,6 +341,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SNewList (list_typ, list_size) (* TODO: Zero-initialize everything *)-> 
         let ptr = build_list_malloc (build_expr builder list_size) list_typ in
         ptr
+      | SNull -> L.const_pointer_null ptr_t
     in
 
     let add_terminal builder instr =
@@ -349,7 +353,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SExprStmt e -> ignore(build_expr builder e); builder
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
-      | SListDeclAssign (_, _, _, _) (*TODO: Should be same/similar as assign?*) -> builder
+      | SListDeclAssign (_, _, e, cname) -> let e' = build_expr builder e in
+      ignore(L.build_store e' (lookup cname) builder); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
       | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
@@ -393,7 +398,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         ignore(L.build_br end_bb body_endbuilder);
 
         L.builder_at_end context end_bb
-      | SListDecl (_, _, _) (*TODO: Probably do nothing here, but check *)-> builder
+      | SListDecl (_, _, _) (*Probably do nothing here, but check *)-> builder
       | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)
       | SForIn (_, _, _, _) -> builder (* For in loops are converted into While loops in the semantics stage *)
       | SDecl(_, _, _) -> builder (* Ignore declarations, which are already covered in 'globals' *)

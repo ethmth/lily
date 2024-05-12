@@ -1,0 +1,16 @@
+
+let a::int = [5, 2, 1]
+
+printl(a)
+
+let b:: bool = [true, true]
+
+#print('n')
+
+printl(b)
+
+
+
+#print(a[0])
+#printd(a[1])
+#print(a[2])

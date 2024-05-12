@@ -1,0 +1,9 @@
+
+let a::int = range(4, 9)
+
+let a_cpy::int = copy(a)
+
+a_cpy.append(17)
+
+printl(a)
+printl(a_cpy)

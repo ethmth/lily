@@ -1,0 +1,13 @@
+
+let a::int = [3, 2, 1]
+
+print(len(a))
+print(truelen(a))
+
+a.append(4)
+
+print(len(a))
+print(truelen(a))
+printl(a)
+
+

@@ -19,7 +19,7 @@
 
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
-let schar = [' ' '!' '#' '$' '%' '&' '(' ')' '*' '+' ',' '-' '.' '/']
+let schar = [' ' '!' '#' '$' '%' '&' '(' ')' '*' '+' ',' '-' '.' '/' '[' ']']
 let ident = "\t" | "    "
 
 rule token = parse
@@ -117,6 +117,8 @@ rule token = parse
 | "string" { STRING }
 | "list"  { LIST }
 | "void"   { VOID }
+
+| "null"   { NULL }
 
 (* Literals *)
 | "True"   { BOOL_LIT(true)  }

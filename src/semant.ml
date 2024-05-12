@@ -12,6 +12,7 @@ let check (program_block) =
   let reserved_funcs: (typ * bool * string * ((typ list) option) * int) list =[
     (* rtyp, rtype is same as first arg (bool), name, args (None for any), min_args*)
   (Any, true, "printi", None, 1);
+  (Any, true, "printd", None, 1);
   (Int, false, "len", Some([List(Any)]), 1);
   (Int,false, "truelen", Some([List(Any)]), 1);
   (List(Any),true, "setsizei", Some([List(Any); Int]), 2);
@@ -24,8 +25,6 @@ let check (program_block) =
     "setsizei";
     "free"
   ] in
-
-  (* TODO: Allow lists to take "Any" types when things only like comparison are done? (Maybe too hard and just do the simple, repetitive way at first) *)
 
   let functions = ref [] in 
   let globals = ref [] in
@@ -247,6 +246,7 @@ let check (program_block) =
           | _ -> raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type")))
       | NewList(t, ind) ->
         let (et, se) = check_expr ind in if et = Int then (List(t), SNewList(t, (et, se))) else  raise (Failure ("Semantics Error (check_expr): NewList size of non-int"))
+      | Null -> (List(Any), SNull)
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function
@@ -255,7 +255,6 @@ let check (program_block) =
           raise (Failure ("Semantics Error (check_binds): Duplicate Bind " ^ n1))
         | _ :: t -> dups t
       in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
-    (* TODO CHECK THAT FUNCTION HAS A RETURN STATEMENT IF IT RETURNS NON-VOID *)
     and check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
@@ -305,7 +304,10 @@ let check (program_block) =
           combined
           | _ -> raise (Failure (""))) 
       | ExprStmt(e) -> SExprStmt(check_expr e)
-      | Return(e) -> let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
+      | Return(e) -> 
+        let ret_is_list = (match block_return with List(_) -> true | _ -> false) in
+        let ret_list_typ = (match block_return with List(x) -> x | _ -> Void) in
+        let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else if t = (List(Any)) && (ret_is_list) then SReturn(List(ret_list_typ), se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
       | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b

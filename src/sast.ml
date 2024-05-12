@@ -20,6 +20,7 @@ and expr_detail =
   | SAssign of string * sexpr * string
   | SAssignIndex of string * sexpr * sexpr * string
   | SNewList of typ * sexpr
+  | SNull
 
 and sblock = SBlock of sstmt list
 
@@ -36,7 +37,6 @@ and sstmt =
   | SListDecl of typ * string * string
   | SListDeclAssign of typ * string * sexpr * string
   | SFdecl of typ * string * sbind list * sblock * string
-  (* | SAssign of string * sexpr * string *)
 
 type sprogram = sblock * sstmt list * bind list
 
@@ -58,6 +58,7 @@ and string_of_sexpr (t, e) =
   | SAssign(v, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">" ^ " = " ^ string_of_sexpr e ^ "\n"
   | SAssignIndex(v, ind, e, cname) -> "<" ^ v ^ " as " ^ cname ^ ">"  ^ "[" ^ string_of_sexpr ind ^ "]" ^ " = " ^ string_of_sexpr e ^ "\n"
   | SNewList(t, ind) -> "new" ^ (string_of_typ t) ^ "[" ^ string_of_sexpr ind ^ "]" ^"\n"
+  | SNull -> "null"
   ) ^ " is " ^ string_of_typ t ^ "}"
   
 let rec string_of_sstmt_list (stmts: sstmt list) (curr_indent) = 
