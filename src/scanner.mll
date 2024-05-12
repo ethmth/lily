@@ -104,7 +104,6 @@ rule token = parse
 | digit+ as lem  { INT_LIT(int_of_string lem) }
 | digit+ '.' digit+ as lem { FLOAT_LIT(float_of_string lem) }
 | '\'' (alpha | digit | schar) '\'' as lem { CHAR_LIT(lem.[1]) }
-| '\"' ((alpha | digit | schar)* as lem) '\"' { STRING_LIT(lem) }
 | alpha (alpha | digit | '_')* as lem { ID(lem) }
 
 (* Miscellaneous *)
