@@ -136,23 +136,21 @@ def merge(left::int, right::int) -> int list:
         append(result, pop(right, 0))
     return result
 
-# the following function cannot be implemented until LILY supports elif
-
-#def quicksort(l::int) -> int list:
-#    if (len(l) <= 1):
-#        return l
-#    let pivot:int = l[len(l) / 2]
-#    let less::int = []
-#    let equal::int = []
-#    let greater::int = []
-#    for num in l:
-#        if num < pivot:
-#           append(less, num)
-#        elif num == pivot:
-#            append(equal, num)
-#        else:
-#            append(greater, num)    
-#   return concatenate(quicksort(less), equal, quicksort(greater))
+def quicksort(l::int) -> int list:
+    if (len(l) <= 1):
+        return l
+    let pivot:int = l[len(l) / 2]
+    let less::int = []
+    let equal::int = []
+    let greater::int = []
+    for num in l:
+        if (num < pivot):
+           append(less, num)
+        if (num == pivot):
+            append(equal, num)
+        else:
+            append(greater, num)    
+    return concatenate(quicksort(less), equal, quicksort(greater))
 
 def selectionsort(l::int) -> int list:
     let length:int = len(l)
@@ -170,20 +168,18 @@ def selectionsort(l::int) -> int list:
 
 # search functions
 
-# the following function cannot be implemented until LILY supports elif
-
-#def binarysearch(l::int, item:int) -> bool:
-#    let low:int = 0
-#    let high:int = len(l) - 1
-#    while (low <= high):
-#        let mid:int = (low + high) / 2
-#        if (l[mid] < item):
-#            low = mid + 1
-#        elif (l[mid] > item):
-#            high = mid - 1
-#        else:
-#            return true
-#    return false
+def binarysearch(l::int, item:int) -> bool:
+    let low:int = 0
+    let high:int = len(l) - 1
+    while (low <= high):
+        let mid:int = (low + high) / 2
+        if (l[mid] < item):
+            low = mid + 1
+        if (l[mid] > item):
+            high = mid - 1
+        else:
+            return true
+    return false
 
 # multi-list operations
 
@@ -202,7 +198,7 @@ def shuffle(list1::int, list2::int) -> int[]:
     let length:int = len(combined_list)
     let j:int = 0
     let temp:int = 0   
-    for(i < length, i++):
+    for (i < length, i++):
         j = random(0, n - 1)
         temp = combined_list[i]
         combined_list[i] = combined_list[j]
