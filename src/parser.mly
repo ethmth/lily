@@ -108,17 +108,12 @@ stmt_simple:
     declaration { $1 }
   | expression_statement { $1 }
   | return_statement { $1 }
-  // | BREAK
-  // | CONTINUE
 
 stmt_compound:
   function_def { $1 }
   | for_loop  { $1 }
   | while_loop  { $1 }
   | if_statement { $1 }
-  // | elif_statement { $1 }
-  // | else_statement { $1 }
-  // | try_statement { $1 }
 
 /* stmt_simple */
 declaration: 
@@ -163,44 +158,12 @@ if_statement:
   IF LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT ELSE COLON NEWLINE INDENT block DEDENT { If($3, Block($8), Block($14)) }
   | IF LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { If($3, Block($8), Block([])) }
 
-// elif_statement:
-//   ELIF LPAREN expression RPAREN COLON NEWLINE INDENT block DEDENT { Elif($3, $8) }
-
-// else_statement:
-//   ELSE COLON NEWLINE INDENT statements DEDENT { Else($5) }
-
-// try_statement:
-//   | TRY COLON NEWLINE INDENT statements except_clauses finally_clause DEDENT
-//     {
-//       Try($5, $6, Some($7))
-//     }
-//   | TRY COLON NEWLINE INDENT statements except_clauses DEDENT
-//     {
-//       Try($5, $6, None)
-//     }
-// except_clauses:
-//   | except_clause except_clauses { $1 :: $2 }
-//   | /* nothing */ { [] }
-
-// except_clause:
-//   EXCEPT LPAREN typ ID RPAREN COLON NEWLINE INDENT statements DEDENT
-//   {
-//     { exn_type=Some $3; exn_var=Some $4; handler=$9 }
-//   }
-//   | EXCEPT COLON NEWLINE INDENT statements DEDENT
-//   {
-//     { exn_type=None; exn_var=None; handler=$5 }
-//   }
-// finally_clause:
-//   FINALLY COLON NEWLINE INDENT statements DEDENT { $5 }
-
 /* Types */
 typ:
     INT   { Int   }
   | BOOL  { Bool  }
   | FLOAT { Float }
   | CHAR  { Char }
-  // | STRING { String }
   | VOID   { Void }
   | typ LIST { List($1) }
   | LIST { List(Any) }
@@ -210,10 +173,6 @@ typ:
 
 list_literal:
   LBRACKET list_elements RBRACKET { ($2) }
-
-// list_elements_opt:
-//    /* nothing */ { [] }
-//    | list_elements { $1 }
 
  list_elements:
    expression { [$1] }
@@ -236,7 +195,6 @@ expression:
   | BOOL_LIT { LitBool($1) }
   | CHAR_LIT { LitChar($1) }
   | FLOAT_LIT { LitFloat($1) }
-  // | STRING_LIT { LitString($1) }
   | ID          { Id($1) }
   | list_literal { LitList($1) }                   (*// Added this line to handle list literals as expressions (CHIMA)*)
   | NEW typ LBRACKET expression RBRACKET  { NewList($2, $4) }
@@ -256,10 +214,6 @@ expression:
   | MINUS INT_LIT { LitInt($2 * -1)}
   | MINUS FLOAT_LIT { LitFloat(($2 *. (-1.0)))}
   | NOT expression { UnaryOp(Negate, $2) }
-  // | expression MAP expression { Map($1, $3) }      
-  // | expression FILTER expression { Filter($1, $3) }   
-  // | expression REDUCE expression WITH expression { Reduce($1, $3, $5) }
-  // | expression ELWISE_ADD expression { ListBinop($1, ElwiseAdd, $3) }  (*// New element-wise addition (CHIMA)*)
   | function_call { $1 }
   | LPAREN expression RPAREN { $2 } (*// For grouping and precedence*)
 
@@ -267,7 +221,6 @@ expression:
 function_call:
   ID LPAREN arguments_opt RPAREN { Call($1, $3)}
   | ID DOT ID LPAREN arguments_opt RPAREN { Assign($1, Call($3, Id($1)::$5) )}
-  // | expression DOT ID LPAREN arguments_opt RPAREN { Call($3, $1::$5) }
 
 arguments_opt:
   /*nothing*/ { [] }
