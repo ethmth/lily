@@ -16,7 +16,8 @@ let check (program_block) =
   (Int, false, "len", Some([List(Any)]), 1);
   (Int,false, "truelen", Some([List(Any)]), 1);
   (List(Any),true, "setsizei", Some([List(Any); Int]), 2);
-  (Int, false, "free", Some([List(Any)]), 1)
+  (Int, false, "free", Some([List(Any)]), 1);
+  (Float, false, "flt", Some([Int]), 1)
   ] in
   let reserved_func_names: string list = [
     "printi";

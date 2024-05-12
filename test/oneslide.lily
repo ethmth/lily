@@ -1,0 +1,41 @@
+
+
+
+def grades_to_gpa_values(grades::char) -> float list:
+
+    let length: int = len(grades)
+    
+    def grade_to_gpa_value(grade: char) -> float:
+        if (grade == 'A'):
+            return 4.0
+        if (grade == 'B'):
+            return 3.0
+        if (grade == 'C'):
+            return 2.0
+        if (grade == 'D'):
+            return 1.0
+        return 0.0
+
+    let gpas::float = []
+    for grade in grades:
+        let gpa: float = grade_to_gpa_value(grade)
+        gpas.append(gpa)
+
+    return gpas
+
+let my_grades:: char = ['A', 'A', 'B', 'B', 'C', 'C', 'A', 'A', 'F']
+my_grades.mergesort()
+
+print(my_grades)
+
+let my_gpas:: float = grades_to_gpa_values(my_grades)
+
+print(my_gpas)
+
+let gpa: float = sum(my_gpas) / flt(len(my_gpas))
+print(gpa)
+
+my_gpas.remove(0.0)
+
+gpa = sum(my_gpas) / flt(len(my_gpas))
+print(gpa)

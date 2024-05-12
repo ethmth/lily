@@ -263,6 +263,9 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         (match o with
            A.Negate    ->  L.build_not
         ) e' "tmpu" builder
+      | SCall ("flt", arg_list, _) ->
+          let ptr = build_expr builder (List.hd arg_list) in
+          L.build_sitofp ptr (ltype_of_typ A.Float) "floatval" builder
       | SCall ("printi", arg_list, _) ->
           build_print_call arg_list builder true
       | SCall ("printd", arg_list, _) ->
