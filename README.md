@@ -27,7 +27,7 @@ Currently, the programming language implementation can be found in the `src/` di
 - [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
 - [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort. They will work when LILY supports `elif`.
 - [x] **Search Functions** - `stdlib.lily` contains binarysearch. ~~It will work when LILY supports `elif`~~. It can work if modified to not use `elif`s.
-- [ ] **"Randomness"** - Neccesary if we want to implement shuffle. Requires bitwise and (&) and modulo (%).
+- [x] **"Randomness"** - random(a, b) function exists.
 - [ ] **Multi-List Operations** - shuffle(list1, list2) will work once a random(a, b) function exists.
 - [ ] **!!!Strings!!! IMPORTANT** 
 - [ ] **List Operations** - `map`, `reduce`, etc.
