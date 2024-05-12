@@ -28,7 +28,6 @@ rule token = parse
 | [' ' '\t' '\r'] { token lexbuf } (* Whitespace *)
 | "#"     { comment lexbuf }           (* Comments *)
 
-
 (* Separators *)
 | '('      { LPAREN }
 | ')'      { RPAREN }
@@ -50,7 +49,6 @@ rule token = parse
 | '*'      { TIMES }
 | '/'      { DIVIDE }
 | '%'      { MOD }
-(* TODO: Add exponent? (**) *)
 
 (* Assignment Operators *)
 | '='      { ASSIGN }
