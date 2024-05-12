@@ -1,0 +1,6 @@
+
+let a::int = range(4, 9)
+
+a.remove(6)
+
+a.print()
