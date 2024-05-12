@@ -3,8 +3,6 @@
 (* Ocamllex scanner for LILY *)
 
 { open Parser
-(* UNCOMMENT THIS FOR test0: *)
-(* { open Parserscanner  *)
 
   let calc_ind_size (ident_str: string) =
     let cur_size = ref 0 in

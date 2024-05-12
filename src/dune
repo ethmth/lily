@@ -1,6 +1,6 @@
 (library
  (name libparser)
- (modules scanner tokenize parser parserscanner ast astscanner))
+ (modules scanner tokenize parser ast))
 (ocamllex scanner)
 (ocamlyacc parser)
 (ocamlyacc parserscanner)
@@ -14,11 +14,6 @@
  (name libirgen)
  (modules irgen)
 (libraries libparser libsemant llvm))
-
-(executable
- (name test0)
- (modules test0)
- (libraries libparser))
 
 (executable
  (name test1)
