@@ -341,6 +341,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SNewList (list_typ, list_size) (* TODO: Zero-initialize everything *)-> 
         let ptr = build_list_malloc (build_expr builder list_size) list_typ in
         ptr
+      | SNull -> L.const_pointer_null ptr_t
     in
 
     let add_terminal builder instr =

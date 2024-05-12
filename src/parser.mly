@@ -42,6 +42,7 @@ open Ast
 
 /* Types */
 %token BOOL INT FLOAT CHAR STRING VOID
+%token NULL
 
 /* List */
 %token LIST NEW
@@ -228,6 +229,7 @@ assignment:
   | ID DECREMENT {Assign($1, Binop(Id($1), Minus, LitInt(1)))}
 
 expression:
+  | NULL { Null }
   | assignment { $1 }
   | ID LBRACKET expression RBRACKET { ListIndex($1, $3) }
   | INT_LIT { LitInt($1) }

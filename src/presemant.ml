@@ -6,6 +6,17 @@ open Ast
 let preprocess (program_block: program) :program =
 
 
+  let get_default_return (t:typ): expr =
+    match t with
+    Int -> LitInt(0)
+    | Bool -> LitBool(false)
+    | Char -> LitChar('a')
+    | Float -> LitFloat(0.0)
+    | List(_) -> Null
+    | _ -> LitInt 0
+  in
+
+
   let rec check_block (block: block): block =
 
     let bind_to_typ (bind: bind): typ =
@@ -43,6 +54,8 @@ let preprocess (program_block: program) :program =
 
 
     let check_func (t, name, binds, b): stmt list =
+      let ret_stmt = Return(get_default_return t )  in
+      let ret_block = match b with Block(sl) -> Block(sl @ [ret_stmt]) in
 
       let args = bind_list_to_typ_list binds in
       let bind_names = bind_list_to_names binds in
@@ -52,13 +65,13 @@ let preprocess (program_block: program) :program =
         let new_types = replace_any_with_typ args lt in
         let new_binds = form_binds new_types bind_names in
         let ret_typ = (if t = List(Any) then List(lt) else t) in
-        Fdecl(ret_typ, name, new_binds, b)
+        Fdecl(ret_typ, name, new_binds, ret_block)
       in
 
       if has_any args then 
         List.map make_fdecl_for_t [Int; Bool; Char; Float]
       else
-        [Fdecl(t, name ,binds, b)]
+        [Fdecl(t, name ,binds, ret_block)]
     in
    
     let check_stmt (s: stmt): stmt list =
@@ -87,7 +100,7 @@ let preprocess (program_block: program) :program =
       get_sl sll
     in
     match block with Block(sl) ->
-    let sll = List.map check_stmt sl in
+    let sll = List.map check_stmt (sl) in
     Block(reform_block sll)
   in
 

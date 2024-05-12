@@ -36,6 +36,7 @@ type expr =
   | Assign of string * expr
   | AssignIndex of string * expr * expr
   | NewList of typ * expr
+  | Null
 
 and block = Block of stmt list
 
@@ -129,6 +130,7 @@ and string_of_expr = function
   (* | Filter(list, predicate) -> string_of_expr list ^ " =>? " ^ string_of_expr predicate *)
   (* | Reduce(list, func, init) -> string_of_expr list ^ " =>/ " ^ string_of_expr func ^ " with " ^ string_of_expr init *)
   | NewList( t, size) -> "new " ^ (string_of_typ t) ^ "[" ^ (string_of_expr size) ^ "]"
+  | Null -> "null"
   
 let rec string_of_stmt_list (stmts: stmt list) (curr_indent) = 
   String.concat "" (List.map (fun local_stmt -> string_of_stmt local_stmt curr_indent) stmts)

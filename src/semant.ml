@@ -248,6 +248,7 @@ let check (program_block) =
           | _ -> raise (Failure ("Semantics Error (check_expr): ListIndex assigning typ to unmatched expression type")))
       | NewList(t, ind) ->
         let (et, se) = check_expr ind in if et = Int then (List(t), SNewList(t, (et, se))) else  raise (Failure ("Semantics Error (check_expr): NewList size of non-int"))
+      | Null -> (List(Any), SNull)
 
     and check_binds (binds : (typ * string) list) =
       let rec dups = function
@@ -306,7 +307,10 @@ let check (program_block) =
           combined
           | _ -> raise (Failure (""))) 
       | ExprStmt(e) -> SExprStmt(check_expr e)
-      | Return(e) -> let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
+      | Return(e) -> 
+        let ret_is_list = (match block_return with List(_) -> true | _ -> false) in
+        let ret_list_typ = (match block_return with List(x) -> x | _ -> Void) in
+        let (t, se) = check_expr e in if t = block_return then SReturn(t, se) else if t = (List(Any)) && (ret_is_list) then SReturn(List(ret_list_typ), se) else raise (Failure ("Semantics Error (check_stmt): Returned invalid type " ^ (string_of_typ t) ^ " in Block " ^ block_name ^"(expected " ^ (string_of_typ block_return) ^ ")"))
       | Decl(typ, id) -> let cname = add_var id typ true in SDecl(typ, id, cname)
       | DeclAssign(et, id, e) ->  let cname = add_var id et true in let (t, se) = check_expr e in if t = Any || t = et then SDeclAssign(et, id, (t, se), cname) else raise (Failure ("Semantics Error (check_stmt): DeclAssigning variable " ^ id ^ " to var of wrong type " ^ string_of_typ t ^ " (expected " ^ string_of_typ et ^ ")" ^ " in Block " ^ block_name))
       | Fdecl(t, name, binds, b) -> check_func t name binds b
