@@ -25,8 +25,8 @@ Currently, the programming language implementation can be found in the `src/` di
 - [x] **Lists** - Lily supports the declaration and referencing of 'lists' in the style specified in the LRM.
 - [x] **Standard Functions** - `stdlib.lily` contains print_bool, len, sum, min, and max
 - [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
-- [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort. They will work when LILY supports `elif`.
-- [x] **Search Functions** - `stdlib.lily` contains binarysearch. ~~It will work when LILY supports `elif`~~. It can work if modified to not use `elif`s.
+- [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort.
+- [x] **Search Functions** - `stdlib.lily` contains binarysearch.
 - [x] **"Randomness"** - random(a, b) function exists.
 - [x] **Multi-List Operations** - shuffle(list1, list2) function exists.
 - [ ] **!!!Strings!!! IMPORTANT** 
