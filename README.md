@@ -27,8 +27,8 @@ Currently, the programming language implementation can be found in the `src/` di
 - [x] **List Operations** - `stdlib.lily` contains range, copy, append, remove, reverse, concatenate, and pop.
 - [x] **Sorting Functions** - `stdlib.lily` contains mergesort, quicksort, and selectionsort.
 - [x] **Search Functions** - `stdlib.lily` contains binarysearch.
-- [x] **"Randomness"** - random(a, b) function exists.
-- [x] **Multi-List Operations** - shuffle(list1, list2) function exists.
+- [x] **"Randomness"** - `stdlib.lily` contains random(a, b).
+- [x] **Multi-List Operations** - `stdlib.lily` contains shuffle(list1, list2).
 - [ ] **!!!Strings!!! IMPORTANT** 
 - [ ] **List Operations** - `map`, `reduce`, etc.
 
