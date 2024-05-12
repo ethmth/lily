@@ -679,6 +679,64 @@ def selectionsort(l::bool) -> bool list:
         l[min_idx] = temp
     return l
 
+#def partition(arr::int, l:int, h:int) -> int: 
+#    let i: int = ( l - 1 ) 
+#    let x:int = arr[h] 
+#  
+#    let j: int = l
+#    for (j < h, j++): 
+#        if (arr[j] <= x): 
+#            i = i + 1
+#            let temp: int = arr[i]
+#            arr[i] = arr[j]
+#            arr[j] = temp
+#
+#    let temp: int = arr[i + 1]
+#    arr[i + 1] = arr[h]
+#    arr[h] = temp
+#    return (i + 1) 
+  
+#def quicksortiterative(arr::int, l:int, h:int) -> int list: 
+#  
+#    # Create an auxiliary stack 
+#    let size: int = h - l + 1
+#   let stack::int = new int[size]
+#  
+#    let top: int = -1
+#  
+#    # push initial values of l and h to stack 
+#    top = top + 1
+#    stack[top] = l 
+#    top = top + 1
+#    stack[top] = h 
+#  
+#    # Keep popping from stack while is not empty 
+#    while(top >= 0): 
+#        h = stack[top] 
+#        top = top - 1
+#        l = stack[top] 
+#        top = top - 1
+#  
+#        let p: int = partition( arr, l, h ) 
+#  
+#        if (p-1 > l): 
+#            top = top + 1
+#            stack[top] = l 
+#            top = top + 1
+#            stack[top] = p - 1
+#  
+#        if (p + 1 < h): 
+#            top = top + 1
+#            stack[top] = p + 1
+#            top = top + 1
+#            stack[top] = h 
+#    return arr
+
+#def quicksort(l::int) -> int list:
+#    let length: int = len(l)
+#    l.quicksortiterative(0, length)
+#    return l
+
 # ==================== search functions ======================================
 
 def search(l::int, item:int) -> bool:

@@ -205,13 +205,13 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       ignore(ptr);
       let user_size_store = (L.build_store (len) ptr builder) in
       ignore(user_size_store);
-      let size_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 8)]) "listlittyp" builder in
+      let size_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int (ltype_of_typ A.Int) 8)]) "listlittyp" builder in
       let size_store = L.build_store (len) size_offset builder in
       ignore(size_store);
-      let typ_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 16)]) "listlittyp" builder in
+      let typ_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int (ltype_of_typ A.Int) 16)]) "listlittyp" builder in
       let typ_store = L.build_store (L.const_int (ltype_of_typ A.Int) (typ_to_id list_typ)) typ_offset builder in
       ignore(typ_store);
-      let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t 24)]) "listlitbyte" builder in
+      let byte_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int (ltype_of_typ A.Int) 24)]) "listlitbyte" builder in
       let byte_store = L.build_store (L.const_int (ltype_of_typ A.Int) (size_of_typ list_typ)) byte_offset builder in
       ignore(byte_store);
       ptr
@@ -224,7 +224,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           let e' = build_expr builder e in
           ignore(L.build_store e' (lookup cname) builder); e')
         )
-      |  SLitInt i -> L.const_of_int64 (ltype_of_typ A.Int) (Int64.of_int i) (true)
+      |  SLitInt i -> L.const_int (ltype_of_typ A.Int) (i)
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f
@@ -236,7 +236,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           [] -> []
           | h::t ->  
             let built_expr = build_expr builder h in
-            let ptr_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int byte_t curr_offset)]) "listlitgep" builder in
+            let ptr_offset = L.build_gep byte_t ptr (Array.of_list [(L.const_int (ltype_of_typ A.Int) curr_offset)]) "listlitgep" builder in
             ignore(L.build_store built_expr ptr_offset builder); build_list_stores t (curr_offset + (size_of_typ list_typ))
         in
         ignore(build_list_stores l list_start_offset);
