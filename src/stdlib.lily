@@ -1,6 +1,6 @@
 # general functions
 
-def printl(a::int) -> int list:
+def printl(a:list) -> list:
     for n in a:
         printd(n)
     return a
