@@ -281,11 +281,39 @@ let check (program_block) =
     and check_func (t: typ) (name: string) (binds: bind list) (b: block): sstmt =
       ignore(check_binds binds); 
       let args = bind_list_to_typ_list binds in
-      let cname = add_func name args t in
+
+      let get_typ_list_list (args: typ list): (typ * (typ list)) list =
+        let replace_any_with_typ (arg_list: typ list) (new_t: typ): typ list =
+          List.map (fun x -> (if x = List(Any) then (List(new_t)) else x)) arg_list
+        in
+        let rec get_typ_list_helper (remaining_types: typ list): (typ * (typ list)) list  =
+          match remaining_types with
+          [] -> []
+          | hed::tal -> [((List(hed)), replace_any_with_typ args hed)] @ (get_typ_list_helper tal)
+        in 
+        if (List.mem (List(Any)) args) then (
+          get_typ_list_helper ([Int; Bool; Float; Char]))
+        else
+          [(t, args)]
+      in
+      let typ_list_list = get_typ_list_list args in
+      let add_this_func (typ_and_typ_list: (typ * typ list)): sstmt = 
+        match typ_and_typ_list with (ret_typ ,arguments) ->
+        (* if is_func_local name arguments then (raise (Failure ("Semantics Error (add_func): Already declared variable " ^ name ^ " in current scope"))) else *)
+        (* ignore(l_fmap := FuncMap.add {id=name; args=arguments} (ret_typ, cname) !l_fmap); *)
+        let cname = add_func name arguments ((ret_typ)) in
+        let (sbinds, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds ((ret_typ)) name in
+        let sfdecl = SFdecl((ret_typ), name, sbinds, sb, cname) in
+        ignore(functions := sfdecl::!functions);
+        sfdecl
+      in
+      SIf((Bool, SLitBool(true)) , SBlock(List.map add_this_func typ_list_list), SBlock([]))
+
+      (* let cname = add_func name args t in
       let (sbinds, sb) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) binds t name in
       let sfdecl = SFdecl(t, name, sbinds, sb, cname) in
       ignore(functions := sfdecl::!functions);
-      sfdecl
+      sfdecl *)
     and check_stmt (s: stmt): sstmt =
       match s with 
       | If (e, b1, b2) -> let (t, se) = check_expr e in ignore(if t != Bool then raise (Failure ("Semantics Error (check_stmt): If statement expression not boolean in Block " ^ block_name)));
