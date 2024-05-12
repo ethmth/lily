@@ -38,7 +38,6 @@ def random(a:int, b:int) -> int:
    seed = (seed * 1103515245 + 12345) % 2147483648
    return a + (seed % (b - a + 1))
 
-
 # list operations
 
 def range(start:int, end:int) -> int list:
@@ -190,26 +189,24 @@ def selectionsort(l::int) -> int list:
 
 # multi-list operations
 
-# the following function requires a random(a, b) function which requires the use of bitwise and, and modulo
-
-# def shuffle(list1::int, list2::int) -> int[]:
-#    let combined_list::int = []
-#    let length1:int = len(list1)
-#    let length2:int = len(list2)
-#    let i:int = 0
-#    while (i < length1):
-#        append(combined_list, list1[i])
-#        i = i + 1
-#    i = 0
-#    while (i < n2):
-#       append(combined_list, list2[i])
-#        i = i + 1
-#    let length:int = len(combined_list)
-#    let j:int = 0
-#    let temp:int = 0   
-#    for(i < length, i++):
-#        j = random(0, n - 1)
-#        temp = combined_list[i]
-#        combined_list[i] = combined_list[j]
-#        combined_list[j] = temp
-#    return combined_list
+def shuffle(list1::int, list2::int) -> int[]:
+    let combined_list::int = []
+    let length1:int = len(list1)
+    let length2:int = len(list2)
+    let i:int = 0
+    while (i < length1):
+        append(combined_list, list1[i])
+        i = i + 1
+    i = 0
+    while (i < n2):
+       append(combined_list, list2[i])
+        i = i + 1
+    let length:int = len(combined_list)
+    let j:int = 0
+    let temp:int = 0   
+    for(i < length, i++):
+        j = random(0, n - 1)
+        temp = combined_list[i]
+        combined_list[i] = combined_list[j]
+        combined_list[j] = temp
+    return combined_list
