@@ -1,5 +1,10 @@
 # general functions
 
+def printl(a:list) -> list:
+    for n in a:
+        print(n)
+    return a
+
 def print_bool(a : bool) -> bool:
     if (a == true):
         print('t', 'r', 'u', 'e')

@@ -144,12 +144,34 @@ let check (program_block) =
       )
     in
     let add_func (name: string) (args: typ list) (t: typ): string =
+
+      let get_typ_list_list (args: typ list): (typ * (typ list)) list =
+        let replace_any_with_typ (arg_list: typ list) (new_t: typ): typ list =
+          List.map (fun x -> (if x = List(Any) then (List(new_t)) else x)) arg_list
+        in
+        let rec get_typ_list_helper (remaining_types: typ list): (typ * (typ list)) list  =
+          match remaining_types with
+          [] -> []
+          | hed::tal -> [(hed, replace_any_with_typ args hed)] @ (get_typ_list_helper tal)
+        in 
+        if (List.mem (List(Any)) args) then (
+          get_typ_list_helper ([Int; Bool; Float; Char]))
+        else
+          [(t, args)]
+      in
+      let typ_list_list = get_typ_list_list args in
       if List.mem name reserved_func_names then (raise (Failure ("Semantics Error (add_func): Cannot name a function " ^ name ^ " (reserved)"))) else
       if is_func_local name args then (raise (Failure ("Semantics Error (add_func): Already declared variable " ^ name ^ " in current scope")))
       else (
         let func_number = update_fnames name in 
         let cname = (name ^ "!" ^ (string_of_int func_number)) in
-        ignore(l_fmap := FuncMap.add {id=name; args=args} (t, cname) !l_fmap);
+        let add_to_fmap (typ_and_typ_list: (typ * typ list)) = 
+          match typ_and_typ_list with (ret_typ ,arguments) ->
+          if is_func_local name arguments then (raise (Failure ("Semantics Error (add_func): Already declared variable " ^ name ^ " in current scope"))) else
+          ignore(l_fmap := FuncMap.add {id=name; args=arguments} (ret_typ, cname) !l_fmap);
+        in
+        (* ignore(l_fmap := FuncMap.add {id=name; args=args} (t, cname) !l_fmap); *)
+        ignore(List.map add_to_fmap typ_list_list);
         cname)
     in
 

@@ -1,0 +1,4 @@
+
+let a::int = [5, 2, 1]
+
+printl(a)

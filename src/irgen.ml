@@ -349,7 +349,8 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       | SExprStmt e -> ignore(build_expr builder e); builder
       | SDeclAssign(_, _, e, cname) -> let e' = build_expr builder e in
         ignore(L.build_store e' (lookup cname) builder); builder
-      | SListDeclAssign (_, _, _, _) (*TODO: Should be same/similar as assign?*) -> builder
+      | SListDeclAssign (_, _, e, cname) -> let e' = build_expr builder e in
+      ignore(L.build_store e' (lookup cname) builder); builder
       | SReturn e -> ignore(L.build_ret (build_expr builder e) builder); builder
       | SIf (predicate, then_block, else_block) ->
         let then_stmt_list = match then_block with SBlock(then_stmt) -> then_stmt in
@@ -393,7 +394,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
         ignore(L.build_br end_bb body_endbuilder);
 
         L.builder_at_end context end_bb
-      | SListDecl (_, _, _) (*TODO: Probably do nothing here, but check *)-> builder
+      | SListDecl (_, _, _) (*Probably do nothing here, but check *)-> builder
       | SFor (_, _, _) -> builder (* For loops are converted into While loops in the semantics stage *)
       | SForIn (_, _, _, _) -> builder (* For in loops are converted into While loops in the semantics stage *)
       | SDecl(_, _, _) -> builder (* Ignore declarations, which are already covered in 'globals' *)

@@ -202,6 +202,8 @@ typ:
   // | STRING { String }
   | VOID   { Void }
   | typ LIST { List($1) }
+  | LIST { List(Any) }
+
 
 /* Lists */
 
