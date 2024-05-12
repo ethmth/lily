@@ -1,0 +1,10 @@
+
+let a::int = [6,75,8,73,1,42,1]
+
+a.mergesort()
+
+print(a)
+let b::int = [2 ,3, 4]
+
+let c:: int = [1, 5, 7]
+#print(merge(b,c))

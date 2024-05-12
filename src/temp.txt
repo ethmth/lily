@@ -1,0 +1,58 @@
+# ==================== sorting functions ======================================
+
+
+def mergerec(l::int, r::int) -> int list:
+    let left::int = copy(l)
+    let right::int = copy(r)
+    #print(left)
+    let result::int = []
+    while (len(left) > 0 and len(right) > 0):
+        if (left[len(left) - 1] > right[len(right) - 1]):
+            result.append(pop(left))
+        else:
+            result.append(pop(right))
+    while (len(left) > 0):
+        result.append(pop(left))
+    while (len(right) > 0):
+        result.append(pop(right))
+
+    #print(result)
+    return result
+
+
+def mergesortrec(l:: int) -> int list:
+    def mergesort_helper(lloc::int, right_sub::int) -> int list:
+        lloc.mergesort()
+        return right_sub
+
+
+    let length: int = len(l)
+    if (length <= 1):
+        return l
+
+    let mid:int = length / 2
+
+    let left_sub::int = sublist(l, 0, mid)
+    let right_sub::int = sublist(l, mid, length)
+
+    #print(left_sub)
+    #print(right_sub)
+    # Get mergesort_helper to return right_sub, and sort left_sub in place
+    right_sub = mergesort_helper(left_sub, right_sub)
+
+    #print('m')
+    #print(left_sub)
+    #print(right_sub)
+
+    #print(left_sub)
+    print('b')
+    print(right_sub)
+    right_sub = mergesort(right_sub)
+    print('a')
+    print(right_sub)
+
+    #print('a')
+    #print(left_sub)
+    #print(right_sub)
+   
+    return merge(left_sub, right_sub)

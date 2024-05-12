@@ -125,6 +125,7 @@ rule token = parse
 | "False"  { BOOL_LIT(false) }
 | "true"   { BOOL_LIT(true)  }
 | "false"  { BOOL_LIT(false) }
+(* | '-' digit+ as lem  { INT_LIT(int_of_string lem) } *)
 | digit+ as lem  { INT_LIT(int_of_string lem) }
 | digit+ '.' digit+ as lem { FLOAT_LIT(float_of_string lem) }
 | '\'' (alpha | digit | schar) '\'' as lem { CHAR_LIT(lem.[1]) }

@@ -194,6 +194,31 @@ def sum(l::float) -> float:
         sum = sum + num
     return sum
 
+def min(a:int, b:int) -> int:
+    if (a < b):
+        return a
+    else:
+        return b
+
+def min(a:float, b:float) -> float:
+    if (a < b):
+        return a
+    else:
+        return b
+
+def max(a:int, b:int) -> int:
+    if (a < b):
+        return a
+    else:
+        return b
+
+def max(a:float, b:float) -> float:
+    if (a < b):
+        return a
+    else:
+        return b
+
+
 def min(l::int) -> int:
     if (len(l) == 0):
         return 0
@@ -328,7 +353,7 @@ def concatenate(a::int, b::int) -> int list:
         result.append(num)
     return result
 
-def concatenate3(a::int, b::int, c::int) -> int list:
+def concatenate(a::int, b::int, c::int) -> int list:
     let result::int = []
     for num in a:
         result.append(num)
@@ -337,3 +362,147 @@ def concatenate3(a::int, b::int, c::int) -> int list:
     for num in c:
         result.append(num)
     return result
+
+def concatenate(a::bool, b::bool) -> bool list:
+    let result::bool = []
+    for num in a:
+        result.append(num)
+    for num in b:
+        result.append(num)
+    return result
+
+def concatenate(a::bool, b::bool, c::bool) -> bool list:
+    let result::bool = []
+    for num in a:
+        result.append(num)
+    for num in b:
+        result.append(num)
+    for num in c:
+        result.append(num)
+    return result
+
+def concatenate(a::float, b::float) -> float list:
+    let result::float = []
+    for num in a:
+        result.append(num)
+    for num in b:
+        result.append(num)
+    return result
+
+def concatenate(a::float, b::float, c::float) -> float list:
+    let result::float = []
+    for num in a:
+        result.append(num)
+    for num in b:
+        result.append(num)
+    for num in c:
+        result.append(num)
+    return result
+
+def concatenate(a::char, b::char) -> char list:
+    let result::char = []
+    for num in a:
+        result.append(num)
+    for num in b:
+        result.append(num)
+    return result
+
+def concatenate(a::char, b::char, c::char) -> char list:
+    let result::char = []
+    for num in a:
+        result.append(num)
+    for num in b:
+        result.append(num)
+    for num in c:
+        result.append(num)
+    return result
+
+def sublist(l::int, start:int, end:int) -> int list:
+    let new_list::int = []
+    let i:int = start
+    while (i < end):
+        new_list.append(l[i])
+        i = i + 1
+    return new_list
+
+def sublist(l::bool, start:int, end:int) -> bool list:
+    let new_list::bool = []
+    let i:int = start
+    while (i < end):
+        new_list.append(l[i])
+        i = i + 1
+    return new_list
+
+def sublist(l::float, start:int, end:int) -> float list:
+    let new_list::float = []
+    let i:int = start
+    while (i < end):
+        new_list.append(l[i])
+        i = i + 1
+    return new_list
+
+def sublist(l::char, start:int, end:int) -> char list:
+    let new_list::char = []
+    let i:int = start
+    while (i < end):
+        new_list.append(l[i])
+        i = i + 1
+    return new_list
+
+# ==================== sorting functions ======================================
+
+
+def merge(a::int, l:int, m:int, r:int) -> int list: 
+    let n1:int = m - l + 1
+    let n2:int = r - m 
+    let L::int = new int[n1]
+    let R::int = new int[n2]
+
+    let i:int = 0
+    for (i < n1, i++): 
+        L[i] = a[l + i] 
+    i = 0
+    for (i < n2, i++):  
+        R[i] = a[m + i + 1] 
+ 
+    i = 0
+    let j:int = 0
+    let k:int = l
+    #i, j, k = 0, 0, l 
+    while ( i < n1 and j < n2): 
+        if (L[i] <= R[j]): 
+            a[k] = L[i] 
+            i++
+        else: 
+            a[k] = R[j] 
+            j++
+        k++
+ 
+    while (i < n1): 
+        a[k] = L[i] 
+        i++
+        k++
+ 
+    while (j < n2): 
+        a[k] = R[j] 
+        j++
+        k++
+    
+    return a
+ 
+
+def mergesort(a::int) -> int list:
+    let width:int = 1   
+    let n:int = len(a)                                          
+
+    while (width < n):
+        let l: int = 0
+        while (l < n): 
+            let r: int = min(l+(width*2-1), n-1)         
+            let m: int = min(l+width-1,n-1)
+             
+            a = merge(a, l, m, r)
+            l = l + width*2
+        width = width * 2
+    return a
+   

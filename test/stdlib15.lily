@@ -1,0 +1,5 @@
+
+let a::int = [-74,48,12]
+a.mergesort()
+
+print(a)

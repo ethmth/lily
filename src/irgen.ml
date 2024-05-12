@@ -154,7 +154,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
       (* TODO: Good bool printing function; printing strings, lists, etc. *)
       let typ_to_fmt (t: A.typ): string =
         match t with
-        | Int -> "%lu"
+        | Int -> "%d"
         | Float -> "%f"
         | Char -> "%c"
         | Bool -> "%B"
@@ -224,7 +224,7 @@ let translate ((globals: (A.typ * string * string) list), (functions: sstmt list
           let e' = build_expr builder e in
           ignore(L.build_store e' (lookup cname) builder); e')
         )
-      |  SLitInt i -> L.const_int (ltype_of_typ A.Int) i
+      |  SLitInt i -> L.const_of_int64 (ltype_of_typ A.Int) (Int64.of_int i) (true)
       | SLitBool b -> L.const_int (ltype_of_typ A.Bool) (if b then 1 else 0)
       | SLitChar c -> L.const_int (ltype_of_typ A.Char) (Char.code c)
       | SLitFloat f  -> L.const_float (ltype_of_typ A.Float) f

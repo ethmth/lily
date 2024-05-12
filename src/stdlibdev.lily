@@ -1,15 +1,3 @@
-
-
-# list operations
-
-def sublist(l::int, start:int, end:int) -> int list:
-    let new_list::int = []
-    let i:int = start
-    while (i < end):
-        append(new_list, l[i])
-        i = i + 1
-    return new_list
-
 # sorting functions
 
 def mergesort(l::int) -> int list:
