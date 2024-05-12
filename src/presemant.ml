@@ -2,10 +2,8 @@
 
 open Libparser
 open Ast
-(* open Sast *)
 
 let preprocess (program_block: program) :program =
-
 
   let get_default_return (t:typ): expr =
     match t with
@@ -16,23 +14,6 @@ let preprocess (program_block: program) :program =
     | List(_) -> Null
     | _ -> LitInt(0)
   in
-
-  (* let rec check_list (el: expr list): sexpr =
-    let rec check_list_helper (el: expr list) (etyp: typ): sexpr list =
-      match el with 
-      [] -> ([])
-      | h::tail -> 
-        (let (t, e) = check_expr h in
-          if (etyp != Any && t != etyp) then (raise (Failure "Semantics Error (check_list): Not all list members are of the same type.")) else
-          ([(t, e)] @ (check_list_helper tail t))) in
-    match el with 
-    [] -> (List(Int), SLitList([]))
-    | h::t -> 
-      (
-        let (ht, he) = check_expr h in
-        (List(ht), SLitList( [(ht, he)] @ check_list_helper t ht))
-      ) *)
-
 
   let rec check_block (block: block): block =
 
@@ -91,27 +72,6 @@ let preprocess (program_block: program) :program =
       | While(e, b) -> [While(e, (check_block b))]
       | For(e, a, b) -> [For(e, a, (check_block b))]
       | ForIn(id, e, b) -> [ForIn(id, e, b)]
-          (* let varname = "forvar!!f" in
-          let listname = "forlist!!l" in
-          let index_var_stmt = DeclAssign(Int, varname, LitInt(0)) in
-          let list_sexpr = DeclAssign(List, listname, e) in
-          let (_, id_decl) = (list_typ, SDecl(list_typ, id, id_cname)) in
-
-          (* Loop *)
-          let while_condition = (Bool, SBinop((Int, SId(varname, varname_cname)), Lt, (Int, SCall("len", [(t, se)], "len")))) in
-          
-          (* In Loop *)
-          let id_assign = (list_typ, SAssign(id, (list_typ, SListIndex(listname, (Int, SId(varname, varname_cname)), listname_cname)), id_cname)) in
-          let index_incrememt = (Int, SAssign(varname, (Int, SBinop( (Int, SId(varname, varname_cname)), Plus, (Int, SLitInt(1)))), varname_cname)) in
-          
-          (* Combine it *)
-          let (_, checked_block) = check_block b (FuncMap.union pick_fst !l_fmap b_fmap) (StringMap.union pick_fst !l_vmap b_vmap) [] block_return block_name in 
-          let while_block = (match checked_block with SBlock(sl) -> ([SExprStmt(id_assign)] @ sl @ [SExprStmt(index_incrememt)])) in
-          let while_loop = SWhile(while_condition, SBlock(while_block)) in
-          let blck = [index_var_stmt] @ [SExprStmt(list_sexpr)] @ [id_decl] @ [while_loop] in 
-          let combined = (SIf((Bool, SLitBool(true)) ,SBlock(blck) , SBlock([]))) in 
-          combined
-          | _ -> raise (Failure (""))) [ForIn(id, e, (check_block b))] *)
       | ExprStmt(e) -> [ExprStmt(e)]
       | Return(e) -> [Return(e)]
       | Decl(typ, id) -> [Decl(typ, id)]

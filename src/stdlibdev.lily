@@ -2,18 +2,6 @@
 
 # list operations
 
-
-def concatenate(a::int, b::int, c::int) -> int list:
-    let result::int = []
-    for num in a:
-        append(result, num)
-    for num in b:
-        append(result, num)
-    for num in c:
-        append(result, num)
-    return result
-
-
 def sublist(l::int, start:int, end:int) -> int list:
     let new_list::int = []
     let i:int = start
