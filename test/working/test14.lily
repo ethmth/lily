@@ -1,0 +1,8 @@
+# random
+let rnd:int = random(1, 10)
+
+print(rnd)
+
+
+
+

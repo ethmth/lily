@@ -1,0 +1,5 @@
+# binarysearch
+let my_list::int = [1, 2, 3, 4, 5]
+let found:bool = binarysearch(my_list, 3)
+
+print(found)

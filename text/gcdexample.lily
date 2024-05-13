@@ -1,0 +1,14 @@
+def gcd(a: int, b: int) -> int:  
+    while (a != b):  
+        if (b < a):  
+            a = a - b  
+        else:  
+            b = b - a  
+    return a  
+
+print(gcd(18, 9))  
+ 
+# List Example   
+ 
+let d::int = [5, 3]  
+print(d)

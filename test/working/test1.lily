@@ -1,0 +1,5 @@
+# mergesort
+let sorted_list::int = [3, 1, 2]
+sorted_list.mergesort()
+
+print(sorted_list)
