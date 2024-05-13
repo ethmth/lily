@@ -1,0 +1,3 @@
+let sorted_list::int = [1, 2, 3, 4]
+remove(sorted_list, 2)
+print(sorted_list)
