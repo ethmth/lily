@@ -1,0 +1,8 @@
+# pop
+let my_list::int = [1, 2, 3, 4, 5]
+let element::int = my_list.pop()
+
+print(element)
+print(my_list)
+
+

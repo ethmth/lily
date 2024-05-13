@@ -1,0 +1,9 @@
+# merge
+let list1::int = [1, 3, 5]
+let list2::int = [2, 4, 6]
+let result::int = merge(list1, list2)
+
+print(result)
+
+
+
