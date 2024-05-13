@@ -1,0 +1,3 @@
+let sorted_list::int = [29, 10, 14, 37, 13]
+sorted_list.selectionsort()
+print(sorted_list)
