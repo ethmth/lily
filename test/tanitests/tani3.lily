@@ -1,0 +1,7 @@
+let b:: int = [5, 3,1 ,2]
+let a:: int = []
+b.selectionsort()
+for value in b:
+    let up5: int = value + 5
+    a.append(up5)
+print(a)
