@@ -1,0 +1,7 @@
+# search
+let my_list::int = [5, 3, 4, 1, 2]
+let found:bool = search(my_list, 4)
+
+print(found)
+
+
